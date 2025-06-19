@@ -1,0 +1,409 @@
+{
+  "Files": [
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\web-ban-thuoc.bundle.scp.css",
+      "PackagePath": "staticwebassets\\web-ban-thuoc.bundle.scp.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\css\\reset.css",
+      "PackagePath": "staticwebassets\\css\\reset.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\css\\site.css",
+      "PackagePath": "staticwebassets\\css\\site.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\favicon.ico",
+      "PackagePath": "staticwebassets\\favicon.ico"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\banner_doctors.png",
+      "PackagePath": "staticwebassets\\images\\banner_doctors.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\banners\\banner1.png",
+      "PackagePath": "staticwebassets\\images\\banners\\banner1.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\banners\\banner2.png",
+      "PackagePath": "staticwebassets\\images\\banners\\banner2.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\banners\\banner3.png",
+      "PackagePath": "staticwebassets\\images\\banners\\banner3.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\banners\\banner4.png",
+      "PackagePath": "staticwebassets\\images\\banners\\banner4.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\banners\\banner5.png",
+      "PackagePath": "staticwebassets\\images\\banners\\banner5.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\banners\\banner6.png",
+      "PackagePath": "staticwebassets\\images\\banners\\banner6.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\banners\\banner_full_1.png",
+      "PackagePath": "staticwebassets\\images\\banners\\banner_full_1.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\banners\\banner_full_2.png",
+      "PackagePath": "staticwebassets\\images\\banners\\banner_full_2.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\banners\\banner_full_3.png",
+      "PackagePath": "staticwebassets\\images\\banners\\banner_full_3.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\bg_doctor.png",
+      "PackagePath": "staticwebassets\\images\\bg_doctor.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\cham_soc_co_the_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\cham_soc_co_the_level_2.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\cham_soc_da_mat_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\cham_soc_da_mat_level_2.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\than_kinh_nao_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\than_kinh_nao_level_2.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_3\\chong_nang_da_mat_level_3.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_3\\chong_nang_da_mat_level_3.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_3\\duong_the_level_3.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_3\\duong_the_level_3.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_3\\sua_rua_mat_kem_gel_sua_level_3.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_3\\sua_rua_mat_kem_gel_sua_level_3.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_3\\sua_tam_xa_bong_level_3.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_3\\sua_tam_xa_bong_level_3.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\certifications\\DMCA.png",
+      "PackagePath": "staticwebassets\\images\\certifications\\DMCA.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\certifications\\bo_cong_thuong.png",
+      "PackagePath": "staticwebassets\\images\\certifications\\bo_cong_thuong.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\danh_muc_noi_bat.png",
+      "PackagePath": "staticwebassets\\images\\danh_muc_noi_bat.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\default\\footer_top_banner.png",
+      "PackagePath": "staticwebassets\\images\\default\\footer_top_banner.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\default\\header_desktop.png",
+      "PackagePath": "staticwebassets\\images\\default\\header_desktop.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\default\\header_logo_brand.png",
+      "PackagePath": "staticwebassets\\images\\default\\header_logo_brand.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\default\\home_bgdoctor.png",
+      "PackagePath": "staticwebassets\\images\\default\\home_bgdoctor.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\default\\title.png",
+      "PackagePath": "staticwebassets\\images\\default\\title.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\home_bgdoctor.png",
+      "PackagePath": "staticwebassets\\images\\home_bgdoctor.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\home_bgdoctor2.png",
+      "PackagePath": "staticwebassets\\images\\home_bgdoctor2.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\products\\vitamin_vien_sui_kudos_do.png",
+      "PackagePath": "staticwebassets\\images\\products\\vitamin_vien_sui_kudos_do.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\products\\vitamin_vien_sui_kudos_hong.png",
+      "PackagePath": "staticwebassets\\images\\products\\vitamin_vien_sui_kudos_hong.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\products\\vitamin_vien_sui_kudos_vang.png",
+      "PackagePath": "staticwebassets\\images\\products\\vitamin_vien_sui_kudos_vang.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\sanpham.png",
+      "PackagePath": "staticwebassets\\images\\sanpham.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\social\\download_qr.png",
+      "PackagePath": "staticwebassets\\images\\social\\download_qr.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\social\\facebook_logo.png",
+      "PackagePath": "staticwebassets\\images\\social\\facebook_logo.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\social\\zalo_logo.png",
+      "PackagePath": "staticwebassets\\images\\social\\zalo_logo.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\js\\site.js",
+      "PackagePath": "staticwebassets\\js\\site.js"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\LICENSE",
+      "PackagePath": "staticwebassets\\lib\\bootstrap"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-grid.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-grid.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-grid.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-grid.css.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-grid.min.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-grid.min.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-grid.min.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-grid.min.css.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-grid.rtl.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-grid.rtl.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-grid.rtl.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-grid.rtl.css.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-grid.rtl.min.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-grid.rtl.min.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-grid.rtl.min.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-grid.rtl.min.css.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.css.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.min.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.min.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.min.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.min.css.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.rtl.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.rtl.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.rtl.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.rtl.css.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.rtl.min.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.rtl.min.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.rtl.min.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.rtl.min.css.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.css.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.min.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.min.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.min.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.min.css.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.rtl.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.rtl.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.rtl.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.rtl.css.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.rtl.min.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.rtl.min.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.rtl.min.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.rtl.min.css.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap.css.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.min.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap.min.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.min.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap.min.css.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.rtl.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap.rtl.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.rtl.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap.rtl.css.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.rtl.min.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap.rtl.min.css"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.rtl.min.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap.rtl.min.css.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.bundle.js",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.bundle.js"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.bundle.js.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.bundle.js.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.bundle.min.js",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.bundle.min.js"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.bundle.min.js.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.bundle.min.js.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.esm.js",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.esm.js"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.esm.js.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.esm.js.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.esm.min.js",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.esm.min.js"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.esm.min.js.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.esm.min.js.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.js",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.js"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.js.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.js.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.min.js",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.min.js"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.min.js.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.min.js.map"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\jquery-validation-unobtrusive\\LICENSE.txt",
+      "PackagePath": "staticwebassets\\lib\\jquery-validation-unobtrusive\\LICENSE.txt"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\jquery-validation-unobtrusive\\jquery.validate.unobtrusive.js",
+      "PackagePath": "staticwebassets\\lib\\jquery-validation-unobtrusive\\jquery.validate.unobtrusive.js"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\jquery-validation-unobtrusive\\jquery.validate.unobtrusive.min.js",
+      "PackagePath": "staticwebassets\\lib\\jquery-validation-unobtrusive\\jquery.validate.unobtrusive.min.js"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\jquery-validation\\LICENSE.md",
+      "PackagePath": "staticwebassets\\lib\\jquery-validation\\LICENSE.md"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\jquery-validation\\dist\\additional-methods.js",
+      "PackagePath": "staticwebassets\\lib\\jquery-validation\\dist\\additional-methods.js"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\jquery-validation\\dist\\additional-methods.min.js",
+      "PackagePath": "staticwebassets\\lib\\jquery-validation\\dist\\additional-methods.min.js"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\jquery-validation\\dist\\jquery.validate.js",
+      "PackagePath": "staticwebassets\\lib\\jquery-validation\\dist\\jquery.validate.js"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\jquery-validation\\dist\\jquery.validate.min.js",
+      "PackagePath": "staticwebassets\\lib\\jquery-validation\\dist\\jquery.validate.min.js"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\jquery\\LICENSE.txt",
+      "PackagePath": "staticwebassets\\lib\\jquery\\LICENSE.txt"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\jquery\\dist\\jquery.js",
+      "PackagePath": "staticwebassets\\lib\\jquery\\dist\\jquery.js"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\jquery\\dist\\jquery.min.js",
+      "PackagePath": "staticwebassets\\lib\\jquery\\dist\\jquery.min.js"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\lib\\jquery\\dist\\jquery.min.map",
+      "PackagePath": "staticwebassets\\lib\\jquery\\dist\\jquery.min.map"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.build.web-ban-thuoc.props",
+      "PackagePath": "build\\web-ban-thuoc.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildMultiTargeting.web-ban-thuoc.props",
+      "PackagePath": "buildMultiTargeting\\web-ban-thuoc.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildTransitive.web-ban-thuoc.props",
+      "PackagePath": "buildTransitive\\web-ban-thuoc.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.web-ban-thuoc.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

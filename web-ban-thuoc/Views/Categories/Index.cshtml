@@ -1,0 +1,54 @@
+@*
+    Trang danh sách sản phẩm theo danh mục
+    Usage: <partial name="_CategoryList" /> hoặc truy cập /Categories/CategoryList
+*@
+
+@{
+    ViewData["Title"] = "Danh mục sản phẩm - Nhà Thuốc Long Châu";
+}
+
+<div class="container mx-auto py-6 px-4">
+    <div class="row g-6">
+        <!-- Bộ lọc bên trái -->
+        <div class="col-12 col-lg-3">
+            <partial name="_FilterSidebar" />
+        </div>
+
+        <!-- Danh sách sản phẩm bên phải -->
+        <div class="col-12 col-lg-9">
+            <h1 class="text-2xl font-semibold mb-6 text-black">Danh mục sản phẩm</h1>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                @for (var i = 0; i < 12; i++)
+                {
+                    <div class="col">
+                        <div class="bg-white rounded-3 shadow-sm overflow-hidden transition-all duration-300 hover-border hover-border-blue-500">
+                            <img src="/images/sanpham.png" width="200" height="200" class="p-3 w-100 h-auto object-contain" alt="Viên uống Glucosamine" />
+                            <div class="px-3 pb-3">
+                                <h5 class="text-sm text-black line-clamp-3" style="height: 60px;">Viên uống Glucosamine And Chondroitin Jpanwell hỗ trợ bổ sung chất nhờn dịch khớp (120 viên)</h5>
+                                <div class="mt-1 text-primary text-sm">768.000đ / Hộp</div>
+                                <div class="text-gray-500 text-sm text-decoration-line-through opacity-50">960.000đ</div>
+                                <p class="mt-1 bg-gray-200 text-gray-600 rounded text-xs w-fit opacity-50">Hộp 120 Viên</p>
+                                <button class="mt-2 w-100 bg-primary text-white py-2 rounded-pill text-sm border-0">Chọn mua</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .hover-border {
+        border: 1px solid transparent;
+    }
+    .hover-border-blue-500:hover {
+        border-color: #3b82f6;
+    }
+</style>

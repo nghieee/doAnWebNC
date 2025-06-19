@@ -1,0 +1,124 @@
+/* 1. Đặt font cơ bản và loại bỏ margin/padding mặc định */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 100%; /* 16px mặc định */
+    line-height: 1.5; /* Tương thích với var(--line-height-base) */
+    -webkit-text-size-adjust: 100%; /* Ngăn chặn điều chỉnh kích thước font trên thiết bị di động */
+}
+
+body {
+    min-height: 100vh;
+    text-rendering: optimizeSpeed; /* Tối ưu hóa hiển thị văn bản */
+    -webkit-font-smoothing: antialiased; /* Cải thiện hiển thị font trên Chrome/Safari */
+    -moz-osx-font-smoothing: grayscale; /* Cải thiện hiển thị font trên Firefox */
+}
+
+/* 2. Chuẩn hóa các phần tử khối */
+h1, h2, h3, h4, h5, h6,
+p, blockquote, figure, dl, dd {
+    margin: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 500; /* Tương thích với Inter weight 500 */
+}
+
+ul, ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* 3. Chuẩn hóa liên kết */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+a:hover {
+    text-decoration: none; /* Có thể thay bằng var(--secondary-color) nếu cần */
+}
+
+/* 4. Chuẩn hóa hình ảnh và media */
+img,
+picture,
+svg {
+    max-width: 100%;
+    height: auto;
+    vertical-align: middle;
+}
+
+/* 5. Chuẩn hóa form và input */
+button,
+input,
+select,
+textarea {
+    font: inherit;
+    border: none;
+    background: none;
+    outline: none;
+    padding: 0;
+}
+
+button {
+    cursor: pointer;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="search"],
+textarea {
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="search"]:focus,
+textarea:focus {
+    outline: none;
+    border-color: #1250DC; /* Tương thích với var(--primary-color) */
+}
+
+/* 6. Chuẩn hóa bảng */
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+/* 7. Loại bỏ outline mặc định trên các phần tử focus */
+:focus {
+    outline: 0;
+    box-shadow: 0 0 0 2px rgba(18, 80, 220, 0.2); /* Tùy chỉnh focus ring */
+}
+
+/* 8. Chuẩn hóa các phần tử khác */
+hr {
+    border: 0;
+    border-top: 1px solid #eee;
+    margin: 1rem 0;
+}
+
+embed,
+iframe,
+object {
+    max-width: 100%;
+}
+
+/* 9. Loại bỏ animation flicker trên các trình duyệt */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

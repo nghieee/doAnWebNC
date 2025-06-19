@@ -1,0 +1,304 @@
+@*
+    Partial view for product filter sidebar
+    Usage: <partial name="_FilterSidebar" />
+*@
+
+<div class="w-full lg:w-64 p-4 bg-white rounded-3 shadow-lg" style="max-height: 900px; overflow-y: auto;">
+    <h3 class="text-xl font-bold mb-6 text-gray-800">Bộ lọc sản phẩm</h3>
+
+    <!-- CSS tùy chỉnh cho checkbox, searchbox và thanh cuộn -->
+    <style>
+        input[type="text"] {
+            color: #000000; /* Màu đen */
+        }
+        input[type="text"]::placeholder {
+            color: #9ca3af; /* Màu xám mặc định, tương ứng text-gray-400 */
+        }
+        input[type="checkbox"]:checked {
+            background-color: #3b82f6 !important; /* Màu blue-500 */
+            border-color: #3b82f6 !important;
+        }
+        input[type="checkbox"]:checked:focus {
+            background-color: #3b82f6 !important;
+            border-color: #3b82f6 !important;
+        }
+        input[type="text"]:focus {
+            outline: none !important; /* Bỏ viền đen mặc định */
+        }
+        /* Tùy chỉnh thanh cuộn */
+        .w-full::-webkit-scrollbar {
+            width: 6px; /* Độ dày mỏng hơn */
+        }
+        .w-full::-webkit-scrollbar-track {
+            background: #f1f1f1; /* Màu nền thanh cuộn */
+        }
+        .w-full::-webkit-scrollbar-thumb {
+            background: #888; /* Màu thanh cuộn */
+            border-radius: 3px;
+        }
+        .w-full::-webkit-scrollbar-thumb:hover {
+            background: #555; /* Màu khi hover */
+        }
+        /* Ẩn mũi tên lên/xuống (chỉ áp dụng cho Webkit) */
+        .w-full::-webkit-scrollbar-button {
+            display: none;
+        }
+    </style>
+
+    <!-- Dữ liệu tĩnh -->
+    @{
+        var filterData = new {
+            brands = new[] { "Blackmores", "Nature's Way", "DHC" },
+            forms = new[] { "Viên uống", "Bột", "Nước" },
+            volumes = new[] { "30 viên", "60 viên", "100g" },
+            prices = new[] { "Dưới 200.000đ", "200.000đ - 500.000đ", "Trên 500.000đ" },
+            audiences = new[] { "Người lớn", "Trẻ em", "Phụ nữ", "Người cao tuổi", "Phụ nữ mang thai" },
+            countries = new[] { "Việt Nam", "Hàn Quốc", "Nhật Bản", "Hoa Kỳ", "Úc", "Pháp", "Thái Lan" },
+            regions = new[] { "Miền Bắc", "Miền Trung", "Miền Nam" }
+        };
+
+        var filters = new {
+            brands = new List<string>(),
+            forms = new List<string>(),
+            volumes = new List<string>(),
+            prices = new List<string>(),
+            audiences = new List<string>(),
+            countries = new List<string>(),
+            regions = new List<string>()
+        };
+
+        var openSections = new {
+            brands = true,
+            forms = true,
+            volumes = true,
+            prices = true,
+            audiences = true,
+            countries = true,
+            regions = true
+        };
+
+        var searchTerms = new {
+            countries = "",
+            audiences = ""
+        };
+    }
+
+    <!-- Thương hiệu -->
+    <div class="mb-6">
+        <h4 class="text-sm font-semibold text-gray-700 mb-2 cursor-pointer bg-gradient from-blue-50 to-white p-2 rounded-lg d-flex justify-content-between align-items-center transition-all duration-300 hover-bg-gradient hover-from-blue-100 hover-to-white"
+            onclick="toggleSection('brands')">
+            <span>Thương hiệu</span>
+            <i class="fas fa-chevron-down transition-transform duration-300" id="brandsIcon"></i>
+        </h4>
+        <div class="space-y-2 overflow-hidden transition-all duration-300" id="brandsSection">
+            @foreach (var brand in filterData.brands)
+            {
+                <label class="d-flex align-items-center gap-2 py-1 hover-bg-gray-100 rounded-md transition-colors duration-200">
+                    <input type="checkbox" data-category="brands" data-value="@brand" class="form-check-input" />
+                    <span class="text-sm text-gray-600">@brand</span>
+                </label>
+            }
+        </div>
+    </div>
+
+    <!-- Dạng bào chế -->
+    <div class="mb-6">
+        <h4 class="text-sm font-semibold text-gray-700 mb-2 cursor-pointer bg-gradient from-blue-50 to-white p-2 rounded-lg d-flex justify-content-between align-items-center transition-all duration-300 hover-bg-gradient hover-from-blue-100 hover-to-white"
+            onclick="toggleSection('forms')">
+            <span>Dạng bào chế</span>
+            <i class="fas fa-chevron-down transition-transform duration-300" id="formsIcon"></i>
+        </h4>
+        <div class="space-y-2 overflow-hidden transition-all duration-300" id="formsSection">
+            @foreach (var form in filterData.forms)
+            {
+                <label class="d-flex align-items-center gap-2 py-1 hover-bg-gray-100 rounded-md transition-colors duration-200">
+                    <input type="checkbox" data-category="forms" data-value="@form" class="form-check-input" />
+                    <span class="text-sm text-gray-600">@form</span>
+                </label>
+            }
+        </div>
+    </div>
+
+    <!-- Dung tích / Trọng lượng -->
+    <div class="mb-6">
+        <h4 class="text-sm font-semibold text-gray-700 mb-2 cursor-pointer bg-gradient from-blue-50 to-white p-2 rounded-lg d-flex justify-content-between align-items-center transition-all duration-300 hover-bg-gradient hover-from-blue-100 hover-to-white"
+            onclick="toggleSection('volumes')">
+            <span>Dung tích / Trọng lượng</span>
+            <i class="fas fa-chevron-down transition-transform duration-300" id="volumesIcon"></i>
+        </h4>
+        <div class="space-y-2 overflow-hidden transition-all duration-300" id="volumesSection">
+            @foreach (var volume in filterData.volumes)
+            {
+                <label class="d-flex align-items-center gap-2 py-1 hover-bg-gray-100 rounded-md transition-colors duration-200">
+                    <input type="checkbox" data-category="volumes" data-value="@volume" class="form-check-input" />
+                    <span class="text-sm text-gray-600">@volume</span>
+                </label>
+            }
+        </div>
+    </div>
+
+    <!-- Giá tiền -->
+    <div class="mb-6">
+        <h4 class="text-sm font-semibold text-gray-700 mb-2 cursor-pointer bg-gradient from-blue-50 to-white p-2 rounded-lg d-flex justify-content-between align-items-center transition-all duration-300 hover-bg-gradient hover-from-blue-100 hover-to-white"
+            onclick="toggleSection('prices')">
+            <span>Giá tiền</span>
+            <i class="fas fa-chevron-down transition-transform duration-300" id="pricesIcon"></i>
+        </h4>
+        <div class="space-y-2 overflow-hidden transition-all duration-300" id="pricesSection">
+            @foreach (var price in filterData.prices)
+            {
+                <label class="d-flex align-items-center gap-2 py-1 hover-bg-gray-100 rounded-md transition-colors duration-200">
+                    <input type="checkbox" data-category="prices" data-value="@price" class="form-check-input" />
+                    <span class="text-sm text-gray-600">@price</span>
+                </label>
+            }
+        </div>
+    </div>
+
+    <!-- Đối tượng sử dụng -->
+    <div class="mb-6">
+        <h4 class="text-sm font-semibold text-gray-700 mb-2 cursor-pointer bg-gradient from-blue-50 to-white p-2 rounded-lg d-flex justify-content-between align-items-center transition-all duration-300 hover-bg-gradient hover-from-blue-100 hover-to-white"
+            onclick="toggleSection('audiences')">
+            <span>Đối tượng sử dụng</span>
+            <i class="fas fa-chevron-down transition-transform duration-300" id="audiencesIcon"></i>
+        </h4>
+        <div class="space-y-2 overflow-hidden transition-all duration-300" id="audiencesSection">
+            <div class="position-relative mb-2">
+                <input type="text" id="audienceSearch" placeholder="Tìm đối tượng..." class="form-control p-2 ps-8 border border-gray-300 rounded-lg text-sm focus-ring-2 focus-ring-blue-300 focus-border-blue-500 transition-all duration-200" />
+                <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-2 text-gray-400 text-sm"></i>
+            </div>
+            @foreach (var audience in filterData.audiences)
+            {
+                <label class="d-flex align-items-center gap-2 py-1 hover-bg-gray-100 rounded-md transition-colors duration-200">
+                    <input type="checkbox" data-category="audiences" data-value="@audience" class="form-check-input" />
+                    <span class="text-sm text-gray-600">@audience</span>
+                </label>
+            }
+        </div>
+    </div>
+
+    <!-- Nước sản xuất -->
+    <div class="mb-6">
+        <h4 class="text-sm font-semibold text-gray-700 mb-2 cursor-pointer bg-gradient from-blue-50 to-white p-2 rounded-lg d-flex justify-content-between align-items-center transition-all duration-300 hover-bg-gradient hover-from-blue-100 hover-to-white"
+            onclick="toggleSection('countries')">
+            <span>Nước sản xuất</span>
+            <i class="fas fa-chevron-down transition-transform duration-300" id="countriesIcon"></i>
+        </h4>
+        <div class="space-y-2 overflow-hidden transition-all duration-300" id="countriesSection">
+            <div class="position-relative mb-2">
+                <input type="text" id="countrySearch" placeholder="Tìm nước sản xuất..." class="form-control p-2 ps-8 border border-gray-300 rounded-lg text-sm focus-ring-2 focus-ring-blue-300 focus-border-blue-500 transition-all duration-200" />
+                <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-2 text-gray-400 text-sm"></i>
+            </div>
+            @foreach (var country in filterData.countries)
+            {
+                <label class="d-flex align-items-center gap-2 py-1 hover-bg-gray-100 rounded-md transition-colors duration-200">
+                    <input type="checkbox" data-category="countries" data-value="@country" class="form-check-input" />
+                    <span class="text-sm text-gray-600">@country</span>
+                </label>
+            }
+        </div>
+    </div>
+
+    <!-- Địa chỉ -->
+    <div class="mb-6">
+        <h4 class="text-sm font-semibold text-gray-700 mb-2 cursor-pointer bg-gradient from-blue-50 to-white p-2 rounded-lg d-flex justify-content-between align-items-center transition-all duration-300 hover-bg-gradient hover-from-blue-100 hover-to-white"
+            onclick="toggleSection('regions')">
+            <span>Địa chỉ</span>
+            <i class="fas fa-chevron-down transition-transform duration-300" id="regionsIcon"></i>
+        </h4>
+        <div class="space-y-2 overflow-hidden transition-all duration-300" id="regionsSection">
+            @foreach (var region in filterData.regions)
+            {
+                <label class="d-flex align-items-center gap-2 py-1 hover-bg-gray-100 rounded-md transition-colors duration-200">
+                    <input type="checkbox" data-category="regions" data-value="@region" class="form-check-input" />
+                    <span class="text-sm text-gray-600">@region</span>
+                </label>
+            }
+        </div>
+    </div>
+
+    <!-- Nút reset -->
+    <button class="w-100 py-2 bg-gradient from-gray-200 to-gray-300 text-gray-700 rounded-lg hover-from-blue-500 hover-to-blue-600 hover-text-white text-sm font-medium transition-all duration-300"
+            onclick="resetFilters()">
+        Xóa bộ lọc
+    </button>
+</div>
+
+<script>
+    // Hàm toggle section
+    function toggleSection(section) {
+        const sectionElement = document.getElementById(section + 'Section');
+        const iconElement = document.getElementById(section + 'Icon');
+        if (sectionElement.style.maxHeight === '0px' || sectionElement.style.maxHeight === '') {
+            sectionElement.style.maxHeight = '96px';
+            sectionElement.style.opacity = '1';
+            iconElement.classList.add('rotate-180');
+            iconElement.classList.add('text-blue-600');
+            iconElement.classList.remove('text-gray-500');
+        } else {
+            sectionElement.style.maxHeight = '0px';
+            sectionElement.style.opacity = '0';
+            iconElement.classList.remove('rotate-180');
+            iconElement.classList.remove('text-blue-600');
+            iconElement.classList.add('text-gray-500');
+        }
+    }
+
+    // Hàm xử lý checkbox
+    document.querySelectorAll('.form-check-input').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const category = this.getAttribute('data-category');
+            const value = this.getAttribute('data-value');
+            const checked = this.checked;
+            const filters = JSON.parse(localStorage.getItem('filters') || '{}');
+            filters[category] = filters[category] || [];
+            if (checked) {
+                filters[category].push(value);
+            } else {
+                filters[category] = filters[category].filter((item: string) => item !== value);
+            }
+            localStorage.setItem('filters', JSON.stringify(filters));
+        });
+    });
+
+    // Hàm tìm kiếm
+    document.getElementById('audienceSearch').addEventListener('input', function() {
+        filterOptions('audiences');
+    });
+    document.getElementById('countrySearch').addEventListener('input', function() {
+        filterOptions('countries');
+    });
+
+    function filterOptions(category) {
+        const searchInput = document.getElementById(category + 'Search');
+        const searchTerm = searchInput.value.toLowerCase();
+        const labels = document.querySelectorAll('#' + category + 'Section label');
+        labels.forEach(label => {
+            const text = label.querySelector('span').textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                label.style.display = 'flex';
+            } else {
+                label.style.display = 'none';
+            }
+        });
+    }
+
+    // Hàm reset filters
+    function resetFilters() {
+        document.querySelectorAll('.form-check-input').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        localStorage.removeItem('filters');
+    }
+
+    // Khởi tạo trạng thái từ localStorage
+    document.addEventListener('DOMContentLoaded', () => {
+        const filters = JSON.parse(localStorage.getItem('filters') || '{}');
+        Object.keys(filters).forEach(category => {
+            filters[category].forEach((value: string) => {
+                const checkbox = document.querySelector(`.form-check-input[data-category="${category}"][data-value="${value}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+        });
+    });
+</script>

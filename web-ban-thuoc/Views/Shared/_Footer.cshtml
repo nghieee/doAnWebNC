@@ -1,0 +1,87 @@
+<footer class="bg-white">
+    <!-- Footer Top Banner -->
+    <div class="footer-top">
+        <img src="/images/default/footer_top_banner.png" alt="Footer Top" class="img-fluid" />
+    </div>
+
+    <!-- Footer Content -->
+    <div class="container pt-4 text-sm">
+        <div class="row g-4">
+            <!-- About Us Section -->
+            <div class="col-12 col-lg-2">
+                <p class="fw-medium text-gray-600 m-0">Về chúng tôi</p>
+                <ul class="list-unstyled text-blue-600">
+                    @foreach (var item in new[] {
+                        "Giới thiệu", "Giấy phép kinh doanh", "Quy chế hoạt động", "Chính sách đặt cọc",
+                        "Chính sách nội dung", "Chính sách đổi trả", "Chính sách giao hàng", "Chính sách bảo mật",
+                        "Chính sách thanh toán", "Kiểm tra hóa đơn điện tử", "Chính sách thu thập và xử lý dữ liệu cá nhân",
+                        "Thông tin trung tâm bảo hành thiết bị y tế từng hãng"
+                    })
+                    {
+                        <li><a href="#" class="text-decoration-none">@item</a></li>
+                    }
+                </ul>
+            </div>
+
+            <!-- Categories Section -->
+            <div class="col-12 col-lg-2">
+                <p class="text-base fw-medium text-gray-600 m-0">Danh mục</p>
+                <ul class="list-unstyled text-blue-600">
+                    @foreach (var item in new[] { "Thực phẩm chức năng", "Dược mỹ phẩm", "Chăm sóc cá nhân", "Thuốc", "Thiết bị y tế" })
+                    {
+                        <li><a href="#" class="text-decoration-none">@item</a></li>
+                    }
+                </ul>
+            </div>
+
+            <!-- Contact Section -->
+            <div class="col-12 col-lg-2">
+                <p class="fw-medium text-gray-600 m-0">Tổng đài</p>
+                @foreach (var item in new[] {
+                    new { Label = "Tư vấn mua hàng", Number = "18006928", Branch = "Nhánh 1" },
+                    new { Label = "Trung tâm tư vấn", Number = "18006928", Branch = "Nhánh 2" },
+                    new { Label = "Góp ý, khiếu nại", Number = "18006928", Branch = "Nhánh 3" }
+                })
+                {
+                    <div>
+                        <p class="text-gray-700 mb-1">@item.Label</p>
+                        <p class="text-blue-600"><a href="#" class="text-decoration-none">@item.Number <span class="text-gray-600">(@item.Branch)</span></a></p>
+                    </div>
+                }
+            </div>
+
+            <!-- Connect Section -->
+            <div class="col-12 col-lg-3">
+                <p class="fw-medium text-gray-600 m-0">Kết nối với chúng tôi</p>
+                <div class="d-flex gap-2 mb-4">
+                    <img src="/images/social/facebook_logo.png" alt="Facebook" width="28" height="28" class="img-fluid" />
+                    <img src="/images/social/zalo_logo.png" alt="Zalo" width="28" height="28" class="img-fluid" />
+                </div>
+                <p class="fw-medium text-gray-600 m-0">Tải ứng dụng Long Châu Phake</p>
+                <img src="/images/social/download_qr.png" alt="QR Code" width="100" height="100" class="img-fluid" />
+            </div>
+
+            <!-- Certifications Section -->
+            <div class="col-12 col-lg-3">
+                <p class="fw-medium text-gray-600 m-0">Chứng nhận bởi</p>
+                <div class="d-flex gap-3">
+                    <img src="/images/certifications/bo_cong_thuong.png" alt="Bo Cong Thuong" width="70" height="45" class="img-fluid" />
+                    <img src="/images/certifications/dmca.png" alt="DMCA" width="70" height="45" class="img-fluid" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Bottom -->
+    <div class="text-center text-gray-500 text-sm bg-light py-4">
+        <div class="container">
+            <p>© 2007 - 2025 Công ty Cổ Phần Dược Phẩm FPT Long Châu Số ĐKKD 0315275368 cấp ngày 17/09/2018 tại Sở Kế hoạch Đầu tư TPHCM</p>
+            <p>GP thiết lập TTTĐTTH số 538/GP-TTĐT do Sở TTTT Hồ Chí Minh cấp ngày 27 tháng 03 năm 2025</p>
+            <ul class="list-unstyled">
+                <li>Địa chỉ: 379-381 Hai Bà Trưng, P. Võ Thị Sáu, Q.3, TP. HCM</li>
+                <li>Số điện thoại: <a href="tel:0123456789" target="_blank" rel="nofollow">0123456789</a></li>
+                <li>Email: <a href="mailto:sale@nhathuoclongchau.com.vn" target="_blank" rel="nofollow">sale@nhathuoclongchau.com.vn</a></li>
+            </ul>
+        </div>
+    </div>
+</footer>

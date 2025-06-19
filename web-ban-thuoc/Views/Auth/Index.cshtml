@@ -1,0 +1,133 @@
+@*
+    Trang đăng nhập và đăng ký - Giao diện tối ưu
+    Usage: Truy cập /Auth/Index
+*@
+
+@{
+    ViewData["Title"] = "Tài khoản - Nhà Thuốc Long Châu";
+}
+
+<div class="d-flex align-items-center justify-content-center pb-5">
+    <div class="">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb bg-white p-3 rounded-3 shadow-sm mb-5">
+                <li class="breadcrumb-item">
+                    <a href="/" class="text-decoration-none text-secondary">Trang Chủ</a>
+                </li>
+                <li class="breadcrumb-item text-primary active" aria-current="page">Tài khoản</li>
+            </ol>
+        </nav>
+
+        <div class="row g-5 justify-content-center">
+            <!-- Login Section -->
+            <div class="col-12 col-md-5">
+                <div class="card p-4 border-0 shadow-sm rounded-4 bg-white">
+                    <h3 class="card-title fw-bold text-dark mb-4">Đăng nhập</h3>
+                    @if (!string.IsNullOrEmpty(ViewBag.LoginError))
+                    {
+                        <div class="alert alert-danger p-2 mb-4 small">
+                            @ViewBag.LoginError
+                        </div>
+                    }
+                    <p class="text-muted mb-4"><span class="text-danger">*</span> Các trường bắt buộc</p>
+                    <form asp-action="Login" asp-controller="Account" method="post">
+                        <div class="mb-3">
+                            <label for="floatingInput" class="form-label text-muted small">Địa chỉ email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control p-2 border border-gray-300 rounded-2 focus-ring" id="floatingInput" name="Email" placeholder="name@example.com" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="floatingPassword" class="form-label text-muted small">Mật khẩu <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control p-2 border border-gray-300 rounded-2 focus-ring" id="floatingPassword" name="Password" placeholder="Mật khẩu" required />
+                        </div>
+                        <div class="form-check mb-4">
+                            <input type="checkbox" class="form-check-input" name="RememberMe" id="flexCheckChecked" checked />
+                            <label class="form-check-label text-muted small" for="flexCheckChecked">Ghi nhớ tôi</label>
+                        </div>
+                        <p class="text-muted small mb-4">
+                            Trang này được bảo vệ bởi reCAPTCHA, Google
+                            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" class="text-primary text-decoration-none">Chính sách bảo mật</a>
+                            và
+                            <a href="https://policies.google.com/terms" target="_blank" rel="noopener" class="text-primary text-decoration-none">Điều khoản dịch vụ</a>.
+                        </p>
+                        <button type="submit" class="btn btn-primary w-100 py-2 rounded-3">ĐĂNG NHẬP</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Registration Section -->
+            <div class="col-12 col-md-6">
+                <div class="card p-4 border-0 shadow-sm rounded-4 bg-white">
+                    <h3 class="card-title fw-bold text-dark mb-4">Tạo tài khoản</h3>
+                    @if (!string.IsNullOrEmpty(ViewBag.RegisterError))
+                    {
+                        <div class="alert alert-danger p-2 mb-4 small">
+                            @ViewBag.RegisterError
+                        </div>
+                    }
+                    <p class="text-muted mb-4"><span class="text-danger">*</span> Các trường bắt buộc</p>
+                    <form asp-action="Register" asp-controller="Account" method="post">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <label for="floatingInputUserName" class="form-label text-muted small">Họ và tên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control p-2 border border-gray-300 rounded-2 focus-ring" id="floatingInputUserName" name="UserName" placeholder="Họ và tên" required />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="floatingInputEmail" class="form-label text-muted small">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control p-2 border border-gray-300 rounded-2 focus-ring" id="floatingInputEmail" name="Email" placeholder="Email" required />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="floatingInputPassword" class="form-label text-muted small">Mật khẩu <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control p-2 border border-gray-300 rounded-2 focus-ring" id="floatingInputPassword" name="Password" placeholder="Mật khẩu" required />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="floatingInputConfirmPassword" class="form-label text-muted small">Xác nhận mật khẩu <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control p-2 border border-gray-300 rounded-2 focus-ring" id="floatingInputConfirmPassword" name="ConfirmPassword" placeholder="Xác nhận mật khẩu" required />
+                            </div>
+                            <div class="col-12">
+                                <label for="floatingInputPhone" class="form-label text-muted small">Số điện thoại <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control p-2 border border-gray-300 rounded-2 focus-ring" id="floatingInputPhone" name="PhoneNumber" placeholder="Số điện thoại" required />
+                            </div>
+                        </div>
+                        <div class="space-y-3 mt-4">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="gridCheck1" required />
+                                <label class="form-check-label text-muted small" for="gridCheck1">
+                                    Có, tôi đồng ý nhận email của LongChauPhake về các thông tin mới bao gồm ưu đãi độc quyền.
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="gridCheck3" required />
+                                <label class="form-check-label text-muted small" for="gridCheck3">
+                                    Tôi đồng ý
+                                    <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" class="text-primary text-decoration-none">Chính sách bảo mật</a>
+                                    <span class="text-danger">*</span>
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 py-2 rounded-3">THAM GIA NGAY</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .focus-ring:focus {
+        box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
+        border-color: #3b82f6;
+        outline: 0;
+    }
+    .card {
+        min-height: 500px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    media (max-width: 767px) {
+        .card {
+            min-height: auto;
+        }
+    }
+</style>
