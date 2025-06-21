@@ -1,76 +1,73 @@
 @model dynamic
 
 @{
-    var title = ViewBag.Title ?? "Danh mục";
-    var categories = ViewBag.Categories as List<dynamic> ?? new List<dynamic>();
-    var isOpen = false; // Logic hover sẽ được xử lý bằng CSS/JavaScript
-    var activeCategory = categories.Any() ? categories[0].id : "";
+    string title = Model.Title;
+    var categories = Model.Categories as IEnumerable<web_ban_thuoc.Models.Category>;
+    var jsFunc = "showSubCategories_" + title.Replace(" ", "");
+    var jsId = "subCategoryItems-" + title.Replace(" ", "");
+    var jsCategories = categories != null
+        ? System.Text.Json.JsonSerializer.Serialize(
+            categories.Select(c => new {
+                id = c.CategoryId,
+                children = c.InverseParentCategory.Select(sub => new {
+                    name = sub.CategoryName,
+                    image = sub.ImageUrl
+                })
+            }).ToList()
+        )
+        : "[]";
 }
 
-<div class="dropdown" onmouseenter="this.querySelector('.dropdown-menu').classList.add('show')" onmouseleave="this.querySelector('.dropdown-menu').classList.remove('show')">
+<div class="dropdown position-static d-inline-block">
     <button class="btn btn-link text-decoration-none text-sm font-medium py-3 d-flex align-items-center gap-1 position-relative transition-colors"
-            type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+            type="button">
         @title
         <i class="fas fa-chevron-down transition-transform" style="transition-duration: 0.3s;"></i>
-        <span class="position-absolute bottom-0 start-0 w-0 h-1 bg-primary transition-all" style="transition-duration: 0.3s;"></span>
     </button>
-
-    <div class="dropdown-menu w-100 shadow-lg border rounded-lg p-0" aria-labelledby="dropdownMenuButton">
+    <div class="dropdown-menu show w-auto shadow-lg border rounded-4 p-0 mt-2" style="min-width:600px; left:0;">
         <div class="d-flex">
             <!-- Cột trái: Danh mục cấp 2 -->
-            <div class="w-25 p-3 border-end">
-                @foreach (var cat in categories)
+            <div class="w-25 p-3 border-end" style="min-width:200px;">
+                @if (categories != null && categories.Any())
                 {
-                    var isActive = cat.id == activeCategory;
-                    <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-lg cursor-pointer @if (isActive) { <text>bg-light text-primary</text> } else { <text>text-dark</text> } hover:bg-light"
-                         onmouseenter="this.parentElement.parentElement.parentElement.querySelector('.w-75').innerHTML = '@Html.Raw(Json.Serialize(cat.items).Replace("\"", "\'"))';">
-                        <img src="@cat.icon" alt="@cat.name" width="24" height="24" class="object-contain" />
-                        <span>@cat.name</span>
-                    </div>
-                }
-            </div>
-
-            <!-- Cột phải: Danh mục cấp 3 -->
-            <div class="w-75 p-3 grid grid-cols-2 gap-3" id="subCategoryItems">
-                @if (categories.Any() && categories[0].items != null)
-                {
-                    @foreach (var item in categories[0].items)
+                    foreach (var cat in categories)
                     {
-                        <div class="d-flex align-items-center gap-2 p-2 bg-light hover:bg-gray-200 rounded-lg transition-colors cursor-pointer">
-                            <img src="@item.image" alt="@item.name" width="40" height="40" class="object-contain" />
-                            <span class="text-sm font-medium text-gray-800">@item.name</span>
+                        <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-dark hover-bg-light menu-cat2-item"
+                             data-cat-id="@cat.CategoryId"
+                             onmouseenter="@($"{jsFunc}({cat.CategoryId})")">
+                            <img src="@cat.ImageUrl" alt="@cat.CategoryName" width="24" height="24" class="object-contain" />
+                            <span>@cat.CategoryName</span>
                         </div>
                     }
                 }
                 else
                 {
-                    <div class="text-gray-500">Không có danh mục con</div>
+                    <div class="text-muted">Không có danh mục con</div>
                 }
+            </div>
+            <!-- Cột phải: Danh mục cấp 3 -->
+            <div class="w-75 p-3" id="@jsId">
+                <div class="text-gray-500">Di chuột vào danh mục để xem danh mục con</div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    document.querySelectorAll('.dropdown').forEach(dropdown => {
-        const menu = dropdown.querySelector('.dropdown-menu');
-        dropdown.addEventListener('mouseenter', () => menu.classList.add('show'));
-        dropdown.addEventListener('mouseleave', () => menu.classList.remove('show'));
-    });
-
-    document.querySelectorAll('.w-25 > div').forEach(item => {
-        item.addEventListener('mouseenter', function() {
-            const itemsHtml = this.getAttribute('data-items');
-            if (itemsHtml) {
-                const items = JSON.parse(itemsHtml.replace(/'/g, '"'));
-                const container = this.parentElement.parentElement.querySelector('.w-75');
-                container.innerHTML = items.map(item => `
-                    <div class="d-flex align-items-center gap-2 p-2 bg-light hover:bg-gray-200 rounded-lg transition-colors cursor-pointer">
-                        <img src="${item.image}" alt="${item.name}" width="40" height="40" class="object-contain" />
-                        <span class="text-sm font-medium text-gray-800">${item.name}</span>
-                    </div>
-                `).join('');
-            }
-        });
-    });
+    // Dynamically declare the function with the correct name
+    window['@jsFunc'] = function(catId) {
+        const categories = @Html.Raw(jsCategories);
+        const cat = categories.find(c => c.id === catId);
+        const container = document.getElementById('@jsId');
+        if (cat && cat.children.length > 0) {
+            container.innerHTML = cat.children.map(sub =>
+                `<div class="d-flex align-items-center gap-2 p-2 bg-light rounded-lg mb-2">
+                    <img src="${sub.image}" alt="${sub.name}" width="24" height="24" />
+                    <span>${sub.name}</span>
+                </div>`
+            ).join('');
+        } else {
+            container.innerHTML = `<div class="text-gray-500">Không có danh mục con</div>`;
+        }
+    }
 </script>

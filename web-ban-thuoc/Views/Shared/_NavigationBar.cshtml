@@ -1,52 +1,7 @@
-@{
-    var categories = new List<dynamic> {
-        new {
-            categoryId = 1,
-            categoryName = "Sản phẩm",
-            imageUrl = "/images/placeholder.png",
-            subCategories = new List<dynamic> {
-                new {
-                    categoryId = 11,
-                    categoryName = "Thực phẩm chức năng",
-                    imageUrl = "/images/placeholder.png",
-                    subCategories = new List<dynamic> {
-                        new { categoryName = "Vitamin C", imageUrl = "/images/placeholder.png" },
-                        new { categoryName = "Omega-3", imageUrl = "/images/placeholder.png" }
-                    }
-                },
-                new {
-                    categoryId = 12,
-                    categoryName = "Thuốc",
-                    imageUrl = "/images/placeholder.png",
-                    subCategories = new List<dynamic> {
-                        new { categoryName = "Paracetamol", imageUrl = "/images/placeholder.png" },
-                        new { categoryName = "Ibuprofen", imageUrl = "/images/placeholder.png" }
-                    }
-                }
-            }
-        }
-    };
-}
-
 <div class="bg-white">
     <div class="container mx-auto">
         <nav class="d-flex gap-3 py-2">
-            @foreach (var category in categories)
-            {
-                var subCategories = new List<dynamic>();
-                foreach (var sub in category.subCategories)
-                {
-                    subCategories.Add(new
-                    {
-                        id = sub.categoryId.ToString(),
-                        name = sub.categoryName,
-                        icon = sub.imageUrl,
-                        items = ((IEnumerable<dynamic>)sub.subCategories).Select(s => new { name = s.categoryName, image = s.imageUrl }).ToList()
-                    });
-                }
-                <partial name="_CateDropdownMenuItems"
-                         model="@new { Title = category.categoryName, Categories = subCategories }" />
-            }
+            @await Component.InvokeAsync("CategoryMenu")
         </nav>
     </div>
 </div>

@@ -61,32 +61,72 @@
       "PackagePath": "staticwebassets\\images\\bg_doctor.png"
     },
     {
-      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\cham_soc_co_the_level_2.png",
-      "PackagePath": "staticwebassets\\images\\categories\\level_2\\cham_soc_co_the_level_2.png"
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\cscn_cham_soc_rang_mieng_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\cscn_cham_soc_rang_mieng_level_2.png"
     },
     {
-      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\cham_soc_da_mat_level_2.png",
-      "PackagePath": "staticwebassets\\images\\categories\\level_2\\cham_soc_da_mat_level_2.png"
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\cscn_ho_tro_tinh_duc_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\cscn_ho_tro_tinh_duc_level_2.png"
     },
     {
-      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\than_kinh_nao_level_2.png",
-      "PackagePath": "staticwebassets\\images\\categories\\level_2\\than_kinh_nao_level_2.png"
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\cscn_tinh_dau_cac_loai_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\cscn_tinh_dau_cac_loai_level_2.png"
     },
     {
-      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_3\\chong_nang_da_mat_level_3.png",
-      "PackagePath": "staticwebassets\\images\\categories\\level_3\\chong_nang_da_mat_level_3.png"
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\cscn_ve_sinh_ca_nhan_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\cscn_ve_sinh_ca_nhan_level_2.png"
     },
     {
-      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_3\\duong_the_level_3.png",
-      "PackagePath": "staticwebassets\\images\\categories\\level_3\\duong_the_level_3.png"
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\dmp_cham_soc_co_the_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\dmp_cham_soc_co_the_level_2.png"
     },
     {
-      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_3\\sua_rua_mat_kem_gel_sua_level_3.png",
-      "PackagePath": "staticwebassets\\images\\categories\\level_3\\sua_rua_mat_kem_gel_sua_level_3.png"
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\dmp_cham_soc_da_mat_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\dmp_cham_soc_da_mat_level_2.png"
     },
     {
-      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_3\\sua_tam_xa_bong_level_3.png",
-      "PackagePath": "staticwebassets\\images\\categories\\level_3\\sua_tam_xa_bong_level_3.png"
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\dmp_cham_soc_toc_da_dau_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\dmp_cham_soc_toc_da_dau_level_2.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\dmp_my_pham_trang_diem_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\dmp_my_pham_trang_diem_level_2.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\tbyt_dung_cu_so_cuu_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\tbyt_dung_cu_so_cuu_level_2.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\tbyt_dung_cu_y_te_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\tbyt_dung_cu_y_te_level_2.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\tbyt_khau_trang_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\tbyt_khau_trang_level_2.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\tpcn_cai_thien_tang_cuong_chuc_nang_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\tpcn_cai_thien_tang_cuong_chuc_nang_level_2.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\tpcn_ho_tro_lam_dep_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\tpcn_ho_tro_lam_dep_level_2.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\tpcn_ho_tro_tieu_hoa_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\tpcn_ho_tro_tieu_hoa_level_2.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\tpcn_sinh_li_noi_tiet_to_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\tpcn_sinh_li_noi_tiet_to_level_2.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\tpcn_suc_khoe_tim_mach_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\tpcn_suc_khoe_tim_mach_level_2.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\tpcn_vitamin_khoang_chat_level_2.png",
+      "PackagePath": "staticwebassets\\images\\categories\\level_2\\tpcn_vitamin_khoang_chat_level_2.png"
     },
     {
       "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\certifications\\DMCA.png",
