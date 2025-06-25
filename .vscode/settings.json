@@ -1,3 +1,6 @@
 {
-    "dotnet.defaultSolution": "web-ban-thuoc.sln"
+    "dotnet.defaultSolution": "web-ban-thuoc.sln",
+    "[csharp]": {
+        "editor.formatOnSave": true
+    }
 }

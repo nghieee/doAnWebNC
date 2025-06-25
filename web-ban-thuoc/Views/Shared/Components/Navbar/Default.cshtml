@@ -1,0 +1,173 @@
+@model List<web_ban_thuoc.Models.CategoryMenuViewModel>
+
+@{
+    var categories = Model ?? new List<web_ban_thuoc.Models.CategoryMenuViewModel>();
+    var firstParent = categories.FirstOrDefault();
+    var firstChildren = firstParent?.Children;
+    var firstChild = firstChildren?.FirstOrDefault();
+}
+@if (categories == null || !categories.Any())
+{
+    <div class="alert alert-warning text-center my-2">Không có dữ liệu danh mục cha để hiển thị menu. Hãy kiểm tra lại dữ
+        liệu hoặc logic lấy danh mục cha trong NavbarFilter/ViewComponent.</div>
+}
+else
+{
+    <nav class="navbar-categories d-flex align-items-center justify-content-center gap-4">
+        @foreach (var parent in categories)
+        {
+            var parentId = parent.CategoryId.ToString();
+            <div class="nav-item-parent position-relative" data-parent-id="@parentId"
+                onmouseenter="showMenu('@parentId')" onmouseleave="hideMenu('@parentId')">
+                <button class="btn btn-link text-dark text-decoration-none d-flex align-items-center gap-2 py-3 position-relative" type="button">
+                    <span class="text-sm fw-medium">@parent.CategoryName</span>
+                    <i class="fas fa-chevron-down ms-1 transition" style="font-size: 0.9em;"></i>
+                    <span class="position-absolute start-0 bottom-0 w-100 bg-primary transition-all"
+                        style="height:2px; opacity:0;"></span>
+                </button>
+                <div class="menu-container position-absolute start-0 border shadow-lg rounded-3 bg-white"
+                    style="display:none; z-index:1000; min-width:800px; top:100%;">
+                    <div class="d-flex">
+                        <div class="children-list w-33 border-end p-0" id="children-@parentId">
+                            <!-- Danh mục con sẽ được render động bằng JS -->
+                        </div>
+                        <div class="grandchildren-list w-67 p-4">
+                            <div class="row row-cols-3 g-3" id="grandchildren-@parentId">
+                                <!-- Danh mục cháu sẽ được render động bằng JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </nav>
+}
+
+<style>
+    .w-33 {
+        width: 33.3333%;
+    }
+
+    .w-67 {
+        width: 66.6667%;
+    }
+
+    .hover-bg-light:hover {
+        background-color: #f1f5f9;
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .nav-item-parent:hover .btn-link span.position-absolute {
+        opacity: 1;
+    }
+
+    .object-contain {
+        object-fit: contain;
+    }
+
+    .transition {
+        transition: all 0.2s ease-in-out;
+    }
+
+    .text-sm {
+        font-size: 0.875rem;
+    }
+
+    .nav-item-parent:hover .menu-container {
+        display: block !important;
+    }
+</style>
+
+<script>
+const categories = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model));
+let currentParentId = null;
+
+function showMenu(parentId) {
+    document.querySelectorAll('.menu-container').forEach(menu => menu.style.display = 'none');
+    const parent = document.querySelector(`[data-parent-id="${parentId}"]`);
+    if (parent) {
+        const menu = parent.querySelector('.menu-container');
+        if (menu) menu.style.display = 'block';
+        currentParentId = parentId;
+        renderChildren(parentId);
+    }
+}
+
+function hideMenu(parentId) {
+    const parent = document.querySelector(`[data-parent-id="${parentId}"]`);
+    if (parent) {
+        const menu = parent.querySelector('.menu-container');
+        if (menu) menu.style.display = 'none';
+        currentParentId = null;
+    }
+}
+
+function renderChildren(parentId) {
+    const parentCat = categories.find(p => p.CategoryId.toString() === parentId);
+    const children = parentCat?.Children || [];
+    const childrenContainer = document.getElementById(`children-${parentId}`);
+    if (!childrenContainer) return;
+    if (!children.length) {
+        childrenContainer.innerHTML = '<div class="p-3 text-muted">Không có danh mục con</div>';
+        document.getElementById(`grandchildren-${parentId}`).innerHTML = '';
+        return;
+    }
+    childrenContainer.innerHTML = children.map(child => {
+        let img = '/images/placeholder.png';
+        if (child.ImageUrl) {
+            if (child.ImageUrl.startsWith('/images/')) {
+                img = child.ImageUrl;
+            } else {
+                img = `/images/categories/level_2/${child.ImageUrl}`;
+            }
+        }
+        return `<div class="child-item d-flex align-items-center gap-2 p-3 cursor-pointer hover-bg-light transition"
+            data-child-id="${child.CategoryId}" onmouseenter="renderGrandChildren('${parentId}', '${child.CategoryId}')">
+            <img src="${img}" alt="${child.CategoryName}" width="32" height="32" class="object-contain" />
+            <span class="text-sm fw-medium">${child.CategoryName}</span>
+        </div>`;
+    }).join('');
+    // Mặc định hiển thị cháu của con đầu tiên
+    renderGrandChildren(parentId, children[0].CategoryId.toString());
+}
+
+function renderGrandChildren(parentId, childId) {
+    const parentCat = categories.find(p => p.CategoryId.toString() === parentId);
+    const childCat = parentCat?.Children?.find(c => c.CategoryId.toString() === childId);
+    const container = document.getElementById(`grandchildren-${parentId}`);
+    if (!container) return;
+    if (!childCat?.Children || childCat.Children.length === 0) {
+        container.innerHTML = '<div class="col-12 text-muted">Không có danh mục cháu</div>';
+        return;
+    }
+    container.innerHTML = childCat.Children.map(grandchild => {
+        let img = '/images/placeholder.png';
+        if (grandchild.ImageUrl) {
+            if (grandchild.ImageUrl.startsWith('/images/')) {
+                img = grandchild.ImageUrl;
+            } else {
+                img = `/images/categories/level_3/${grandchild.ImageUrl}`;
+            }
+        }
+        return `<div class="col">
+            <a href="#" class="text-decoration-none">
+                <div class="d-flex align-items-center gap-2 p-2 rounded-2 hover-bg-light transition">
+                    <img src="${img}" alt="${grandchild.CategoryName}"
+                         width="40" height="40" class="object-contain" />
+                    <span class="text-sm text-dark">${grandchild.CategoryName}</span>
+                </div>
+            </a>
+        </div>`;
+    }).join('');
+    // Highlight child đang active
+    const childrenContainer = document.getElementById(`children-${parentId}`);
+    if (childrenContainer) {
+        childrenContainer.querySelectorAll('.child-item').forEach(item =>
+            item.classList.toggle('bg-light', item.dataset.childId === childId)
+        );
+    }
+}
+</script>
