@@ -42,12 +42,12 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvZHVjdHNcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Shared/Error.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
+[D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Shared/Components/Navbar/Default.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNcTmF2YmFyXERlZmF1bHQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Shared/_CateDropdownMenuItems.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9DYXRlRHJvcGRvd25NZW51SXRlbXMuY3NodG1s
+[D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Shared/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Shared/_FilterSidebar.cshtml]
@@ -60,10 +60,6 @@ build_metadata.AdditionalFiles.CssScope =
 
 [D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Shared/_Header.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9IZWFkZXIuY3NodG1s
-build_metadata.AdditionalFiles.CssScope = 
-
-[D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Shared/_NavigationBar.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9OYXZpZ2F0aW9uQmFyLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Shared/_ValidationScriptsPartial.cshtml]

@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,20 +17,25 @@
         #root {
             background-color: #EAEFFA;
         }
+
         .header-bg {
             background-image: url('/images/default/header_desktop.png');
             background-size: cover;
         }
+
         .footer-top img {
             width: 100%;
             height: auto;
         }
     </style>
 </head>
+
 <body>
     <div id="root">
         <partial name="_Header" />
-        <partial name="_NavigationBar" />
+        <div class="navbar-wrapper bg-white border-bottom shadow-sm position-relative z-2">
+            @await Component.InvokeAsync("Navbar")
+        </div>
         <main class="container py-4">
             @RenderBody()
         </main>
@@ -48,6 +54,6 @@
 
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    </body>
+</body>
+
 </html>
-@await Component.InvokeAsync("CategoryMenu")
