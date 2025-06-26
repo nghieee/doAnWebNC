@@ -2,39 +2,33 @@
 
 @{
     var categories = Model ?? new List<web_ban_thuoc.Models.CategoryMenuViewModel>();
-    var firstParent = categories.FirstOrDefault();
-    var firstChildren = firstParent?.Children;
-    var firstChild = firstChildren?.FirstOrDefault();
 }
-@if (categories == null || !categories.Any())
+
+@if (!categories.Any())
 {
     <div class="alert alert-warning text-center my-2">Không có dữ liệu danh mục cha để hiển thị menu. Hãy kiểm tra lại dữ
         liệu hoặc logic lấy danh mục cha trong NavbarFilter/ViewComponent.</div>
 }
 else
 {
-    <nav class="navbar-categories d-flex align-items-center justify-content-center gap-4">
+    <nav class="navbar-categories d-flex align-items-center justify-content-center position-relative gap-4"
+        role="navigation">
         @foreach (var parent in categories)
         {
-            var parentId = parent.CategoryId.ToString();
-            <div class="nav-item-parent position-relative" data-parent-id="@parentId"
-                onmouseenter="showMenu('@parentId')" onmouseleave="hideMenu('@parentId')">
-                <button class="btn btn-link text-dark text-decoration-none d-flex align-items-center gap-2 py-3 position-relative" type="button">
+            <div class="nav-item-parent position-relative" data-parent-id="@parent.CategoryId"
+                onmouseenter="showMenu('@parent.CategoryId')" onmouseleave="hideMenu('@parent.CategoryId')">
+                <button class="nav-btn btn btn-link text-dark text-decoration-none d-flex align-items-center gap-2 py-3"
+                    type="button" aria-expanded="false">
                     <span class="text-sm fw-medium">@parent.CategoryName</span>
-                    <i class="fas fa-chevron-down ms-1 transition" style="font-size: 0.9em;"></i>
-                    <span class="position-absolute start-0 bottom-0 w-100 bg-primary transition-all"
-                        style="height:2px; opacity:0;"></span>
+                    <i class="fas fa-chevron-down nav-arrow" aria-hidden="true"></i>
+                    <span class="nav-underline position-absolute start-0 bottom-0"></span>
                 </button>
-                <div class="menu-container position-absolute start-0 border shadow-lg rounded-3 bg-white"
-                    style="display:none; z-index:1000; min-width:800px; top:100%;">
+                <div class="menu-container position-absolute start-50 translate-middle-x border shadow-lg rounded-bottom-4 bg-white"
+                    style="display: none; z-index: 1000; min-width: 800px; top: 100%;">
                     <div class="d-flex">
-                        <div class="children-list w-33 border-end p-0" id="children-@parentId">
-                            <!-- Danh mục con sẽ được render động bằng JS -->
-                        </div>
+                        <div class="children-list w-33 border-end p-0" id="children-@parent.CategoryId"></div>
                         <div class="grandchildren-list w-67 p-4">
-                            <div class="row row-cols-3 g-3" id="grandchildren-@parentId">
-                                <!-- Danh mục cháu sẽ được render động bằng JS -->
-                            </div>
+                            <div class="row row-cols-3 g-3" id="grandchildren-@parent.CategoryId"></div>
                         </div>
                     </div>
                 </div>
@@ -60,14 +54,6 @@ else
         cursor: pointer;
     }
 
-    .nav-item-parent:hover .btn-link span.position-absolute {
-        opacity: 1;
-    }
-
-    .object-contain {
-        object-fit: contain;
-    }
-
     .transition {
         transition: all 0.2s ease-in-out;
     }
@@ -76,98 +62,142 @@ else
         font-size: 0.875rem;
     }
 
+    .nav-btn {
+        border-radius: 8px;
+        min-width: 90px;
+        background: transparent;
+        border: none;
+        outline: none;
+        box-shadow: none;
+        position: relative;
+        overflow: visible;
+    }
+
+    .nav-underline {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 2px;
+        width: 0;
+        background: #2563eb;
+        transition: width 0.3s cubic-bezier(.4, 0, .2, 1);
+        opacity: 1;
+    }
+
+    .nav-item-parent:hover .nav-underline {
+        width: 100%;
+    }
+
+    .nav-item-parent:hover .nav-btn .nav-arrow {
+        color: #2563eb;
+        transform: rotate(180deg);
+    }
+
+    .nav-arrow {
+        font-size: 0.9em;
+        transition: color 0.2s, transform 0.3s;
+    }
+
     .nav-item-parent:hover .menu-container {
         display: block !important;
+    }
+
+    .child-item {
+        padding: 0.75rem 1rem;
+    }
+
+    .grandchild-item {
+        padding: 0.5rem;
+    }
+
+    .object-contain {
+        object-fit: contain;
     }
 </style>
 
 <script>
-const categories = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model));
-let currentParentId = null;
+    const categories = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model));
+    let currentParentId = null;
 
-function showMenu(parentId) {
-    document.querySelectorAll('.menu-container').forEach(menu => menu.style.display = 'none');
-    const parent = document.querySelector(`[data-parent-id="${parentId}"]`);
-    if (parent) {
-        const menu = parent.querySelector('.menu-container');
-        if (menu) menu.style.display = 'block';
-        currentParentId = parentId;
-        renderChildren(parentId);
+    function showMenu(parentId) {
+        hideAllMenus();
+        const parent = document.querySelector(`[data-parent-id="${parentId}"]`);
+        if (parent) {
+            parent.querySelector('.menu-container').style.display = 'block';
+            currentParentId = parentId;
+            renderChildren(parentId);
+        }
     }
-}
 
-function hideMenu(parentId) {
-    const parent = document.querySelector(`[data-parent-id="${parentId}"]`);
-    if (parent) {
-        const menu = parent.querySelector('.menu-container');
-        if (menu) menu.style.display = 'none';
+    function hideMenu(parentId) {
+        const parent = document.querySelector(`[data-parent-id="${parentId}"]`);
+        if (parent) parent.querySelector('.menu-container').style.display = 'none';
         currentParentId = null;
     }
-}
 
-function renderChildren(parentId) {
-    const parentCat = categories.find(p => p.CategoryId.toString() === parentId);
-    const children = parentCat?.Children || [];
-    const childrenContainer = document.getElementById(`children-${parentId}`);
-    if (!childrenContainer) return;
-    if (!children.length) {
-        childrenContainer.innerHTML = '<div class="p-3 text-muted">Không có danh mục con</div>';
-        document.getElementById(`grandchildren-${parentId}`).innerHTML = '';
-        return;
+    function hideAllMenus() {
+        document.querySelectorAll('.menu-container').forEach(menu => menu.style.display = 'none');
     }
-    childrenContainer.innerHTML = children.map(child => {
-        let img = '/images/placeholder.png';
-        if (child.ImageUrl) {
-            if (child.ImageUrl.startsWith('/images/')) {
-                img = child.ImageUrl;
-            } else {
-                img = `/images/categories/level_2/${child.ImageUrl}`;
-            }
-        }
-        return `<div class="child-item d-flex align-items-center gap-2 p-3 cursor-pointer hover-bg-light transition"
-            data-child-id="${child.CategoryId}" onmouseenter="renderGrandChildren('${parentId}', '${child.CategoryId}')">
-            <img src="${img}" alt="${child.CategoryName}" width="32" height="32" class="object-contain" />
-            <span class="text-sm fw-medium">${child.CategoryName}</span>
-        </div>`;
-    }).join('');
-    // Mặc định hiển thị cháu của con đầu tiên
-    renderGrandChildren(parentId, children[0].CategoryId.toString());
-}
 
-function renderGrandChildren(parentId, childId) {
-    const parentCat = categories.find(p => p.CategoryId.toString() === parentId);
-    const childCat = parentCat?.Children?.find(c => c.CategoryId.toString() === childId);
-    const container = document.getElementById(`grandchildren-${parentId}`);
-    if (!container) return;
-    if (!childCat?.Children || childCat.Children.length === 0) {
-        container.innerHTML = '<div class="col-12 text-muted">Không có danh mục cháu</div>';
-        return;
-    }
-    container.innerHTML = childCat.Children.map(grandchild => {
-        let img = '/images/placeholder.png';
-        if (grandchild.ImageUrl) {
-            if (grandchild.ImageUrl.startsWith('/images/')) {
-                img = grandchild.ImageUrl;
-            } else {
-                img = `/images/categories/level_3/${grandchild.ImageUrl}`;
-            }
+    function renderChildren(parentId) {
+        const parentCat = categories.find(p => p.CategoryId.toString() === parentId);
+        const childrenContainer = document.getElementById(`children-${parentId}`);
+        const grandchildrenContainer = document.getElementById(`grandchildren-${parentId}`);
+        if (!childrenContainer || !grandchildrenContainer) return;
+
+        const children = parentCat?.Children || [];
+        if (!children.length) {
+            childrenContainer.innerHTML = '<div class="p-3 text-muted">Không có danh mục con</div>';
+            grandchildrenContainer.innerHTML = '<div class="col-12 text-muted">Không có danh mục cháu</div>';
+            return;
         }
-        return `<div class="col">
-            <a href="#" class="text-decoration-none">
-                <div class="d-flex align-items-center gap-2 p-2 rounded-2 hover-bg-light transition">
-                    <img src="${img}" alt="${grandchild.CategoryName}"
-                         width="40" height="40" class="object-contain" />
-                    <span class="text-sm text-dark">${grandchild.CategoryName}</span>
+
+        childrenContainer.innerHTML = children.map(child => `
+            <div class="child-item d-flex align-items-center gap-2 hover-bg-light transition cursor-pointer" 
+                 data-child-id="${child.CategoryId}" 
+                 onmouseenter="renderGrandChildren('${parentId}', '${child.CategoryId}')">
+                <img src="${getImageUrl(child.ImageUrl, 'level_2')}" alt="${child.CategoryName}" width="24" height="24" class="object-contain" />
+                <span class="text-sm fw-medium">${child.CategoryName}</span>
+            </div>
+        `).join('');
+
+        renderGrandChildren(parentId, children[0].CategoryId.toString());
+    }
+
+    function renderGrandChildren(parentId, childId) {
+        const parentCat = categories.find(p => p.CategoryId.toString() === parentId);
+        const childCat = parentCat?.Children?.find(c => c.CategoryId.toString() === childId);
+        const container = document.getElementById(`grandchildren-${parentId}`);
+        if (!container) return;
+
+        const grandchildren = childCat?.Children || [];
+        container.innerHTML = grandchildren.length
+            ? grandchildren.map(grandchild => `
+                <div class="col">
+                    <a href="/category/${grandchild.CategoryId}" class="text-decoration-none">
+                        <div class="d-flex align-items-center gap-2 p-2 rounded hover-bg-light transition grandchild-item">
+                            <img src="${getImageUrl(grandchild.ImageUrl, 'level_3')}" alt="${grandchild.CategoryName}" width="40" height="40" class="object-contain" />
+                            <span class="text-sm text-dark">${grandchild.CategoryName}</span>
+                        </div>
+                    </a>
                 </div>
-            </a>
-        </div>`;
-    }).join('');
-    // Highlight child đang active
-    const childrenContainer = document.getElementById(`children-${parentId}`);
-    if (childrenContainer) {
-        childrenContainer.querySelectorAll('.child-item').forEach(item =>
-            item.classList.toggle('bg-light', item.dataset.childId === childId)
-        );
+            `).join('')
+            : '<div class="col-12 text-muted">Không có danh mục cháu</div>';
+
+        highlightActiveChild(parentId, childId);
     }
-}
+
+    function getImageUrl(imageUrl, level) {
+        if (!imageUrl) return '/images/placeholder.png';
+        return imageUrl.startsWith('/images/') ? imageUrl : `/images/categories/${level}/${imageUrl}`;
+    }
+
+    function highlightActiveChild(parentId, childId) {
+        const childrenContainer = document.getElementById(`children-${parentId}`);
+        if (childrenContainer) {
+            childrenContainer.querySelectorAll('.child-item').forEach(item =>
+                item.classList.toggle('bg-light', item.dataset.childId === childId)
+            );
+        }
+    }
 </script>
