@@ -1,4 +1,4 @@
-﻿@model dynamic
+﻿@model IEnumerable<web_ban_thuoc.Models.Category>
 @{
     ViewData["Title"] = "Nhà Thuốc Long Châu - Trang chủ";
 }
@@ -7,13 +7,16 @@
 <div id="fullWidthCarousel" class="carousel slide" data-bs-ride="carousel">
     <div class="carousel-inner">
         <div class="carousel-item active">
-            <img src="/images/banners/banner_full_3.png" class="d-block w-100" alt="Full Banner 1" style="object-fit: cover;" />
+            <img src="/images/banners/banner_full_3.png" class="d-block w-100" alt="Full Banner 1"
+                style="object-fit: cover;" />
         </div>
         <div class="carousel-item">
-            <img src="/images/banners/banner_full_2.png" class="d-block w-100" alt="Full Banner 2" style="object-fit: cover;" />
+            <img src="/images/banners/banner_full_2.png" class="d-block w-100" alt="Full Banner 2"
+                style="object-fit: cover;" />
         </div>
         <div class="carousel-item">
-            <img src="/images/banners/banner_full_3.png" class="d-block w-100" alt="Full Banner 3" style="object-fit: cover;" />
+            <img src="/images/banners/banner_full_3.png" class="d-block w-100" alt="Full Banner 3"
+                style="object-fit: cover;" />
         </div>
     </div>
     <button class="carousel-control-prev" type="button" data-bs-target="#fullWidthCarousel" data-bs-slide="prev">
@@ -25,7 +28,8 @@
         <span class="visually-hidden">Next</span>
     </button>
     <div class="carousel-indicators">
-        <button type="button" data-bs-target="#fullWidthCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#fullWidthCarousel" data-bs-slide-to="0" class="active"
+            aria-current="true" aria-label="Slide 1"></button>
         <button type="button" data-bs-target="#fullWidthCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
         <button type="button" data-bs-target="#fullWidthCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
     </div>
@@ -38,16 +42,20 @@
             <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel">
                 <div class="carousel-inner">
                     <div class="carousel-item active">
-                        <img src="/images/banners/banner1.png" class="d-block w-100 rounded-3" alt="Banner 1" style="object-fit: cover;" />
+                        <img src="/images/banners/banner1.png" class="d-block w-100 rounded-3" alt="Banner 1"
+                            style="object-fit: cover;" />
                     </div>
                     <div class="carousel-item">
-                        <img src="/images/banners/banner2.png" class="d-block w-100 rounded-3" alt="Banner 2" style="object-fit: cover;" />
+                        <img src="/images/banners/banner2.png" class="d-block w-100 rounded-3" alt="Banner 2"
+                            style="object-fit: cover;" />
                     </div>
                     <div class="carousel-item">
-                        <img src="/images/banners/banner3.png" class="d-block w-100 rounded-3" alt="Banner 3" style="object-fit: cover;" />
+                        <img src="/images/banners/banner3.png" class="d-block w-100 rounded-3" alt="Banner 3"
+                            style="object-fit: cover;" />
                     </div>
                     <div class="carousel-item">
-                        <img src="/images/banners/banner4.png" class="d-block w-100 rounded-3" alt="Banner 4" style="object-fit: cover;" />
+                        <img src="/images/banners/banner4.png" class="d-block w-100 rounded-3" alt="Banner 4"
+                            style="object-fit: cover;" />
                     </div>
                 </div>
                 <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
@@ -59,20 +67,26 @@
                     <span class="visually-hidden">Next</span>
                 </button>
                 <div class="carousel-indicators">
-                    <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-                    <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
-                    <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
-                    <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="3" aria-label="Slide 4"></button>
+                    <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="0" class="active"
+                        aria-current="true" aria-label="Slide 1"></button>
+                    <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="1"
+                        aria-label="Slide 2"></button>
+                    <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="2"
+                        aria-label="Slide 3"></button>
+                    <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="3"
+                        aria-label="Slide 4"></button>
                 </div>
             </div>
         </div>
         <div class="col-12 col-md-4">
             <div class="row g-3">
                 <div class="col-12">
-                    <img src="/images/banners/banner5.png" class="w-100 rounded-3" alt="Banner 5" style="object-fit: cover;" />
+                    <img src="/images/banners/banner5.png" class="w-100 rounded-3" alt="Banner 5"
+                        style="object-fit: cover;" />
                 </div>
                 <div class="col-12">
-                    <img src="/images/banners/banner6.png" class="w-100 rounded-3" alt="Banner 6" style="object-fit: cover;" />
+                    <img src="/images/banners/banner6.png" class="w-100 rounded-3" alt="Banner 6"
+                        style="object-fit: cover;" />
                 </div>
             </div>
         </div>
@@ -86,14 +100,16 @@
         Danh mục nổi bật
     </div>
     <div class="row row-cols-2 row-cols-sm-3 row-cols-md-6 g-4 justify-content-center">
-        @for (var i = 0; i < 12; i++)
+        @foreach (var cat in Model)
         {
             <div class="col">
-                <a href="/Categories" class="text-decoration-none text-black bg-white p-4 rounded-3 shadow-sm text-center d-block hover-bg-light transition"
-                   style="min-height: 120px; display: flex; flex-direction: column; justify-content: center;">
-                    <img src="/images/categories/level_2/than_kinh_nao_level_2.png" width="24" height="24" class="mx-auto mb-2" alt="Thần kinh não" />
-                    <div class="mt-2 font-medium">Thần kinh não</div>
-                    <div class="text-gray-500 text-sm opacity-50">106 sản phẩm</div>
+                <a href="/Categories/@cat.CategoryId"
+                    class="text-decoration-none text-black bg-white p-4 rounded-3 shadow-sm text-center d-block hover-bg-light transition"
+                    style="min-height: 120px; display: flex; flex-direction: column; justify-content: center;">
+                    <img src="/images/categories/level_2/@(cat.ImageUrl ?? "/images/placeholder.png")" width="24"
+                        height="24" class="mx-auto mb-2" alt="@cat.CategoryName" />
+                    <div class="mt-2 font-medium" style="height: 42px;">@cat.CategoryName</div>
+                    <div class="text-gray-500 text-sm opacity-50">@((cat.Products?.Count ?? 0) + " sản phẩm")</div>
                 </a>
             </div>
         }
@@ -112,13 +128,16 @@
             {
                 <div class="col">
                     <div class="bg-white rounded-3 shadow-sm overflow-hidden hover-border hover-border-blue-500 h-100">
-                        <img src="/images/sanpham.png" width="200" height="200" class="p-3 w-100" alt="Viên uống Glucosamine" />
+                        <img src="/images/sanpham.png" width="200" height="200" class="p-3 w-100"
+                            alt="Viên uống Glucosamine" />
                         <div class="px-3 pb-3">
-                            <h5 class="text-sm text-black line-clamp-3" style="height: 60px;">Viên uống Glucosamine And Chondroitin Jpanwell hỗ trợ bổ sung chất nhờn dịch khớp (120 viên)</h5>
+                            <h5 class="text-sm text-black line-clamp-3" style="height: 60px;">Viên uống Glucosamine And
+                                Chondroitin Jpanwell hỗ trợ bổ sung chất nhờn dịch khớp (120 viên)</h5>
                             <div class="mt-1 text-primary text-sm">768.000đ / Hộp</div>
                             <div class="text-gray-500 text-sm text-decoration-line-through opacity-50">960.000đ</div>
                             <p class="mt-1 bg-gray-200 text-gray-600 rounded text-xs w-fit opacity-50">Hộp 120 Viên</p>
-                            <button class="mt-2 w-100 bg-primary text-white py-2 rounded-pill text-sm border-0">Chọn mua</button>
+                            <button class="mt-2 w-100 bg-primary text-white py-2 rounded-pill text-sm border-0">Chọn
+                                mua</button>
                         </div>
                     </div>
                 </div>
@@ -129,12 +148,15 @@
 
 <!-- Doctor Section -->
 <div class="mx-auto mt-4 pb-4">
-    <div class="position-relative bg-image" style="background-image: url('/images/home_bgdoctor.png'); height: 276px; border-radius: 1.5rem; overflow: hidden;">
+    <div class="position-relative bg-image"
+        style="background-image: url('/images/home_bgdoctor.png'); height: 276px; border-radius: 1.5rem; overflow: hidden;">
         <img src="/images/home_bgdoctor2.png" class="position-absolute bottom-0 end-0" width="350" alt="Doctor" />
         <div class="pt-4 ps-4 text-white">
             <h3 class="text-xl font-medium">Chuyên trang bệnh & sức khỏe</h3>
             <p class="text-base">Tổng hợp thông tin và kiến thức chuyên sâu về các lĩnh vực sức khỏe</p>
-            <a href="/doctor" class="mt-3 d-inline-block px-4 py-2 bg-white text-primary rounded-pill text-sm text-decoration-none">Tìm hiểu thêm</a>
+            <a href="/doctor"
+                class="mt-3 d-inline-block px-4 py-2 bg-white text-primary rounded-pill text-sm text-decoration-none">Tìm
+                hiểu thêm</a>
         </div>
     </div>
 </div>
@@ -144,16 +166,20 @@
         background-color: #f9fafb;
         transition: background-color 0.3s;
     }
+
     .hover-border:hover {
         border: 1px solid;
     }
+
     .hover-border-blue-500:hover {
         border-color: #3b82f6;
     }
+
     .bg-image {
         background-size: cover;
         background-position: center;
     }
+
     .line-clamp-3 {
         display: -webkit-box;
         -webkit-line-clamp: 3;

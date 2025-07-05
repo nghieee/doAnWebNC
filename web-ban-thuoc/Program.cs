@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using web_ban_thuoc.Data; 
+using web_ban_thuoc.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Register the ApplicationDbContext with dependency injection
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+// Register the LongChauDbContext with dependency injection
+builder.Services.AddDbContext<LongChauDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Register the NavbarFilter as a scoped service

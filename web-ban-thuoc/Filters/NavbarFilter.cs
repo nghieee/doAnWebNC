@@ -1,14 +1,13 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using web_ban_thuoc.Data;
 using web_ban_thuoc.Models;
 
 public class NavbarFilter : IActionFilter
 {
-    private readonly ApplicationDbContext _context;
+    private readonly LongChauDbContext _context;
 
-    public NavbarFilter(ApplicationDbContext context)
+    public NavbarFilter(LongChauDbContext context)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
     }

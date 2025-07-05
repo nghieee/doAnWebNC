@@ -6,16 +6,22 @@ namespace web_ban_thuoc.Controllers;
 
 public class HomeController : Controller
 {
-    private readonly ILogger<HomeController> _logger;
+    private readonly LongChauDbContext _context;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(LongChauDbContext context)
     {
-        _logger = logger;
+        _context = context;
     }
 
     public IActionResult Index()
     {
-        return View();
+        var featuredCategories = _context.Categories
+            .Where(c => c.IsFeatured && c.ParentCategoryId != null)
+            .OrderBy(c => c.CategoryName)
+            .Take(12)
+            .ToList();
+
+        return View(featuredCategories);
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
