@@ -1,4 +1,5 @@
-﻿@model IEnumerable<web_ban_thuoc.Models.Category>
+﻿@model web_ban_thuoc.Models.HomeViewModel
+
 @{
     ViewData["Title"] = "Nhà Thuốc Long Châu - Trang chủ";
 }
@@ -100,7 +101,7 @@
         Danh mục nổi bật
     </div>
     <div class="row row-cols-2 row-cols-sm-3 row-cols-md-6 g-4 justify-content-center">
-        @foreach (var cat in Model)
+        @foreach (var cat in Model.FeaturedCategories)
         {
             <div class="col">
                 <a href="/Categories/@cat.CategoryId"
@@ -109,9 +110,13 @@
                     <img src="/images/categories/level_2/@(cat.ImageUrl ?? "/images/placeholder.png")" width="24"
                         height="24" class="mx-auto mb-2" alt="@cat.CategoryName" />
                     <div class="mt-2 font-medium" style="height: 42px;">@cat.CategoryName</div>
-                    <div class="text-gray-500 text-sm opacity-50">@((cat.Products?.Count ?? 0) + " sản phẩm")</div>
+                    <div class="text-gray-500 text-sm opacity-50">@cat.ProductCount sản phẩm</div>
                 </a>
             </div>
+        }
+        @if (!Model.FeaturedCategories.Any())
+        {
+            <div class="col-12 text-center text-muted">Không có danh mục nổi bật nào.</div>
         }
     </div>
 </div>
@@ -124,23 +129,30 @@
             Sản phẩm nổi bật
         </div>
         <div class="row row-cols-1 row-cols-md-6 g-4 justify-content-center">
-            @for (var i = 0; i < 12; i++)
+            @foreach (var product in Model.FeaturedProducts)
             {
+                var mainImage = product.ProductImages?.FirstOrDefault(i => i.IsMain == true) ??
+                product.ProductImages?.FirstOrDefault();
                 <div class="col">
                     <div class="bg-white rounded-3 shadow-sm overflow-hidden hover-border hover-border-blue-500 h-100">
-                        <img src="/images/sanpham.png" width="200" height="200" class="p-3 w-100"
-                            alt="Viên uống Glucosamine" />
+                        <img src="images/products/@(mainImage?.ImageUrl ?? "/images/sanpham.png")"
+                            class="p-3 w-100" alt="@product.ProductName" />
                         <div class="px-3 pb-3">
-                            <h5 class="text-sm text-black line-clamp-3" style="height: 60px;">Viên uống Glucosamine And
-                                Chondroitin Jpanwell hỗ trợ bổ sung chất nhờn dịch khớp (120 viên)</h5>
-                            <div class="mt-1 text-primary text-sm">768.000đ / Hộp</div>
-                            <div class="text-gray-500 text-sm text-decoration-line-through opacity-50">960.000đ</div>
-                            <p class="mt-1 bg-gray-200 text-gray-600 rounded text-xs w-fit opacity-50">Hộp 120 Viên</p>
-                            <button class="mt-2 w-100 bg-primary text-white py-2 rounded-pill text-sm border-0">Chọn
+                            <h5 class="text-sm text-black line-clamp-3">@product.ProductName</h5>
+                            <div class="mt-1 text-primary fw-semibold">@product.Price.ToString("N0")đ</div>
+                            <div class="text-gray-500 text-sm text-decoration-line-through opacity-50">@((product.Price *
+                                                            1.25m).ToString("N0"))đ</div>
+                            <p class="mt-1 bg-gray-200 text-gray-600 rounded text-xs w-fit opacity-50">@(product.Package ??
+                                                            "Hộp")</p>
+                            <button class="mt-2 w-100 bg-primary text-white py-2 rounded-pill border-0">Chọn
                                 mua</button>
                         </div>
                     </div>
                 </div>
+            }
+            @if (!Model.FeaturedProducts.Any())
+            {
+                <div class="col-12 text-center text-muted">Không có sản phẩm nổi bật nào.</div>
             }
         </div>
     </div>
@@ -168,11 +180,12 @@
     }
 
     .hover-border:hover {
-        border: 1px solid;
+        outline: 1px solid; 
+        outline-offset: 0; 
     }
 
     .hover-border-blue-500:hover {
-        border-color: #3b82f6;
+        outline-color: #3b82f6; 
     }
 
     .bg-image {

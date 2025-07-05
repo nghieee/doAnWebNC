@@ -15,7 +15,11 @@ public partial class Category
 
     public int? ParentCategoryId { get; set; }
 
-    public bool IsFeatured { get; set; }
+    public bool IsFeature { get; set; }
+
+    public string? CategoryLevel { get; set; }
+
+    public int ProductCount { get; set; }
 
     public virtual ICollection<Category> InverseParentCategory { get; set; } = new List<Category>();
 

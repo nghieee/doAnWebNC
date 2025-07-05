@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using web_ban_thuoc.Models;
 
 namespace web_ban_thuoc.Controllers;
@@ -15,13 +16,22 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        var featuredCategories = _context.Categories
-            .Where(c => c.IsFeatured && c.ParentCategoryId != null)
-            .OrderBy(c => c.CategoryName)
-            .Take(12)
-            .ToList();
+        var viewModel = new HomeViewModel
+        {
+            FeaturedCategories = _context.Categories
+                .Where(c => c.IsFeature && c.ParentCategoryId != null && c.CategoryLevel == 2.ToString())
+                .OrderBy(c => c.CategoryName)
+                .Take(12)
+                .ToList(),
+            FeaturedProducts = _context.Products
+                .Include(p => p.ProductImages)
+                .Where(p => p.IsFeature && p.IsActive && p.StockQuantity > 0)
+                .OrderBy(p => p.ProductName)
+                .Take(12)
+                .ToList()
+        };
 
-        return View(featuredCategories);
+        return View(viewModel);
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
