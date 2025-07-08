@@ -128,6 +128,9 @@ public partial class LongChauDbContext : DbContext
             entity.Property(e => e.Brand).HasMaxLength(100);
             entity.Property(e => e.Contraindications).HasMaxLength(500);
             entity.Property(e => e.Dosage).HasMaxLength(500);
+            entity.Property(e => e.IngredientUnit)
+                .HasMaxLength(25)
+                .IsFixedLength();
             entity.Property(e => e.Ingredients).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.Origin).HasMaxLength(100);
             entity.Property(e => e.Package).HasMaxLength(100);

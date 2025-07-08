@@ -35,6 +35,8 @@ public partial class Product
 
     public bool IsActive { get; set; }
 
+    public string? IngredientUnit { get; set; }
+
     public virtual Category? Category { get; set; }
 
     public virtual ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();

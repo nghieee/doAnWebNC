@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "T03TJL3AQuo2Ih5fTVZYsTHPjbNyoL+g4cKNZnR0ctM=",
+  "Hash": "+hj0I56Ycl2VNkulyIK5kt4HafKEZOHDPCr1Cz4xnhA=",
   "Source": "web-ban-thuoc",
   "BasePath": "_content/web-ban-thuoc",
   "Mode": "Default",
@@ -2278,12 +2278,12 @@
       "OriginalItemSpec": "wwwroot\\images\\products\\multivitamin_5.png"
     },
     {
-      "Identity": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\products\\nature's_bounty_1.png",
+      "Identity": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\products\\natures_bounty_1.png",
       "SourceId": "web-ban-thuoc",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\",
       "BasePath": "_content/web-ban-thuoc",
-      "RelativePath": "images/products/nature's_bounty_1.png",
+      "RelativePath": "images/products/natures_bounty_1.png",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -2294,15 +2294,15 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\images\\products\\nature's_bounty_1.png"
+      "OriginalItemSpec": "wwwroot\\images\\products\\natures_bounty_1.png"
     },
     {
-      "Identity": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\products\\nature's_bounty_2.png",
+      "Identity": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\products\\natures_bounty_2.png",
       "SourceId": "web-ban-thuoc",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\",
       "BasePath": "_content/web-ban-thuoc",
-      "RelativePath": "images/products/nature's_bounty_2.png",
+      "RelativePath": "images/products/natures_bounty_2.png",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -2313,15 +2313,15 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\images\\products\\nature's_bounty_2.png"
+      "OriginalItemSpec": "wwwroot\\images\\products\\natures_bounty_2.png"
     },
     {
-      "Identity": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\products\\nature's_bounty_3.png",
+      "Identity": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\products\\natures_bounty_3.png",
       "SourceId": "web-ban-thuoc",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\",
       "BasePath": "_content/web-ban-thuoc",
-      "RelativePath": "images/products/nature's_bounty_3.png",
+      "RelativePath": "images/products/natures_bounty_3.png",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -2332,15 +2332,15 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\images\\products\\nature's_bounty_3.png"
+      "OriginalItemSpec": "wwwroot\\images\\products\\natures_bounty_3.png"
     },
     {
-      "Identity": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\products\\nature's_bounty_4.png",
+      "Identity": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\products\\natures_bounty_4.png",
       "SourceId": "web-ban-thuoc",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\",
       "BasePath": "_content/web-ban-thuoc",
-      "RelativePath": "images/products/nature's_bounty_4.png",
+      "RelativePath": "images/products/natures_bounty_4.png",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -2351,15 +2351,15 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\images\\products\\nature's_bounty_4.png"
+      "OriginalItemSpec": "wwwroot\\images\\products\\natures_bounty_4.png"
     },
     {
-      "Identity": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\products\\nature's_bounty_5.png",
+      "Identity": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\products\\natures_bounty_5.png",
       "SourceId": "web-ban-thuoc",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\",
       "BasePath": "_content/web-ban-thuoc",
-      "RelativePath": "images/products/nature's_bounty_5.png",
+      "RelativePath": "images/products/natures_bounty_5.png",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -2370,7 +2370,7 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\images\\products\\nature's_bounty_5.png"
+      "OriginalItemSpec": "wwwroot\\images\\products\\natures_bounty_5.png"
     },
     {
       "Identity": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\products\\prenatal_one_1.png",
