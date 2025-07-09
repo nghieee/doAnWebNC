@@ -16,22 +16,52 @@
 
         <!-- Danh sách sản phẩm bên phải -->
         <div class="col-12 col-lg-9">
-            <h1 class="text-2xl font-semibold mb-6 text-black">Danh mục sản phẩm</h1>
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-                @for (var i = 0; i < 12; i++)
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <p class="text-black" style="font-size: 16px;">Danh mục sản phẩm</p>
+                <div class="d-flex align-items-center mb-3">
+                    <span class="me-2">Sắp xếp theo:</span>
+                    @{
+                        var sort = Context.Request.Query["sort"].ToString();
+                        string sortActive(string value) => sort == value ? "btn-primary text-white" : "btn-outline-primary";
+                    }
+                    <button type="button" class="btn @sortActive("") me-2 rounded-5 btn-sort" data-sort="" onclick="sortProducts('')">Bán chạy</button>
+                    <button type="button" class="btn @sortActive("price_asc") me-2 rounded-5 btn-sort" data-sort="price_asc" onclick="sortProducts('price_asc')">Giá thấp</button>
+                    <button type="button" class="btn @sortActive("price_desc") rounded-5 btn-sort" data-sort="price_desc" onclick="sortProducts('price_desc')">Giá cao</button>
+                </div>
+            </div>
+            
+            @{
+                var products = ViewBag.Products as List<web_ban_thuoc.Models.Product>;
+            }
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="product-list">
+                @if (products != null && products.Any())
                 {
-                    <div class="col">
-                        <div class="bg-white rounded-3 shadow-sm overflow-hidden transition-all duration-300 hover-border hover-border-blue-500">
-                            <img src="/images/sanpham.png" width="200" height="200" class="p-3 w-100 h-auto object-contain" alt="Viên uống Glucosamine" />
-                            <div class="px-3 pb-3">
-                                <h5 class="text-sm text-black line-clamp-3" style="height: 60px;">Viên uống Glucosamine And Chondroitin Jpanwell hỗ trợ bổ sung chất nhờn dịch khớp (120 viên)</h5>
-                                <div class="mt-1 text-primary text-sm">768.000đ / Hộp</div>
-                                <div class="text-gray-500 text-sm text-decoration-line-through opacity-50">960.000đ</div>
-                                <p class="mt-1 bg-gray-200 text-gray-600 rounded text-xs w-fit opacity-50">Hộp 120 Viên</p>
-                                <button class="mt-2 w-100 bg-primary text-white py-2 rounded-pill text-sm border-0">Chọn mua</button>
+                    foreach (var product in products)
+                    {
+                        var mainImage = product.ProductImages?.FirstOrDefault(i => i.IsMain == true) ??
+                        product.ProductImages?.FirstOrDefault();
+                        <a class="col text-decoration-none"
+                            href="@Url.Action("Details", "Product", new { id = product.ProductId })">
+                            <div class="bg-white rounded-3 shadow-sm overflow-hidden hover-border hover-border-blue-500 h-100">
+                                <img src="/images/products/@(mainImage?.ImageUrl ?? "/images/sanpham.png")" class="p-3 w-100"
+                                    alt="@product.ProductName" />
+                                <div class="px-3 pb-3">
+                                    <h5 class="text-sm text-black line-clamp-3">@product.ProductName</h5>
+                                    <div class="mt-1 text-primary fw-semibold">@product.Price.ToString("N0")đ</div>
+                                    <div class="text-gray-500 text-sm text-decoration-line-through opacity-50">@((product.Price *
+                                                                    1.25m).ToString("N0"))đ</div>
+                                    <p class="mt-1 bg-gray-200 text-gray-600 rounded text-xs w-fit opacity-50">@(product.Package ??
+                                                                    "Hộp")</p>
+                                    <button class="mt-2 w-100 bg-primary text-white py-2 rounded-pill border-0">Chọn
+                                        mua</button>
+                                </div>
                             </div>
-                        </div>
-                    </div>
+                        </a>
+                    }
+                }
+                else
+                {
+                    <div class="col-12 text-center text-muted">Không có sản phẩm nào trong danh mục này.</div>
                 }
             </div>
         </div>
@@ -45,10 +75,39 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
+
     .hover-border {
         border: 1px solid transparent;
     }
+
     .hover-border-blue-500:hover {
         border-color: #3b82f6;
     }
 </style>
+
+<script>
+function sortProducts(sort) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('sort', sort);
+
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(res => res.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newList = doc.querySelector('#product-list');
+            document.querySelector('#product-list').innerHTML = newList.innerHTML;
+
+            // Cập nhật trạng thái active cho các button sort
+            document.querySelectorAll('.btn-sort').forEach(btn => {
+                btn.classList.remove('btn-primary', 'text-white');
+                btn.classList.add('btn-outline-primary');
+            });
+            const activeBtn = document.querySelector(`.btn-sort[data-sort="${sort}"]`);
+            if (activeBtn) {
+                activeBtn.classList.remove('btn-outline-primary');
+                activeBtn.classList.add('btn-primary', 'text-white');
+            }
+        });
+}
+</script>

@@ -136,6 +136,8 @@ public partial class LongChauDbContext : DbContext
             entity.Property(e => e.Package).HasMaxLength(100);
             entity.Property(e => e.Price).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.ProductName).HasMaxLength(255);
+            entity.Property(e => e.Slug).HasMaxLength(255);
+            entity.Property(e => e.SoldQuantity).HasDefaultValue(0);
             entity.Property(e => e.TargetUsers).HasMaxLength(500);
             entity.Property(e => e.Uses)
                 .HasMaxLength(1000)

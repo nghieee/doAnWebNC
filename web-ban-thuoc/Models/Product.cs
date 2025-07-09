@@ -37,6 +37,10 @@ public partial class Product
 
     public string? IngredientUnit { get; set; }
 
+    public string? Slug { get; set; }
+
+    public int? SoldQuantity { get; set; }
+
     public virtual Category? Category { get; set; }
 
     public virtual ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();

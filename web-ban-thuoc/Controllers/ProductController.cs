@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using web_ban_thuoc.Models;
 
+[Route("Products")]
 public class ProductController : Controller
 {
     private readonly LongChauDbContext _context;
@@ -11,6 +12,7 @@ public class ProductController : Controller
         _context = context;
     }
 
+    [HttpGet("{id}")]
     public IActionResult Details(int id)
     {
         ViewData["Title"] = "Chi tiết sản phẩm - Nhà Thuốc Long Châu";
