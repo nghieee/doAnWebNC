@@ -42,10 +42,32 @@
 
             <!-- Cart and Login -->
             <div class="col-12 col-md-3 d-flex align-items-center justify-content-center justify-content-md-end gap-4">
-                <a href="/auth" class="d-flex align-items-center text-white text-decoration-none">
-                    <i class="fas fa-user me-2"></i>
-                    <span>Đăng nhập</span>
-                </a>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <div class="dropdown">
+                        <a class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" href="#" id="accountDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user me-2"></i>
+                            <span>Tài khoản</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end mt-2" aria-labelledby="accountDropdown">
+                            <li class="px-3 py-2 small text-muted">@User.Identity.Name</li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form asp-action="Logout" asp-controller="Auth" method="post" class="m-0">
+                                    <button type="submit" class="dropdown-item">Đăng xuất</button>
+                                </form>
+                            </li>
+                            <!-- <li><a class="dropdown-item" href="/account/change-password">Đổi mật khẩu</a></li> -->
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <a href="/auth" class="d-flex align-items-center text-white text-decoration-none">
+                        <i class="fas fa-user me-2"></i>
+                        <span>Đăng nhập</span>
+                    </a>
+                }
                 <a href="/cart" class="btn btn-primary rounded-pill d-flex align-items-center gap-2 py-3 px-4">
                     <i class="fas fa-cart-shopping me-2"></i>
                     <span>Giỏ hàng</span>

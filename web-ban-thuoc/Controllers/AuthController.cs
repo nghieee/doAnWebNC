@@ -32,35 +32,36 @@ namespace web_ban_thuoc.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(string Email, string Password, bool RememberMe = false)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
-            _logger.LogInformation("Login attempt for email: {Email}", Email);
+            _logger.LogInformation("Login attempt for email: {Email}", model.Email);
 
-            if (string.IsNullOrEmpty(Email) || string.IsNullOrEmpty(Password))
+            if (!ModelState.IsValid)
             {
-                TempData["LoginError"] = "Email và mật khẩu không được để trống";
-                return RedirectToAction("Index", "Auth");
+                TempData["LoginError"] = ModelState.Values.SelectMany(v => v.Errors).FirstOrDefault()?.ErrorMessage;
+                return View("~/Views/Auth/Index.cshtml", new RegisterViewModel());
             }
 
-            var user = await _userManager.FindByEmailAsync(Email);
+            var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null || !user.EmailConfirmed)
             {
                 TempData["LoginError"] = "Tài khoản chưa xác nhận email hoặc không tồn tại.";
-                return RedirectToAction("Index", "Auth");
+                ViewBag.LoginModel = model;
+                return View("~/Views/Auth/Index.cshtml", new RegisterViewModel());
             }
 
-            var result = await _signInManager.PasswordSignInAsync(Email, Password, RememberMe, lockoutOnFailure: false);
-            
+            var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
             if (result.Succeeded)
             {
-                _logger.LogInformation("Login successful for email: {Email}", Email);
+                _logger.LogInformation("Login successful for email: {Email}", model.Email);
                 return RedirectToAction("Index", "Home");
             }
             else
             {
-                _logger.LogWarning("Login failed for email: {Email}", Email);
+                _logger.LogWarning("Login failed for email: {Email}", model.Email);
                 TempData["LoginError"] = "Email hoặc mật khẩu không đúng";
-                return RedirectToAction("Index", "Auth");
+                ViewBag.LoginModel = model;
+                return View("~/Views/Auth/Index.cshtml", new RegisterViewModel());
             }
         }
 
