@@ -3,7 +3,7 @@
     Usage: <partial name="_FilterSidebar" />
 *@
 
-<style>
+    <style>
     .filter-section {
         border-bottom: 1px solid #e5e7eb;
         padding-bottom: 1rem;
@@ -64,31 +64,31 @@
         color: #fecaca;
     }
     .form-check-input:checked {
-        background-color: #3b82f6 !important;
-        border-color: #3b82f6 !important;
-    }
+            background-color: #3b82f6 !important;
+            border-color: #3b82f6 !important;
+        }
     .form-check-input:checked:focus {
         background-color: #3b82f6 !important;
         border-color: #3b82f6 !important;
         box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
     }
     .filter-sidebar::-webkit-scrollbar {
-        width: 6px;
-    }
+            width: 6px;
+        }
     .filter-sidebar::-webkit-scrollbar-track {
-        background: #f1f1f1;
+            background: #f1f1f1;
         border-radius: 3px;
-    }
+        }
     .filter-sidebar::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 3px;
-    }
+            background: #888;
+            border-radius: 3px;
+        }
     .filter-sidebar::-webkit-scrollbar-thumb:hover {
-        background: #555;
-    }
+            background: #555;
+        }
     .filter-sidebar::-webkit-scrollbar-button {
-        display: none;
-    }
+            display: none;
+        }
     keyframes fadeIn {
         from { opacity: 0; transform: translateY(-10px); }
         to { opacity: 1; transform: translateY(0); }
@@ -407,5 +407,5 @@ document.addEventListener('DOMContentLoaded', function() {
 window.addEventListener('popstate', function() {
     initializeFilters();
     loadProducts();
-});
+    });
 </script>

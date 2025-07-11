@@ -1,3 +1,4 @@
+@model web_ban_thuoc.Models.RegisterViewModel
 @*
     Trang đăng nhập và đăng ký - Giao diện tối ưu
     Usage: Truy cập /Auth/Index
@@ -5,6 +6,7 @@
 
 @{
     ViewData["Title"] = "Tài khoản - Nhà Thuốc Long Châu";
+    var loginModel = ViewBag.LoginModel as web_ban_thuoc.Models.LoginViewModel ?? new web_ban_thuoc.Models.LoginViewModel();
 }
 
 <div class="d-flex align-items-center justify-content-center pb-5">
@@ -24,24 +26,28 @@
             <div class="col-12 col-md-5">
                 <div class="card p-4 border-0 shadow-sm rounded-4 bg-white">
                     <h3 class="card-title fw-bold text-dark mb-4">Đăng nhập</h3>
-                    @if (!string.IsNullOrEmpty(ViewBag.LoginError))
+                    @if (TempData["LoginError"] != null)
                     {
                         <div class="alert alert-danger p-2 mb-4 small">
-                            @ViewBag.LoginError
+                            @TempData["LoginError"]
                         </div>
                     }
                     <p class="text-muted mb-4"><span class="text-danger">*</span> Các trường bắt buộc</p>
-                    <form asp-action="Login" asp-controller="Account" method="post">
+                    <form asp-action="Login" asp-controller="Auth" method="post">
                         <div class="mb-3">
                             <label for="floatingInput" class="form-label text-muted small">Địa chỉ email <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control p-2 border border-gray-300 rounded-2 focus-ring" id="floatingInput" name="Email" placeholder="name@example.com" required />
+                            <input type="email" class="form-control p-2 border border-gray-300 rounded-2 focus-ring" id="floatingInput" name="Email" placeholder="name@example.com" required value="@loginModel.Email" />
+                            @if (TempData["LoginError"] != null && !string.IsNullOrEmpty(loginModel.Email))
+                            {
+                                <div class="text-danger small">@TempData["LoginError"]</div>
+                            }
                         </div>
                         <div class="mb-3">
                             <label for="floatingPassword" class="form-label text-muted small">Mật khẩu <span class="text-danger">*</span></label>
                             <input type="password" class="form-control p-2 border border-gray-300 rounded-2 focus-ring" id="floatingPassword" name="Password" placeholder="Mật khẩu" required />
                         </div>
                         <div class="form-check mb-4">
-                            <input type="checkbox" class="form-check-input" name="RememberMe" id="flexCheckChecked" checked />
+                            <input type="checkbox" class="form-check-input" name="RememberMe" id="flexCheckChecked" @(loginModel.RememberMe ? "checked" : "") />
                             <label class="form-check-label text-muted small" for="flexCheckChecked">Ghi nhớ tôi</label>
                         </div>
                         <p class="text-muted small mb-4">
@@ -59,34 +65,45 @@
             <div class="col-12 col-md-6">
                 <div class="card p-4 border-0 shadow-sm rounded-4 bg-white">
                     <h3 class="card-title fw-bold text-dark mb-4">Tạo tài khoản</h3>
-                    @if (!string.IsNullOrEmpty(ViewBag.RegisterError))
+                    @if (TempData["RegisterError"] != null)
                     {
                         <div class="alert alert-danger p-2 mb-4 small">
-                            @ViewBag.RegisterError
+                            @TempData["RegisterError"]
+                        </div>
+                    }
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success p-2 mb-4 small">
+                            @TempData["SuccessMessage"]
                         </div>
                     }
                     <p class="text-muted mb-4"><span class="text-danger">*</span> Các trường bắt buộc</p>
-                    <form asp-action="Register" asp-controller="Account" method="post">
+                    <form asp-action="Register" asp-controller="Auth" method="post">
                         <div class="row g-3">
                             <div class="col-12 col-md-6">
                                 <label for="floatingInputUserName" class="form-label text-muted small">Họ và tên <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control p-2 border border-gray-300 rounded-2 focus-ring" id="floatingInputUserName" name="UserName" placeholder="Họ và tên" required />
+                                <input type="text" class="form-control p-2 border border-gray-300 rounded-2 focus-ring" id="floatingInputUserName" name="UserName" placeholder="Họ và tên" required value="@Model?.UserName" />
+                                @Html.ValidationMessageFor(m => m.UserName, "", new { @class = "text-danger small" })
                             </div>
                             <div class="col-12 col-md-6">
                                 <label for="floatingInputEmail" class="form-label text-muted small">Email <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control p-2 border border-gray-300 rounded-2 focus-ring" id="floatingInputEmail" name="Email" placeholder="Email" required />
+                                <input type="email" class="form-control p-2 border border-gray-300 rounded-2 focus-ring" id="floatingInputEmail" name="Email" placeholder="Email" required value="@Model?.Email" />
+                                @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger small" })
                             </div>
                             <div class="col-12 col-md-6">
                                 <label for="floatingInputPassword" class="form-label text-muted small">Mật khẩu <span class="text-danger">*</span></label>
                                 <input type="password" class="form-control p-2 border border-gray-300 rounded-2 focus-ring" id="floatingInputPassword" name="Password" placeholder="Mật khẩu" required />
+                                @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger small" })
                             </div>
                             <div class="col-12 col-md-6">
                                 <label for="floatingInputConfirmPassword" class="form-label text-muted small">Xác nhận mật khẩu <span class="text-danger">*</span></label>
                                 <input type="password" class="form-control p-2 border border-gray-300 rounded-2 focus-ring" id="floatingInputConfirmPassword" name="ConfirmPassword" placeholder="Xác nhận mật khẩu" required />
+                                @Html.ValidationMessageFor(m => m.ConfirmPassword, "", new { @class = "text-danger small" })
                             </div>
                             <div class="col-12">
                                 <label for="floatingInputPhone" class="form-label text-muted small">Số điện thoại <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control p-2 border border-gray-300 rounded-2 focus-ring" id="floatingInputPhone" name="PhoneNumber" placeholder="Số điện thoại" required />
+                                <input type="text" class="form-control p-2 border border-gray-300 rounded-2 focus-ring" id="floatingInputPhone" name="PhoneNumber" placeholder="Số điện thoại" required value="@Model?.PhoneNumber" />
+                                @Html.ValidationMessageFor(m => m.PhoneNumber, "", new { @class = "text-danger small" })
                             </div>
                         </div>
                         <div class="space-y-3 mt-4">

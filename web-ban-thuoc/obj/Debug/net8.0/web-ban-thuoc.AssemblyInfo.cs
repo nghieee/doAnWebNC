@@ -10,10 +10,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.AspNetCore.Identity.UI.UIFrameworkAttribute("Bootstrap5")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("web-ban-thuoc")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9f925cd26616016ab0924edb726bb80165c5566f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d1397a75bce93a16f6be54ad5a98fb51685e781c")]
 [assembly: System.Reflection.AssemblyProductAttribute("web-ban-thuoc")]
 [assembly: System.Reflection.AssemblyTitleAttribute("web-ban-thuoc")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
