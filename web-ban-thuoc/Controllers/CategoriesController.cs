@@ -23,7 +23,7 @@ public class CategoriesController : Controller
         string[] brands,
         string[] origins,
         string priceRange,
-        string search // Thêm tham số search
+        string search
     )
     {
         var category = _context.Categories.FirstOrDefault(c => c.CategoryId == categoryId);
@@ -39,7 +39,7 @@ public class CategoriesController : Controller
         allCategoryIds.AddRange(childCategoryIds);
 
         var productsQuery = _context.Products
-            .Where(p => p.CategoryId.HasValue && allCategoryIds.Contains(p.CategoryId.Value));
+            .Where(p => p.CategoryId.HasValue && allCategoryIds.Contains(p.CategoryId.Value) && p.IsActive);
 
         // Lọc theo thương hiệu
         if (brands != null && brands.Length > 0)
@@ -87,20 +87,25 @@ public class CategoriesController : Controller
 
         // Truyền dữ liệu filter cho view
         ViewBag.Brands = _context.Products
+            .Where(p => p.CategoryId.HasValue && allCategoryIds.Contains(p.CategoryId.Value) && p.IsActive)
             .Select(p => p.Brand)
             .Where(b => !string.IsNullOrEmpty(b))
             .Distinct()
+            .OrderBy(b => b)
             .ToList();
 
         ViewBag.Countries = _context.Products
+            .Where(p => p.CategoryId.HasValue && allCategoryIds.Contains(p.CategoryId.Value) && p.IsActive)
             .Select(p => p.Origin)
             .Where(c => !string.IsNullOrEmpty(c))
             .Distinct()
+            .OrderBy(c => c)
             .ToList();
 
+        // Nếu là AJAX request, trả về partial view chỉ chứa danh sách sản phẩm
         if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
         {
-            return PartialView("Index", this.ViewBag.Products); // hoặc trả về view chỉ chứa #product-list
+            return PartialView("_ProductList", products);
         }
 
         return View("~/Views/Categories/Index.cshtml");

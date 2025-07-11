@@ -3,163 +3,189 @@
     Usage: <partial name="_FilterSidebar" />
 *@
 
-<div class="w-full lg:w-64 p-4 bg-white rounded-3 shadow-lg" style="max-height: 900px; overflow-y: auto;">
-    <h3 class="text-xl font-bold mb-6 text-gray-800">Bộ lọc sản phẩm</h3>
-
-    <!-- CSS tùy chỉnh cho checkbox, searchbox và thanh cuộn -->
-    <style>
-        input[type="text"] {
-            color: #000000;
-            /* Màu đen */
-        }
-
-        input[type="text"]::placeholder {
-            color: #9ca3af;
-            /* Màu xám mặc định, tương ứng text-gray-400 */
-        }
-
-        input[type="checkbox"]:checked {
-            background-color: #3b82f6 !important;
-            /* Màu blue-500 */
-            border-color: #3b82f6 !important;
-        }
-
-        input[type="checkbox"]:checked:focus {
-            background-color: #3b82f6 !important;
-            border-color: #3b82f6 !important;
-        }
-
-        input[type="text"]:focus {
-            outline: none !important;
-            /* Bỏ viền đen mặc định */
-        }
-
-        /* Tùy chỉnh thanh cuộn */
-        .w-full::-webkit-scrollbar {
-            width: 6px;
-            /* Độ dày mỏng hơn */
-        }
-
-        .w-full::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            /* Màu nền thanh cuộn */
-        }
-
-        .w-full::-webkit-scrollbar-thumb {
-            background: #888;
-            /* Màu thanh cuộn */
-            border-radius: 3px;
-        }
-
-        .w-full::-webkit-scrollbar-thumb:hover {
-            background: #555;
-            /* Màu khi hover */
-        }
-
-        /* Ẩn mũi tên lên/xuống (chỉ áp dụng cho Webkit) */
-        .w-full::-webkit-scrollbar-button {
-            display: none;
-        }
-    </style>
-
-    <!-- Dữ liệu tĩnh -->
-    @{
-        var filterData = new
-        {
-            brands = new[] { "Blackmores", "Nature's Way", "DHC" },
-            forms = new[] { "Viên uống", "Bột", "Nước" },
-            volumes = new[] { "30 viên", "60 viên", "100g" },
-            prices = new[] { "Dưới 200.000đ", "200.000đ - 500.000đ", "Trên 500.000đ" },
-            audiences = new[] { "Người lớn", "Trẻ em", "Phụ nữ", "Người cao tuổi", "Phụ nữ mang thai" },
-            countries = new[] { "Việt Nam", "Hàn Quốc", "Nhật Bản", "Hoa Kỳ", "Úc", "Pháp", "Thái Lan" },
-            regions = new[] { "Miền Bắc", "Miền Trung", "Miền Nam" }
-        };
-
-        var filters = new
-        {
-            brands = new List<string>(),
-            forms = new List<string>(),
-            volumes = new List<string>(),
-            prices = new List<string>(),
-            audiences = new List<string>(),
-            countries = new List<string>(),
-            regions = new List<string>()
-        };
-
-        var openSections = new
-        {
-            brands = true,
-            forms = true,
-            volumes = true,
-            prices = true,
-            audiences = true,
-            countries = true,
-            regions = true
-        };
-
-        var searchTerms = new
-        {
-            countries = "",
-            audiences = ""
-        };
+<style>
+    .filter-section {
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
     }
+    .filter-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+    .filter-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+    .filter-option {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+    .filter-option:hover {
+        background-color: #f9fafb;
+        border-radius: 0.25rem;
+    }
+    .filter-option span {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+    .active-filters {
+        background-color: #eff6ff;
+        border: 1px solid #3b82f6;
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        animation: fadeIn 0.3s ease;
+    }
+    .active-filter-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        background-color: #3b82f6;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        margin: 0.125rem;
+        animation: slideIn 0.2s ease;
+    }
+    .active-filter-tag .remove-filter {
+        cursor: pointer;
+        font-weight: bold;
+        transition: color 0.2s ease;
+    }
+    .active-filter-tag .remove-filter:hover {
+        color: #fecaca;
+    }
+    .form-check-input:checked {
+        background-color: #3b82f6 !important;
+        border-color: #3b82f6 !important;
+    }
+    .form-check-input:checked:focus {
+        background-color: #3b82f6 !important;
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
+    }
+    .filter-sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+    .filter-sidebar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+    .filter-sidebar::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+    .filter-sidebar::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+    .filter-sidebar::-webkit-scrollbar-button {
+        display: none;
+    }
+    keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    keyframes slideIn {
+        from { opacity: 0; transform: scale(0.8); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    .loading-spinner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+    }
+    .product-count {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+    .product-count .count-number {
+        font-weight: 600;
+        color: #3b82f6;
+    }
+    media (max-width: 768px) {
+        .filter-sidebar { margin-bottom: 1rem; }
+        .active-filters { margin-bottom: 0.5rem; }
+    }
+</style>
+
+<div class="w-full lg:w-64 p-4 bg-white rounded-3 shadow-lg filter-sidebar" style="max-height: 900px; overflow-y: auto;">
+    <h3 class="text-xl font-bold text-gray-800 mb-4">Bộ lọc sản phẩm</h3>
 
     @{
         var brands = ViewBag.Brands as List<string> ?? new List<string>();
-        var forms = ViewBag.Forms as List<string> ?? new List<string>();
-        var audiences = ViewBag.Audiences as List<string> ?? new List<string>();
         var countries = ViewBag.Countries as List<string> ?? new List<string>();
         var selectedBrands = Context.Request.Query["brands"].ToList();
         var selectedOrigins = Context.Request.Query["origins"].ToList();
         var selectedPrice = Context.Request.Query["priceRange"].ToString();
     }
+
+    <!-- Hiển thị các filter đang active -->
+    <div id="activeFilters" class="active-filters" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <small class="text-primary fw-semibold">Bộ lọc đang áp dụng:</small>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearAllFilters()">
+                <i class="fas fa-times me-1"></i>Xóa tất cả
+            </button>
+        </div>
+        <div id="activeFilterTags"></div>
+    </div>
+
     <!-- Thương hiệu -->
-    <div class="mb-6">
-        <h4 class="text-sm font-semibold text-gray-700 mb-2">Thương hiệu</h4>
+    <div class="filter-section">
+        <h4 class="filter-label">Thương hiệu</h4>
         <div>
             @foreach (var brand in brands)
             {
-                <label class="d-flex align-items-center gap-2 py-1">
+                <label class="filter-option">
                     <input type="checkbox" name="brands" value="@brand" class="form-check-input"
-                        @(selectedBrands.Contains(brand) ? "checked" : "") onchange="this.form.submit()" />
-                    <span class="text-sm text-gray-600">@brand</span>
+                        @(selectedBrands.Contains(brand) ? "checked" : "") onchange="applyFilters()" />
+                    <span>@brand</span>
                 </label>
             }
         </div>
     </div>
 
     <!-- Giá tiền -->
-    <div class="mb-6">
-        <h4 class="text-sm font-semibold text-gray-700 mb-2">Giá tiền</h4>
+    <div class="filter-section">
+        <h4 class="filter-label">Giá tiền</h4>
         <div>
-            <label class="d-flex align-items-center gap-2 py-1">
-                <input type="radio" name="priceRange" value="1" class="form-check-input" @(selectedPrice == "1" ?
-                                                                                                             "checked" : "") onchange="this.form.submit()" />
-                <span class="text-sm text-gray-600">Dưới 200.000đ</span>
+            <label class="filter-option">
+                <input type="radio" name="priceRange" value="1" class="form-check-input" 
+                    @(selectedPrice == "1" ? "checked" : "") onchange="applyFilters()" />
+                <span>Dưới 200.000đ</span>
             </label>
-            <label class="d-flex align-items-center gap-2 py-1">
-                <input type="radio" name="priceRange" value="2" class="form-check-input" @(selectedPrice == "2" ?
-                                                                                                             "checked" : "") onchange="this.form.submit()" />
-                <span class="text-sm text-gray-600">200.000đ - 500.000đ</span>
+            <label class="filter-option">
+                <input type="radio" name="priceRange" value="2" class="form-check-input" 
+                    @(selectedPrice == "2" ? "checked" : "") onchange="applyFilters()" />
+                <span>200.000đ - 500.000đ</span>
             </label>
-            <label class="d-flex align-items-center gap-2 py-1">
-                <input type="radio" name="priceRange" value="3" class="form-check-input" @(selectedPrice == "3" ?
-                                                                                                             "checked" : "") onchange="this.form.submit()" />
-                <span class="text-sm text-gray-600">Trên 500.000đ</span>
+            <label class="filter-option">
+                <input type="radio" name="priceRange" value="3" class="form-check-input" 
+                    @(selectedPrice == "3" ? "checked" : "") onchange="applyFilters()" />
+                <span>Trên 500.000đ</span>
             </label>
         </div>
     </div>
 
     <!-- Nguồn gốc -->
-    <div class="mb-6">
-        <h4 class="text-sm font-semibold text-gray-700 mb-2">Nguồn gốc</h4>
+    <div class="filter-section">
+        <h4 class="filter-label">Nguồn gốc</h4>
         <div>
             @foreach (var country in countries)
             {
-                <label class="d-flex align-items-center gap-2 py-1">
+                <label class="filter-option">
                     <input type="checkbox" name="origins" value="@country" class="form-check-input"
-                        @(selectedOrigins.Contains(country) ? "checked" : "") onchange="this.form.submit()" />
-                    <span class="text-sm text-gray-600">@country</span>
+                        @(selectedOrigins.Contains(country) ? "checked" : "") onchange="applyFilters()" />
+                    <span>@country</span>
                 </label>
             }
         </div>
@@ -167,82 +193,219 @@
 </div>
 
 <script>
-    // Hàm toggle section
-    function toggleSection(section) {
-        const sectionElement = document.getElementById(section + 'Section');
-        const iconElement = document.getElementById(section + 'Icon');
-        if (sectionElement.style.maxHeight === '0px' || sectionElement.style.maxHeight === '') {
-            sectionElement.style.maxHeight = '96px';
-            sectionElement.style.opacity = '1';
-            iconElement.classList.add('rotate-180');
-            iconElement.classList.add('text-blue-600');
-            iconElement.classList.remove('text-gray-500');
-        } else {
-            sectionElement.style.maxHeight = '0px';
-            sectionElement.style.opacity = '0';
-            iconElement.classList.remove('rotate-180');
-            iconElement.classList.remove('text-blue-600');
-            iconElement.classList.add('text-gray-500');
+// Biến để lưu trạng thái filter
+let currentFilters = {
+    brands: [],
+    origins: [],
+    priceRange: '',
+    sort: ''
+};
+// Debounce timer để tránh gọi API quá nhiều
+let filterTimeout;
+// Khởi tạo filter từ URL parameters
+function initializeFilters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    currentFilters.brands = urlParams.getAll('brands');
+    currentFilters.origins = urlParams.getAll('origins');
+    currentFilters.priceRange = urlParams.get('priceRange') || '';
+    currentFilters.sort = urlParams.get('sort') || '';
+    
+    updateActiveFiltersDisplay();
+    
+    // Cập nhật trạng thái active cho các button sort nếu có
+    if (currentFilters.sort) {
+        document.querySelectorAll('.btn-sort').forEach(btn => {
+            btn.classList.remove('btn-primary', 'text-white');
+            btn.classList.add('btn-outline-primary');
+        });
+        const activeBtn = document.querySelector(`.btn-sort[data-sort="${currentFilters.sort}"]`);
+        if (activeBtn) {
+            activeBtn.classList.remove('btn-outline-primary');
+            activeBtn.classList.add('btn-primary', 'text-white');
         }
     }
-
-    // Hàm xử lý checkbox
-    document.querySelectorAll('.form-check-input').forEach(checkbox => {
-        checkbox.addEventListener('change', function () {
-            const category = this.getAttribute('data-category');
-            const value = this.getAttribute('data-value');
-            const checked = this.checked;
-            const filters = JSON.parse(localStorage.getItem('filters') || '{}');
-            filters[category] = filters[category] || [];
-            if (checked) {
-                filters[category].push(value);
-            } else {
-                filters[category] = filters[category].filter((item: string) => item !== value);
-            }
-            localStorage.setItem('filters', JSON.stringify(filters));
-        });
+}
+// Cập nhật hiển thị các filter đang active
+function updateActiveFiltersDisplay() {
+    const activeFiltersDiv = document.getElementById('activeFilters');
+    const activeFilterTagsDiv = document.getElementById('activeFilterTags');
+    
+    let hasActiveFilters = false;
+    let tagsHtml = '';
+    
+    // Thêm tags cho brands
+    currentFilters.brands.forEach(brand => {
+        hasActiveFilters = true;
+        tagsHtml += `
+            <span class="active-filter-tag">
+                Thương hiệu: ${brand}
+                <span class="remove-filter" onclick="removeFilter('brands', '${brand}')">&times;</span>
+            </span>
+        `;
     });
-
-    // Hàm tìm kiếm
-    document.getElementById('audienceSearch').addEventListener('input', function () {
-        filterOptions('audiences');
+    
+    // Thêm tags cho origins
+    currentFilters.origins.forEach(origin => {
+        hasActiveFilters = true;
+        tagsHtml += `
+            <span class="active-filter-tag">
+                Nguồn gốc: ${origin}
+                <span class="remove-filter" onclick="removeFilter('origins', '${origin}')">&times;</span>
+            </span>
+        `;
     });
-    document.getElementById('countrySearch').addEventListener('input', function () {
-        filterOptions('countries');
-    });
-
-    function filterOptions(category) {
-        const searchInput = document.getElementById(category + 'Search');
-        const searchTerm = searchInput.value.toLowerCase();
-        const labels = document.querySelectorAll('#' + category + 'Section label');
-        labels.forEach(label => {
-            const text = label.querySelector('span').textContent.toLowerCase();
-            if (text.includes(searchTerm)) {
-                label.style.display = 'flex';
-            } else {
-                label.style.display = 'none';
-            }
-        });
+    
+    // Thêm tag cho price range
+    if (currentFilters.priceRange) {
+        hasActiveFilters = true;
+        let priceText = '';
+        switch (currentFilters.priceRange) {
+            case '1': priceText = 'Dưới 200.000đ'; break;
+            case '2': priceText = '200.000đ - 500.000đ'; break;
+            case '3': priceText = 'Trên 500.000đ'; break;
+        }
+        tagsHtml += `
+            <span class="active-filter-tag">
+                Giá: ${priceText}
+                <span class="remove-filter" onclick="removeFilter('priceRange', '${currentFilters.priceRange}')">&times;</span>
+            </span>
+        `;
     }
-
-    // Hàm reset filters
-    function resetFilters() {
-        document.querySelectorAll('.form-check-input').forEach(checkbox => {
-            checkbox.checked = false;
-        });
-        localStorage.removeItem('filters');
+    
+    activeFilterTagsDiv.innerHTML = tagsHtml;
+    activeFiltersDiv.style.display = hasActiveFilters ? 'block' : 'none';
+}
+// Xóa một filter cụ thể
+function removeFilter(type, value) {
+    if (type === 'brands') {
+        currentFilters.brands = currentFilters.brands.filter(b => b !== value);
+        document.querySelector(`input[name="brands"][value="${value}"]`).checked = false;
+    } else if (type === 'origins') {
+        currentFilters.origins = currentFilters.origins.filter(o => o !== value);
+        document.querySelector(`input[name="origins"][value="${value}"]`).checked = false;
+    } else if (type === 'priceRange') {
+        currentFilters.priceRange = '';
+        document.querySelectorAll('input[name="priceRange"]').forEach(radio => radio.checked = false);
     }
-
-    // Khởi tạo trạng thái từ localStorage
-    document.addEventListener('DOMContentLoaded', () => {
-        const filters = JSON.parse(localStorage.getItem('filters') || '{}');
-        Object.keys(filters).forEach(category => {
-            filters[category].forEach((value: string) => {
-                const checkbox = document.querySelector(`.form-check-input[data-category="${category}"][data-value="${value}"]`);
-                if (checkbox) {
-                    checkbox.checked = true;
+    
+    applyFilters();
+}
+// Xóa tất cả filters
+function clearAllFilters() {
+    // Xóa tất cả checkboxes và radio buttons
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.querySelectorAll('input[type="radio"]').forEach(rb => rb.checked = false);
+    
+    // Reset current filters
+    currentFilters = {
+        brands: [],
+        origins: [],
+        priceRange: '',
+        sort: currentFilters.sort // Giữ lại sort
+    };
+    
+    applyFilters();
+}
+// Áp dụng filters và load lại sản phẩm
+function applyFilters() {
+    // Cập nhật current filters từ form
+    currentFilters.brands = Array.from(document.querySelectorAll('input[name="brands"]:checked'))
+        .map(cb => cb.value);
+    currentFilters.origins = Array.from(document.querySelectorAll('input[name="origins"]:checked'))
+        .map(cb => cb.value);
+    currentFilters.priceRange = document.querySelector('input[name="priceRange"]:checked')?.value || '';
+    
+    // Cập nhật URL
+    updateURL();
+    
+    // Cập nhật hiển thị active filters
+    updateActiveFiltersDisplay();
+    
+    // Debounce để tránh gọi API quá nhiều
+    clearTimeout(filterTimeout);
+    filterTimeout = setTimeout(() => {
+        loadProducts();
+    }, 300);
+}
+// Cập nhật URL với các filter hiện tại
+function updateURL() {
+    const url = new URL(window.location.href);
+    
+    // Xóa tất cả parameters cũ
+    url.searchParams.delete('brands');
+    url.searchParams.delete('origins');
+    url.searchParams.delete('priceRange');
+    
+    // Thêm parameters mới
+    currentFilters.brands.forEach(brand => {
+        url.searchParams.append('brands', brand);
+    });
+    
+    currentFilters.origins.forEach(origin => {
+        url.searchParams.append('origins', origin);
+    });
+    
+    if (currentFilters.priceRange) {
+        url.searchParams.set('priceRange', currentFilters.priceRange);
+    }
+    
+    // Giữ lại sort parameter nếu có
+    if (currentFilters.sort) {
+        url.searchParams.set('sort', currentFilters.sort);
+    }
+    
+    // Cập nhật URL mà không reload trang
+    window.history.pushState({}, '', url);
+}
+// Load lại danh sách sản phẩm
+function loadProducts() {
+    const url = new URL(window.location.href);
+    
+    // Thêm AJAX header
+    const headers = {
+        'X-Requested-With': 'XMLHttpRequest'
+    };
+    
+    // Hiển thị loading
+    const productList = document.getElementById('product-list');
+    productList.innerHTML = '<div class="col-12 text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Đang tải...</span></div></div>';
+    
+    fetch(url, { headers })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newProductList = doc.querySelector('#product-list');
+            
+            if (newProductList) {
+                productList.innerHTML = newProductList.innerHTML;
+                
+                // Cập nhật số lượng sản phẩm
+                const productCount = newProductList.querySelectorAll('.col').length;
+                const productCountElement = document.getElementById('product-count');
+                if (productCountElement) {
+                    productCountElement.innerHTML = `Tìm thấy <span class=\"fw-semibold\">${productCount}</span> sản phẩm`;
                 }
-            });
+            } else {
+                productList.innerHTML = '<div class="col-12 text-center text-muted">Không tìm thấy sản phẩm nào.</div>';
+                const productCountElement = document.getElementById('product-count');
+                if (productCountElement) {
+                    productCountElement.innerHTML = 'Tìm thấy <span class=\"fw-semibold\">0</span> sản phẩm';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Lỗi khi tải sản phẩm:', error);
+            productList.innerHTML = '<div class="col-12 text-center text-danger">Có lỗi xảy ra khi tải sản phẩm.</div>';
         });
-    });
+}
+// Khởi tạo khi trang load
+document.addEventListener('DOMContentLoaded', function() {
+    initializeFilters();
+});
+// Lắng nghe sự kiện popstate để xử lý khi user navigate back/forward
+window.addEventListener('popstate', function() {
+    initializeFilters();
+    loadProducts();
+});
 </script>
