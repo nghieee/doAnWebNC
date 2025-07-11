@@ -9,6 +9,8 @@ D:\DoAnCaNhan\doAnWebNC\web-ban-thuoc\bin\Debug\net8.0\web-ban-thuoc.pdb
 D:\DoAnCaNhan\doAnWebNC\web-ban-thuoc\bin\Debug\net8.0\Azure.Core.dll
 D:\DoAnCaNhan\doAnWebNC\web-ban-thuoc\bin\Debug\net8.0\Azure.Identity.dll
 D:\DoAnCaNhan\doAnWebNC\web-ban-thuoc\bin\Debug\net8.0\Humanizer.dll
+D:\DoAnCaNhan\doAnWebNC\web-ban-thuoc\bin\Debug\net8.0\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
+D:\DoAnCaNhan\doAnWebNC\web-ban-thuoc\bin\Debug\net8.0\Microsoft.AspNetCore.Identity.UI.dll
 D:\DoAnCaNhan\doAnWebNC\web-ban-thuoc\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
 D:\DoAnCaNhan\doAnWebNC\web-ban-thuoc\bin\Debug\net8.0\Microsoft.Build.Locator.dll
 D:\DoAnCaNhan\doAnWebNC\web-ban-thuoc\bin\Debug\net8.0\Microsoft.CodeAnalysis.dll
@@ -147,6 +149,7 @@ D:\DoAnCaNhan\doAnWebNC\web-ban-thuoc\obj\Debug\net8.0\web-ban-thuoc.GeneratedMS
 D:\DoAnCaNhan\doAnWebNC\web-ban-thuoc\obj\Debug\net8.0\web-ban-thuoc.AssemblyInfoInputs.cache
 D:\DoAnCaNhan\doAnWebNC\web-ban-thuoc\obj\Debug\net8.0\web-ban-thuoc.AssemblyInfo.cs
 D:\DoAnCaNhan\doAnWebNC\web-ban-thuoc\obj\Debug\net8.0\web-ban-thuoc.csproj.CoreCompileInputs.cache
+D:\DoAnCaNhan\doAnWebNC\web-ban-thuoc\obj\Debug\net8.0\web-ban-thuoc.MvcApplicationPartsAssemblyInfo.cs
 D:\DoAnCaNhan\doAnWebNC\web-ban-thuoc\obj\Debug\net8.0\web-ban-thuoc.MvcApplicationPartsAssemblyInfo.cache
 D:\DoAnCaNhan\doAnWebNC\web-ban-thuoc\obj\Debug\net8.0\web-ban-thuoc.RazorAssemblyInfo.cache
 D:\DoAnCaNhan\doAnWebNC\web-ban-thuoc\obj\Debug\net8.0\web-ban-thuoc.RazorAssemblyInfo.cs
