@@ -7,7 +7,8 @@ public partial class Review
 {
     public int ReviewId { get; set; }
 
-    public int? UserId { get; set; }
+    // Đổi UserId sang string? để liên kết với IdentityUser
+    public string? UserId { get; set; }
 
     public int? ProductId { get; set; }
 
@@ -19,5 +20,6 @@ public partial class Review
 
     public virtual Product? Product { get; set; }
 
-    public virtual User? User { get; set; }
+    // Đổi navigation property sang IdentityUser
+    public virtual Microsoft.AspNetCore.Identity.IdentityUser? User { get; set; }
 }

@@ -7,7 +7,8 @@ public partial class Order
 {
     public int OrderId { get; set; }
 
-    public int? UserId { get; set; }
+    // Đổi UserId sang string? để phù hợp với Identity
+    public string? UserId { get; set; }
 
     public DateTime? OrderDate { get; set; }
 
@@ -23,5 +24,6 @@ public partial class Order
 
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 
-    public virtual User? User { get; set; }
+    // Navigation property tới IdentityUser
+    public virtual Microsoft.AspNetCore.Identity.IdentityUser? User { get; set; }
 }

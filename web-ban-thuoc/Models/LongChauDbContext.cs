@@ -25,6 +25,21 @@ public class LongChauDbContext : IdentityDbContext
     {
         // Đảm bảo InventoryTransaction có khóa chính
         modelBuilder.Entity<InventoryTransaction>().HasKey(x => x.TransactionId);
+        
+        // Cấu hình Order với IdentityUser (chỉ cấu hình này)
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.User)
+            .WithMany()
+            .HasForeignKey(o => o.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Cấu hình Review liên kết với IdentityUser
+        modelBuilder.Entity<Review>()
+            .HasOne<Microsoft.AspNetCore.Identity.IdentityUser>(r => r.User)
+            .WithMany()
+            .HasForeignKey(r => r.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // ... có thể thêm các cấu hình khác nếu cần
         base.OnModelCreating(modelBuilder);
     }

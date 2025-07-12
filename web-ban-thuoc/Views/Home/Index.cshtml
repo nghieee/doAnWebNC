@@ -145,8 +145,11 @@
                                                             1.25m).ToString("N0"))đ</div>
                             <p class="mt-1 bg-gray-200 text-gray-600 rounded text-xs w-fit opacity-50">@(product.Package ??
                                                             "Hộp")</p>
-                            <button class="mt-2 w-100 bg-primary text-white py-2 rounded-pill border-0">Chọn
-                                mua</button>
+                            <form asp-controller="Cart" asp-action="AddToCart" method="post" style="margin-top:8px;" class="add-to-cart-form">
+                                <input type="hidden" name="productId" value="@product.ProductId" />
+                                <input type="hidden" name="quantity" value="1" />
+                                <button type="submit" class="btn btn-primary w-100">Thêm vào giỏ</button>
+                            </form>
                         </div>
                     </div>
                 </a>

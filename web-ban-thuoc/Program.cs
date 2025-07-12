@@ -29,6 +29,9 @@ builder.Services.AddScoped<NavbarFilter>();
 builder.Services.AddControllersWithViews(options =>
     options.Filters.Add<NavbarFilter>());
 
+// Thêm vào trước builder.Build()
+builder.Services.AddSession();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -47,6 +50,9 @@ app.UseRouting();
 // Thêm UseAuthentication trước UseAuthorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Thêm vào pipeline, sau UseRouting, trước UseEndpoints hoặc UseAuthorization
+app.UseSession();
 
 app.MapControllerRoute(
     name: "default",

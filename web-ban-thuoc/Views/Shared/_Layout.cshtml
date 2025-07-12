@@ -27,6 +27,29 @@
             width: 100%;
             height: auto;
         }
+
+        /* Toast notification styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .toast {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: none;
+        }
+
+        .toast-success {
+            border-left: 4px solid #28a745;
+        }
+
+        .toast-error {
+            border-left: 4px solid #dc3545;
+        }
     </style>
 </head>
 
@@ -42,6 +65,9 @@
         <partial name="_Footer" />
     </div>
 
+    <!-- Toast notification container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <!-- JavaScript để kích hoạt Tooltip -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -50,8 +76,93 @@
                 return new bootstrap.Tooltip(tooltipTriggerEl)
             })
         });
-    </script>
 
+        // Hàm hiển thị toast notification
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toastContainer');
+            const toastId = 'toast-' + Date.now();
+            
+            const toastHtml = `
+                <div class="toast toast-${type} show" id="${toastId}" role="alert">
+                    <div class="toast-header">
+                        <i class="fas fa-${type === 'success' ? 'check-circle text-success' : 'exclamation-circle text-danger'} me-2"></i>
+                        <strong class="me-auto">Thông báo</strong>
+                        <button type="button" class="btn-close" onclick="closeToast('${toastId}')"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            `;
+            
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            
+            // Tự động ẩn sau 3 giây
+            setTimeout(() => {
+                closeToast(toastId);
+            }, 3000);
+        }
+
+        function closeToast(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.remove();
+            }
+        }
+
+        // Hiển thị toast từ TempData nếu có
+        @if (TempData["CartMessage"] != null)
+        {
+            <text>
+            showToast('@Html.Raw(TempData["CartMessage"])', 'success');
+            </text>
+        }
+
+        // Xử lý AJAX cho form thêm vào giỏ hàng
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('submit', function(e) {
+                if (e.target.classList.contains('add-to-cart-form')) {
+                    e.preventDefault();
+                    
+                    const form = e.target;
+                    const formData = new FormData(form);
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    
+                    // Hiển thị loading
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang thêm...';
+                    submitBtn.disabled = true;
+                    
+                    fetch('/Cart/AddToCart', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast(data.message, 'success');
+                        } else if (data.requireLogin) {
+                            showToast(data.message, 'error');
+                        } else {
+                            showToast('Có lỗi xảy ra khi thêm sản phẩm!', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToast('Có lỗi xảy ra khi thêm sản phẩm!', 'error');
+                    })
+                    .finally(() => {
+                        // Khôi phục button
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    });
+                }
+            });
+        });
+    </script>
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

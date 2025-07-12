@@ -8,25 +8,27 @@ using web_ban_thuoc.Services;
 
 namespace web_ban_thuoc.Controllers
 {
-    public class AuthController : Controller
-    {
+public class AuthController : Controller
+{
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ILogger<AuthController> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly LongChauDbContext _context;
 
-        public AuthController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, ILogger<AuthController> logger, IEmailSender emailSender)
+        public AuthController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, ILogger<AuthController> logger, IEmailSender emailSender, LongChauDbContext context)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _context = context;
         }
 
         [HttpGet]
-        public IActionResult Index()
-        {
-            ViewData["Title"] = "Tài khoản - Nhà Thuốc Long Châu";
+    public IActionResult Index()
+    {
+        ViewData["Title"] = "Tài khoản - Nhà Thuốc Long Châu";
             // Luôn trả về model mới khi GET, không nhận model lỗi
             return View("~/Views/Auth/Index.cshtml", new RegisterViewModel());
         }
