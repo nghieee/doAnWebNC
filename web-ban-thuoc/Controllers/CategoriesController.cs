@@ -35,8 +35,18 @@ public class CategoriesController : Controller
             .Select(c => c.CategoryId)
             .ToList();
 
-        var allCategoryIds = new List<int> { categoryId };
-        allCategoryIds.AddRange(childCategoryIds);
+        List<int> allCategoryIds;
+        if (childCategoryIds.Any())
+        {
+            // Nếu có con, lấy sản phẩm của chính nó và các con
+            allCategoryIds = new List<int> { categoryId };
+            allCategoryIds.AddRange(childCategoryIds);
+        }
+        else
+        {
+            // Nếu không có con, chỉ lấy sản phẩm của chính nó (danh mục cháu)
+            allCategoryIds = new List<int> { categoryId };
+        }
 
         var productsQuery = _context.Products
             .Where(p => p.CategoryId.HasValue && allCategoryIds.Contains(p.CategoryId.Value) && p.IsActive);

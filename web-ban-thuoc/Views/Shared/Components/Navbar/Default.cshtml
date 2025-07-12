@@ -156,8 +156,10 @@ else
             <div class="child-item d-flex align-items-center gap-2 hover-bg-light transition cursor-pointer" 
                  data-child-id="${child.CategoryId}" 
                  onmouseenter="renderGrandChildren('${parentId}', '${child.CategoryId}')">
-                <img src="${getImageUrl(child.ImageUrl, 'level_2')}" alt="${child.CategoryName}" width="24" height="24" class="object-contain" />
-                <span class="text-sm fw-medium">${child.CategoryName}</span>
+                <a href="/Categories/${child.CategoryId}" class="d-flex align-items-center gap-2 text-decoration-none text-dark w-100">
+                    <img src="${getImageUrl(child.ImageUrl, 'level_2')}" alt="${child.CategoryName}" width="24" height="24" class="object-contain" />
+                    <span class="text-sm fw-medium">${child.CategoryName}</span>
+                </a>
             </div>
         `).join('');
 
@@ -174,7 +176,7 @@ else
         container.innerHTML = grandchildren.length
             ? grandchildren.map(grandchild => `
                 <div class="col">
-                    <a href="/category/${grandchild.CategoryId}" class="text-decoration-none">
+                    <a href="/Categories/${grandchild.CategoryId}" class="text-decoration-none">
                         <div class="d-flex align-items-center gap-2 p-2 rounded hover-bg-light transition grandchild-item">
                             <img src="${getImageUrl(grandchild.ImageUrl, 'level_3')}" alt="${grandchild.CategoryName}" width="40" height="40" class="object-contain" />
                             <span class="text-sm text-dark">${grandchild.CategoryName}</span>
