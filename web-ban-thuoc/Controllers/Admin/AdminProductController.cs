@@ -51,7 +51,10 @@ namespace web_ban_thuoc.Controllers.Admin
                 .Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
             // Truyền dữ liệu filter cho view
-            ViewBag.Categories = _context.Categories.OrderBy(c => c.CategoryName).ToList();
+            ViewBag.Categories = _context.Categories
+                .Where(c => c.CategoryLevel == "2" || c.CategoryLevel == "3")
+                .OrderBy(c => c.CategoryName)
+                .ToList();
             ViewBag.Origins = _context.Products.Where(p => !string.IsNullOrEmpty(p.Origin)).Select(p => p.Origin).Distinct().OrderBy(o => o).ToList();
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;

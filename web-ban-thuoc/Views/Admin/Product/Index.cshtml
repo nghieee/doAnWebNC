@@ -2,22 +2,62 @@
 @{
     ViewData["Title"] = "Quản lý sản phẩm";
     Layout = "~/Views/Admin/_Layout.cshtml";
+    var categoryOptions = "";
+    foreach (var cat in (IEnumerable<dynamic>)ViewBag.Categories)
+    {
+        var selected = (ViewBag.SelectedCategory != null && ViewBag.SelectedCategory.ToString() == cat.CategoryId.ToString()) ? "selected" : "";
+        categoryOptions += $"<option value='{cat.CategoryId}' {selected}>{cat.CategoryName}</option>";
+    }
+    var originOptions = "";
+    foreach (var origin in (IEnumerable<string>)ViewBag.Origins)
+    {
+        var selected = (ViewBag.SelectedOrigin != null && ViewBag.SelectedOrigin.ToString() == origin) ? "selected" : "";
+        originOptions += $"<option value='{origin}' {selected}>{origin}</option>";
+    }
 }
 
 <div class="container-fluid py-3">
-    <!-- Header với nút thêm sản phẩm -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="h4 text-primary fw-bold mb-0">Danh sách sản phẩm</h2>
-        <a href="@Url.Action("Create", "AdminProduct")" class="btn btn-primary btn-lg d-flex align-items-center gap-2">
-            <i class="fa fa-plus"></i> Thêm sản phẩm
-        </a>
+    <!-- Thanh lọc sản phẩm -->
+    <form method="get" class="row g-3 align-items-end mb-4 bg-white shadow-sm rounded-4 px-4 py-3">
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Danh mục</label>
+            <select class="form-select" name="categoryId">
+                <option value="">Tất cả</option>
+                @Html.Raw(categoryOptions)
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Nguồn gốc</label>
+            <select class="form-select" name="origin">
+                <option value="">Tất cả</option>
+                @Html.Raw(originOptions)
+            </select>
+        </div>
+        <div class="col-md-4 d-flex gap-2 align-items-end">
+            <button type="submit" class="btn btn-primary"><i class="fa fa-filter me-1"></i> Lọc</button>
+            <a href="@Url.Action("Index", "AdminProduct")" class="btn btn-outline-secondary">Xóa bộ lọc</a>
+        </div>
+    </form>
+    <!-- Header với nút thêm sản phẩm và nút xóa nhanh -->
+    <div class="d-flex justify-content-end align-items-center mb-4">
+        <div class="d-flex gap-2">
+            <button id="bulkDeleteBtn" class="btn btn-danger btn-lg d-none align-items-center gap-2" onclick="return confirm('Bạn có chắc muốn xóa các sản phẩm đã chọn?');">
+                <i class="fa fa-trash"></i> Xóa nhanh
+            </button>
+            <a href="@Url.Action("Create", "AdminProduct")" class="btn btn-primary btn-lg d-flex align-items-center gap-2">
+                <i class="fa fa-plus"></i> Thêm sản phẩm
+            </a>
+        </div>
     </div>
-
     <!-- Bảng sản phẩm -->
     <div class="table-responsive">
-        <table class="table table-hover align-middle table-bordered bg-white shadow-sm rounded-4 overflow-hidden" style="min-width: 1100px;">
+        <form id="bulkDeleteForm" method="post" action="@Url.Action("BulkDelete", "AdminProduct")">
+        <table class="table table-hover align-middle table-bordered bg-white shadow-sm overflow-hidden" style="min-width: 1100px;">
             <thead class="table-light sticky-top">
                 <tr style="height: 60px;">
+                    <th class="text-center" style="width:40px;">
+                        <input type="checkbox" id="checkAll" />
+                    </th>
                     <th class="text-center" style="width: 48px;">ID</th>
                     <th class="text-center" style="width: 100px;">Ảnh</th>
                     <th style="min-width: 320px;">Tên sản phẩm</th>
@@ -35,6 +75,9 @@
                         ?? "default.png";
                     var mainImgPath = mainImg == "default.png" ? "/images/products/default.png" : $"/images/products/{mainImg}";
                     <tr style="height: 88px; vertical-align: middle;" class="table-row-hover">
+                        <td class="text-center">
+                            <input type="checkbox" class="row-checkbox" name="selectedIds" value="@item.ProductId" />
+                        </td>
                         <td class="fw-bold text-secondary text-center">@item.ProductId</td>
                         <td class="text-center">
                             <img src="@mainImgPath" alt="Ảnh sản phẩm" class="rounded-3 border shadow-sm" style="width: 68px; height: 68px; object-fit: cover; background: #f4f6fb;" />
@@ -69,6 +112,7 @@
                 }
             </tbody>
         </table>
+        </form>
     </div>
 
     <!-- Phân trang -->
@@ -118,6 +162,33 @@
 
 @section Scripts {
     <script>
+        // Tick chọn tất cả
+        $(document).on('change', '#checkAll', function() {
+            $('.row-checkbox').prop('checked', this.checked);
+            toggleBulkDeleteBtn();
+        });
+        // Tick từng dòng
+        $(document).on('change', '.row-checkbox', function() {
+            var allChecked = $('.row-checkbox').length === $('.row-checkbox:checked').length;
+            $('#checkAll').prop('checked', allChecked);
+            toggleBulkDeleteBtn();
+        });
+        // Hiện/ẩn nút xóa nhanh
+        function toggleBulkDeleteBtn() {
+            if ($('.row-checkbox:checked').length > 0) {
+                $('#bulkDeleteBtn').removeClass('d-none');
+            } else {
+                $('#bulkDeleteBtn').addClass('d-none');
+            }
+        }
+        // Xóa nhanh các sản phẩm đã chọn
+        $('#bulkDeleteBtn').on('click', function(e) {
+            e.preventDefault();
+            if (confirm('Bạn có chắc muốn xóa các sản phẩm đã chọn?')) {
+                $('#bulkDeleteForm').submit();
+            }
+        });
+
         $(document).on('click', '.view-detail-btn', function() {
             var id = $(this).data('id');
             $('#productDetailContent').html('<div class="text-center p-5 text-secondary"><div class="spinner-border text-primary mb-2"></div><div>Đang tải thông tin sản phẩm...</div></div>');
