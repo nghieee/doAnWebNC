@@ -56,6 +56,11 @@ public class AuthController : Controller
             if (result.Succeeded)
             {
                 _logger.LogInformation("Login successful for email: {Email}", model.Email);
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (await _userManager.IsInRoleAsync(user, "Admin"))
+                {
+                    return RedirectToAction("Index", "AdminHome");
+                }
                 return RedirectToAction("Index", "Home");
             }
             else

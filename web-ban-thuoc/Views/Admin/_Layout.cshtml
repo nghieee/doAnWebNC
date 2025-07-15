@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin</title>
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/site.css" />
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <style>
+        body { background: #f4f6fb; }
+        .admin-sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #1976d2 80%, #1565c0 100%);
+            color: #fff;
+            padding: 0;
+            box-shadow: 2px 0 10px rgba(25, 118, 210, 0.08);
+            transition: width 0.3s cubic-bezier(.4,2,.6,1), left 0.3s;
+            width: 240px;
+            position: relative;
+            z-index: 1000;
+        }
+        .admin-sidebar.collapsed {
+            width: 70px;
+        }
+        .admin-sidebar .sidebar-header {
+            padding: 2rem 1rem 1.5rem 1rem;
+            text-align: center;
+            border-bottom: 1px solid #1565c0;
+        }
+        .admin-sidebar .sidebar-logo {
+            max-width: 120px;
+            max-height: 48px;
+            transition: max-width 0.3s;
+        }
+        .admin-sidebar.collapsed .sidebar-logo {
+            max-width: 40px;
+        }
+        .admin-sidebar .toggle-btn {
+            position: absolute;
+            top: 1.2rem;
+            right: -18px;
+            background: #1976d2;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.15);
+            z-index: 1100;
+            transition: right 0.3s;
+        }
+        .admin-sidebar.collapsed .toggle-btn {
+            right: -18px;
+        }
+        .admin-sidebar .nav-link {
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 500;
+            border-radius: 0.5rem;
+            margin: 0.25rem 1rem;
+            padding: 0.85rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+        .admin-sidebar .nav-link.active, .admin-sidebar .nav-link:hover {
+            background: #fff;
+            color: #1976d2;
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+        }
+        .admin-sidebar .nav-link .sidebar-text {
+            transition: opacity 0.3s, width 0.3s;
+            opacity: 1;
+            width: auto;
+        }
+        .admin-sidebar.collapsed .nav-link .sidebar-text {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+        }
+        .admin-sidebar .logout {
+            margin-top: auto;
+            margin-bottom: 2rem;
+        }
+        .admin-sidebar .logout .nav-link {
+            background: #fff;
+            color: #d32f2f;
+            font-weight: bold;
+            justify-content: center;
+        }
+        .admin-sidebar .logout .nav-link:hover {
+            background: #d32f2f;
+            color: #fff;
+        }
+        .admin-header {
+            background: #fff;
+            border-bottom: 1px solid #e3e6f0;
+            padding: 1.5rem 2rem 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            border-radius: 0 0 1rem 1rem;
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.04);
+        }
+        .admin-header .title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1976d2;
+            letter-spacing: 1px;
+        }
+        @@media (max-width: 991.98px) {
+            .admin-sidebar { min-height: auto; }
+            .admin-header { padding: 1rem; }
+        }
+        @@media (max-width: 767.98px) {
+            .admin-sidebar { position: static; width: 100%; border-radius: 0 0 1rem 1rem; }
+            .admin-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row flex-nowrap">
+            <nav id="adminSidebar" class="col-auto col-md-3 col-xl-2 px-0 admin-sidebar d-flex flex-column position-relative">
+                <div class="sidebar-header mb-4">
+                    <img src="/images/default/header_logo_brand.png" alt="Logo" class="sidebar-logo mb-2" />
+                    <span class="toggle-btn" onclick="toggleSidebar()">
+                        <i class="fa-solid fa-angles-left"></i>
+                    </span>
+                </div>
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a href="/admin" class="nav-link @(Context.Request.Path == "/admin" ? "active" : "")">
+                            <i class="fa-solid fa-gauge"></i>
+                            <span class="sidebar-text">Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link">
+                            <i class="fa-solid fa-box"></i>
+                            <span class="sidebar-text">Sản phẩm</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link">
+                            <i class="fa-solid fa-tags"></i>
+                            <span class="sidebar-text">Danh mục</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            <span class="sidebar-text">Đơn hàng</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link">
+                            <i class="fa-solid fa-users"></i>
+                            <span class="sidebar-text">Người dùng</span>
+                        </a>
+                    </li>
+                </ul>
+                <div class="logout mt-auto">
+                    <a href="/Auth/Logout" class="nav-link">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span class="sidebar-text">Đăng xuất</span>
+                    </a>
+                </div>
+            </nav>
+            <main class="col py-3">
+                <div class="admin-header">
+                    <div class="title">@ViewData["Title"]</div>
+                    <div class="d-none d-md-block">
+                        <span class="text-secondary">Xin chào, <b>Admin</b></span>
+                    </div>
+                </div>
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
+    <script>
+        function toggleSidebar() {
+            var sidebar = document.getElementById('adminSidebar');
+            sidebar.classList.toggle('collapsed');
+            var icon = sidebar.querySelector('.toggle-btn i');
+            if (sidebar.classList.contains('collapsed')) {
+                icon.classList.remove('fa-angles-left');
+                icon.classList.add('fa-angles-right');
+            } else {
+                icon.classList.remove('fa-angles-right');
+                icon.classList.add('fa-angles-left');
+            }
+        }
+    </script>
+</body>
+</html> 

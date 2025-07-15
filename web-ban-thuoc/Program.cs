@@ -34,6 +34,40 @@ builder.Services.AddSession();
 
 var app = builder.Build();
 
+// Seed role và user admin
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+
+    // Tạo role Admin nếu chưa có
+    if (!await roleManager.RoleExistsAsync("Admin"))
+    {
+        await roleManager.CreateAsync(new IdentityRole("Admin"));
+    }
+
+    // Tạo tài khoản admin nếu chưa có
+    var adminEmail = "admin@gmail.com";
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+    if (adminUser == null)
+    {
+        adminUser = new IdentityUser
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            EmailConfirmed = true
+        };
+        await userManager.CreateAsync(adminUser, "Admin123."); // Đặt mật khẩu mạnh
+    }
+
+    // Gán role Admin cho tài khoản này
+    if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+    {
+        await userManager.AddToRoleAsync(adminUser, "Admin");
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -54,9 +88,19 @@ app.UseAuthorization();
 // Thêm vào pipeline, sau UseRouting, trước UseEndpoints hoặc UseAuthorization
 app.UseSession();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.UseEndpoints(endpoints =>
+{
+    // Route cho admin
+    endpoints.MapControllerRoute(
+        name: "admin",
+        pattern: "admin/{action=Index}/{id?}",
+        defaults: new { controller = "AdminHome", action = "Index" }
+    );
+    // Route mặc định
+    endpoints.MapControllerRoute(
+        name: "default",
+        pattern: "{controller=Home}/{action=Index}/{id?}");
+});
 
 // Thêm route cho Identity UI
 app.MapRazorPages();

@@ -26,6 +26,14 @@ build_property.GenerateRazorMetadataSourceChecksumAttributes =
 build_property.MSBuildProjectDirectory = D:\DoAnCaNhan\doAnWebNC\web-ban-thuoc
 build_property._RazorSourceGeneratorDebug = 
 
+[D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Admin/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Admin/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cX0xheW91dC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Auth/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXV0aFxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
