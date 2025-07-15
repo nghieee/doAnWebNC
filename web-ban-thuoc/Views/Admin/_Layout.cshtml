@@ -13,13 +13,13 @@
         body { background: #f4f6fb; }
         .admin-sidebar {
             min-height: 100vh;
+            height: 100px;
             background: linear-gradient(180deg, #1976d2 80%, #1565c0 100%);
             color: #fff;
             padding: 0;
             box-shadow: 2px 0 10px rgba(25, 118, 210, 0.08);
             transition: width 0.3s cubic-bezier(.4,2,.6,1), left 0.3s;
             width: 240px;
-            position: relative;
             z-index: 1000;
         }
         .admin-sidebar.collapsed {
@@ -131,7 +131,7 @@
 <body>
     <div class="container-fluid">
         <div class="row flex-nowrap">
-            <nav id="adminSidebar" class="col-auto col-md-3 col-xl-2 px-0 admin-sidebar d-flex flex-column position-relative">
+            <nav id="adminSidebar" class="col-auto col-md-3 col-xl-2 px-0 admin-sidebar d-flex flex-column position-sticky top-0">
                 <div class="sidebar-header mb-4">
                     <img src="/images/default/header_logo_brand.png" alt="Logo" class="sidebar-logo mb-2" />
                     <span class="toggle-btn" onclick="toggleSidebar()">
@@ -146,7 +146,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="nav-link">
+                        <a href="/AdminProduct" class="nav-link">
                             <i class="fa-solid fa-box"></i>
                             <span class="sidebar-text">Sản phẩm</span>
                         </a>
@@ -188,6 +188,7 @@
             </main>
         </div>
     </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
     <script>
@@ -204,5 +205,6 @@
             }
         }
     </script>
+    @RenderSection("Scripts", required: false)
 </body>
 </html> 

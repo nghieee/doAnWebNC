@@ -1,0 +1,180 @@
+@model IEnumerable<web_ban_thuoc.Models.Product>
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+
+<div class="container-fluid py-3">
+    <!-- Header với nút thêm sản phẩm -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h4 text-primary fw-bold mb-0">Danh sách sản phẩm</h2>
+        <a href="@Url.Action("Create", "AdminProduct")" class="btn btn-primary btn-lg d-flex align-items-center gap-2">
+            <i class="fa fa-plus"></i> Thêm sản phẩm
+        </a>
+    </div>
+
+    <!-- Bảng sản phẩm -->
+    <div class="table-responsive">
+        <table class="table table-hover align-middle table-bordered bg-white shadow-sm rounded-4 overflow-hidden" style="min-width: 1100px;">
+            <thead class="table-light sticky-top">
+                <tr style="height: 60px;">
+                    <th class="text-center" style="width: 48px;">ID</th>
+                    <th class="text-center" style="width: 100px;">Ảnh</th>
+                    <th style="min-width: 320px;">Tên sản phẩm</th>
+                    <th class="text-center" style="width: 120px;">Giá</th>
+                    <th class="text-center" style="width: 180px;">Danh mục</th>
+                    <th class="text-center" style="width: 110px;">Trạng thái</th>
+                    <th class="text-center" style="width: 170px;">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    var mainImg = item.ProductImages?.FirstOrDefault(i => i.IsMain == true)?.ImageUrl
+                        ?? item.ProductImages?.FirstOrDefault()?.ImageUrl
+                        ?? "default.png";
+                    var mainImgPath = mainImg == "default.png" ? "/images/products/default.png" : $"/images/products/{mainImg}";
+                    <tr style="height: 88px; vertical-align: middle;" class="table-row-hover">
+                        <td class="fw-bold text-secondary text-center">@item.ProductId</td>
+                        <td class="text-center">
+                            <img src="@mainImgPath" alt="Ảnh sản phẩm" class="rounded-3 border shadow-sm" style="width: 68px; height: 68px; object-fit: cover; background: #f4f6fb;" />
+                        </td>
+                        <td class="fw-semibold text-wrap">@item.ProductName</td>
+                        <td class="text-primary fw-bold text-center">@item.Price.ToString("N0") đ</td>
+                        <td class="text-center">@item.Category?.CategoryName</td>
+                        <td class="text-center">
+                            @if (item.IsActive)
+                            {
+                                <span class="badge bg-success-subtle text-success px-3 py-2 fs-6">Hiển thị</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary-subtle text-secondary px-3 py-2 fs-6">Ẩn</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-info btn-sm px-3 py-2 me-1 view-detail-btn" data-id="@item.ProductId" data-bs-toggle="tooltip" data-bs-placement="top" title="Xem chi tiết">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                                <a href="@Url.Action("Edit", "AdminProduct", new { id = item.ProductId })" class="btn btn-warning btn-sm px-3 py-2 me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Sửa sản phẩm">
+                                    <i class="fa fa-edit"></i>
+                                </a>
+                                <a href="@Url.Action("Delete", "AdminProduct", new { id = item.ProductId })" class="btn btn-danger btn-sm px-3 py-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Xóa sản phẩm" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?');">
+                                    <i class="fa fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Phân trang -->
+    @if (ViewBag.TotalPages > 1)
+    {
+        <nav class="d-flex justify-content-center mt-4">
+            <ul class="pagination pagination-sm">
+                <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = ViewBag.CurrentPage - 1 })" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+                {
+                    <li class="page-item @(i == (int)ViewBag.CurrentPage ? "active" : "")">
+                        <a class="page-link @(i == (int)ViewBag.CurrentPage ? "bg-primary text-white" : "")" href="@Url.Action("Index", new { page = i })">@i</a>
+                    </li>
+                }
+                <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = ViewBag.CurrentPage + 1 })" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+
+    <!-- Modal chi tiết sản phẩm -->
+    <div class="modal fade" id="productDetailModal" tabindex="-1" aria-labelledby="productDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="productDetailModalLabel"><i class="fa fa-box me-2"></i> Chi tiết sản phẩm</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body p-4" id="productDetailContent">
+                    <div class="text-center p-5 text-secondary">
+                        <div class="spinner-border text-primary mb-2"></div>
+                        <div>Đang tải thông tin sản phẩm...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        $(document).on('click', '.view-detail-btn', function() {
+            var id = $(this).data('id');
+            $('#productDetailContent').html('<div class="text-center p-5 text-secondary"><div class="spinner-border text-primary mb-2"></div><div>Đang tải thông tin sản phẩm...</div></div>');
+            $('#productDetailModal').modal('show');
+            $.get('/AdminProduct/GetProductDetail/' + id, function(html) {
+                $('#productDetailContent').html(html);
+            }).fail(function() {
+                $('#productDetailContent').html('<div class="alert alert-danger m-4">Không thể tải thông tin sản phẩm!</div>');
+            });
+        });
+
+        // Khởi tạo tooltip cho các nút hành động
+        $(document).ready(function() {
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+    </script>
+}
+
+<style>
+    /* Tùy chỉnh giao diện bảng */
+    .table-row-hover:hover {
+        background-color: #f8f9fa;
+        transition: background-color 0.2s;
+    }
+
+    /* Tùy chỉnh nút trong btn-group */
+    .btn-group .btn {
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+    .btn-group .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Tùy chỉnh phân trang */
+    .pagination-sm .page-link {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.9rem;
+        border-radius: 0.25rem;
+    }
+    .pagination-sm .page-item.active .page-link {
+        background-color: #1976d2;
+        border-color: #1976d2;
+    }
+    .pagination-sm .page-link:focus {
+        box-shadow: none;
+    }
+
+    /* Modal tùy chỉnh */
+    .modal-xl {
+        max-width: 90%;
+    }
+    .modal-header {
+        border-bottom: none;
+    }
+    .modal-footer {
+        border-top: none;
+    }
+</style>

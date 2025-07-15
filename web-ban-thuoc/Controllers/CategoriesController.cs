@@ -40,7 +40,7 @@ public class CategoriesController : Controller
         {
             // Nếu có con, lấy sản phẩm của chính nó và các con
             allCategoryIds = new List<int> { categoryId };
-            allCategoryIds.AddRange(childCategoryIds);
+        allCategoryIds.AddRange(childCategoryIds);
         }
         else
         {

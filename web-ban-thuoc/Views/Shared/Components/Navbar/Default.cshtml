@@ -157,8 +157,8 @@ else
                  data-child-id="${child.CategoryId}" 
                  onmouseenter="renderGrandChildren('${parentId}', '${child.CategoryId}')">
                 <a href="/Categories/${child.CategoryId}" class="d-flex align-items-center gap-2 text-decoration-none text-dark w-100">
-                    <img src="${getImageUrl(child.ImageUrl, 'level_2')}" alt="${child.CategoryName}" width="24" height="24" class="object-contain" />
-                    <span class="text-sm fw-medium">${child.CategoryName}</span>
+                <img src="${getImageUrl(child.ImageUrl, 'level_2')}" alt="${child.CategoryName}" width="24" height="24" class="object-contain" />
+                <span class="text-sm fw-medium">${child.CategoryName}</span>
                 </a>
             </div>
         `).join('');
