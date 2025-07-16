@@ -15,7 +15,7 @@ namespace web_ban_thuoc.Controllers.Admin
             _context = context;
         }
 
-        public IActionResult Index(int? parentId1 = null, int? parentId2 = null, int page = 1)
+        public IActionResult Index(int? parentId1 = null, int? parentId2 = null, int page = 1, string? isFeature = null)
         {
             int pageSize = 12;
             var categories = _context.Categories
@@ -29,6 +29,14 @@ namespace web_ban_thuoc.Controllers.Admin
             // Lọc theo cấp 2
             if (parentId2.HasValue)
                 categories = categories.Where(c => c.ParentCategoryId == parentId2 || c.CategoryId == parentId2);
+            // Lọc theo danh mục nổi bật
+            if (!string.IsNullOrEmpty(isFeature))
+            {
+                if (isFeature == "true")
+                    categories = categories.Where(c => c.IsFeature);
+                else if (isFeature == "false")
+                    categories = categories.Where(c => !c.IsFeature);
+            }
             // Danh sách danh mục cấp 1 cho filter
             var parentCategories1 = _context.Categories.Where(c => c.CategoryLevel == "1").OrderBy(c => c.CategoryName).ToList();
             // Danh sách danh mục cấp 2 cho filter (theo cấp 1 nếu có)
@@ -46,12 +54,14 @@ namespace web_ban_thuoc.Controllers.Admin
             ViewBag.SelectedParentId2 = parentId2;
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
+            ViewBag.SelectedIsFeature = isFeature;
             return View("~/Views/Admin/Category/Index.cshtml", pagedCategories);
         }
 
         public IActionResult Create()
         {
-            ViewBag.ParentCategories = _context.Categories.OrderBy(c => c.CategoryName).ToList();
+            ViewBag.ParentCategories1 = _context.Categories.Where(c => c.CategoryLevel == "1").OrderBy(c => c.CategoryName).ToList();
+            ViewBag.ParentCategories2 = _context.Categories.Where(c => c.CategoryLevel == "2").OrderBy(c => c.CategoryName).ToList();
             return View("~/Views/Admin/Category/Create.cshtml");
         }
 
@@ -76,8 +86,22 @@ namespace web_ban_thuoc.Controllers.Admin
                 _context.SaveChanges();
                 return RedirectToAction("Index");
             }
-            ViewBag.ParentCategories = _context.Categories.OrderBy(c => c.CategoryName).ToList();
+            ViewBag.ParentCategories1 = _context.Categories.Where(c => c.CategoryLevel == "1").OrderBy(c => c.CategoryName).ToList();
+            ViewBag.ParentCategories2 = _context.Categories.Where(c => c.CategoryLevel == "2").OrderBy(c => c.CategoryName).ToList();
             return View("~/Views/Admin/Category/Create.cshtml", category);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult BulkDelete(int[] selectedIds)
+        {
+            if (selectedIds != null && selectedIds.Length > 0)
+            {
+                var categories = _context.Categories.Where(c => selectedIds.Contains(c.CategoryId)).ToList();
+                _context.Categories.RemoveRange(categories);
+                _context.SaveChanges();
+            }
+            return RedirectToAction("Index");
         }
     }
 } 

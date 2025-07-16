@@ -18,24 +18,35 @@
         var selected = (selectedParentId2 == cat.CategoryId) ? "selected" : "";
         parentOptions2 += $"<option value='{cat.CategoryId}' {selected}>{cat.CategoryName}</option>";
     }
+    var isFeatureOptions = "<option value=\"\">Tất cả</option>";
+    var selectedIsFeature = ViewBag.SelectedIsFeature as string ?? "";
+    isFeatureOptions += $"<option value='true' {(selectedIsFeature == "true" ? "selected" : "")}>Nổi bật</option>";
+    isFeatureOptions += $"<option value='false' {(selectedIsFeature == "false" ? "selected" : "")}>Thường</option>";
 }
 <div class="container-fluid py-3">
-    <form method="get" class="row g-3 align-items-end mb-4 bg-white shadow-sm rounded-4 px-4 py-3" style="max-width: 900px;">
-        <div class="col-md-5">
+    <!-- Form filter -->
+    <form method="get" class="row g-3 align-items-end mb-4 bg-white shadow-sm rounded-4 px-4 py-3">
+        <div class="col-md-3">
             <label class="form-label fw-semibold">Lọc theo danh mục cấp 1</label>
             <select class="form-select" name="parentId1" id="parentId1">
                 @Html.Raw(parentOptions1)
             </select>
         </div>
-        <div class="col-md-5">
+        <div class="col-md-3">
             <label class="form-label fw-semibold">Lọc theo danh mục cấp 2</label>
             <select class="form-select" name="parentId2" id="parentId2">
                 @Html.Raw(parentOptions2)
             </select>
         </div>
-        <div class="col-md-2 d-flex gap-2 align-items-end">
-            <button type="submit" class="btn btn-primary w-100 d-flex"><i class="fa fa-filter me-1 align-self-center"></i> Lọc</button>
-            <a href="@Url.Action("Index", "AdminCategory")" class="btn btn-outline-secondary w-100">Xóa</a>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Lọc theo danh mục nổi bật</label>
+            <select class="form-select" name="isFeature">
+                @Html.Raw(isFeatureOptions)
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2 align-items-end">
+            <button type="submit" class="btn btn-primary"><i class="fa fa-filter me-1 align-self-center"></i> Lọc</button>
+            <a href="@Url.Action("Index", "AdminCategory")" class="btn btn-outline-secondary">Xóa bộ lọc</a>
         </div>
     </form>
     <script>
@@ -45,53 +56,73 @@
             this.form.submit();
         });
     </script>
-    <div class="table-responsive">
-        <table class="table table-hover align-middle table-bordered bg-white shadow-sm overflow-hidden" style="min-width: 900px;">
-            <thead class="table-light sticky-top">
-                <tr style="height: 56px;">
-                    <th class="text-center" style="width: 60px;">ID</th>
-                    <th style="min-width: 220px;">Tên danh mục</th>
-                    <th class="text-center" style="width: 80px;">Cấp</th>
-                    <th style="min-width: 180px;">Danh mục cha</th>
-                    <th class="text-center" style="width: 120px;">Số sản phẩm</th>
-                    <th class="text-center" style="width: 110px;">Trạng thái</th>
-                    <th class="text-center" style="width: 160px;">Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr style="height: 64px; vertical-align: middle;">
-                        <td class="fw-bold text-secondary text-center">@item.CategoryId</td>
-                        <td class="fw-semibold">@item.CategoryName</td>
-                        <td class="text-center">@item.CategoryLevel</td>
-                        <td>@item.ParentCategory?.CategoryName</td>
-                        <td class="text-center">@item.ProductCount sản phẩm</td>
-                        <td class="text-center">
-                            @if (item.IsFeature)
-                            {
-                                <span class="badge bg-success-subtle text-success px-3 py-2 fs-6">Hiển thị</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary-subtle text-secondary px-3 py-2 fs-6">Ẩn</span>
-                            }
-                        </td>
-                        <td class="text-center">
-                            <div class="btn-group" role="group">
-                                <a href="#" class="btn btn-warning btn-sm px-3 py-2 me-1" data-bs-toggle="tooltip" title="Sửa danh mục">
-                                    <i class="fa fa-edit"></i>
-                                </a>
-                                <a href="#" class="btn btn-danger btn-sm px-3 py-2" data-bs-toggle="tooltip" title="Xóa danh mục">
-                                    <i class="fa fa-trash"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <!-- Nút thêm và xóa nhanh -->
+    <div class="d-flex justify-content-end align-items-center mb-4">
+        <div class="d-flex gap-2">
+            <button id="bulkDeleteBtn" class="btn btn-danger btn-lg d-none align-items-center gap-2">
+                <i class="fa fa-trash"></i> Xóa nhanh
+            </button>
+            <a href="@Url.Action("Create", "AdminCategory")" class="btn btn-primary btn-lg d-flex align-items-center gap-2">
+                <i class="fa fa-plus"></i> Thêm danh mục
+            </a>
+        </div>
     </div>
+    <!-- bảng danh mục -->
+    <form id="bulkDeleteForm" method="post" action="@Url.Action("BulkDelete", "AdminCategory")">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle table-bordered bg-white shadow-sm overflow-hidden" style="min-width: 900px;">
+                <thead class="table-light sticky-top">
+                    <tr style="height: 56px;">
+                        <th class="text-center" style="width:40px;">
+                            <input type="checkbox" id="checkAll" />
+                        </th>
+                        <th class="text-center" style="width: 60px;">ID</th>
+                        <th style="min-width: 220px;">Tên danh mục</th>
+                        <th class="text-center" style="width: 80px;">Cấp</th>
+                        <th style="min-width: 180px;">Danh mục cha</th>
+                        <th class="text-center" style="width: 120px;">Số sản phẩm</th>
+                        <th class="text-center" style="width: 110px;">Danh mục nổi bật</th>
+                        <th class="text-center" style="width: 160px;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr style="height: 64px; vertical-align: middle;">
+                            <td class="text-center">
+                                <input type="checkbox" class="row-checkbox" name="selectedIds" value="@item.CategoryId" />
+                            </td>
+                            <td class="fw-bold text-secondary text-center">@item.CategoryId</td>
+                            <td class="fw-semibold">@item.CategoryName</td>
+                            <td class="text-center">@item.CategoryLevel</td>
+                            <td>@item.ParentCategory?.CategoryName</td>
+                            <td class="text-center">@item.ProductCount sản phẩm</td>
+                            <td class="text-center">
+                                @if (item.IsFeature)
+                                {
+                                    <span class="badge bg-success-subtle text-success px-3 py-2 fs-6">Nổi bật</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-subtle text-secondary px-3 py-2 fs-6">Thường</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a href="#" class="btn btn-warning btn-sm px-3 py-2 me-1" data-bs-toggle="tooltip" title="Sửa danh mục">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-danger btn-sm px-3 py-2" data-bs-toggle="tooltip" title="Xóa danh mục">
+                                        <i class="fa fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </form>
     @if (ViewBag.TotalPages > 1)
     {
         <nav class="d-flex justify-content-center mt-4">
@@ -118,6 +149,33 @@
 </div>
 @section Scripts {
     <script>
+        // Tick chọn tất cả
+        $(document).on('change', '#checkAll', function() {
+            $('.row-checkbox').prop('checked', this.checked);
+            toggleBulkDeleteBtn();
+        });
+        // Tick từng dòng
+        $(document).on('change', '.row-checkbox', function() {
+            var allChecked = $('.row-checkbox').length === $('.row-checkbox:checked').length;
+            $('#checkAll').prop('checked', allChecked);
+            toggleBulkDeleteBtn();
+        });
+        // Hiện/ẩn nút xóa nhanh
+        function toggleBulkDeleteBtn() {
+            if ($('.row-checkbox:checked').length > 0) {
+                $('#bulkDeleteBtn').removeClass('d-none');
+            } else {
+                $('#bulkDeleteBtn').addClass('d-none');
+            }
+        }
+        // Xóa nhanh các danh mục đã chọn
+        $('#bulkDeleteBtn').on('click', function(e) {
+            e.preventDefault();
+            if (confirm('Bạn có chắc muốn xóa các danh mục đã chọn?')) {
+                $('#bulkDeleteForm').submit();
+            }
+        });
+        // Khởi tạo tooltip cho các nút hành động
         $(function () {
             $('[data-bs-toggle="tooltip"]').tooltip();
         });
