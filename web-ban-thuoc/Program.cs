@@ -24,6 +24,13 @@ builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Emai
 // Đăng ký service gửi mail
 builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
 
+// Thêm cấu hình LoginPath cho cookie authentication
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Auth/Index";
+    options.AccessDeniedPath = "/Auth/AccessDenied";
+});
+
 // Register the NavbarFilter as a scoped service
 builder.Services.AddScoped<NavbarFilter>();
 builder.Services.AddControllersWithViews(options =>
