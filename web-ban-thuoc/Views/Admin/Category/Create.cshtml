@@ -29,7 +29,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Danh mục cha cấp 1</label>
-                            <select class="form-select" id="parent1" onchange="updateParent2()">
+                            <select class="form-select" id="parent1" name="parentCategoryId1" onchange="updateParent2()">
                                 <option value="">-- Không có --</option>
                                 @foreach (var cat in parentCategories1)
                                 {
@@ -39,20 +39,12 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Danh mục cha cấp 2</label>
-                            <select asp-for="ParentCategoryId" class="form-select" id="parent2">
+                            <select class="form-select" id="parent2" name="parentCategoryId2">
                                 <option value="">-- Không có --</option>
                                 @foreach (var cat in parentCategories2)
                                 {
-                                    <option value="@cat.CategoryId">@cat.CategoryName</option>
+                                    <option value="@cat.CategoryId" data-parent="@cat.ParentCategoryId">@cat.CategoryName</option>
                                 }
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Cấp</label>
-                            <select asp-for="CategoryLevel" class="form-select" required>
-                                <option value="1">Cấp 1</option>
-                                <option value="2">Cấp 2</option>
-                                <option value="3">Cấp 3</option>
                             </select>
                         </div>
                         <div class="mb-3">

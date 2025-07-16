@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using web_ban_thuoc.Models;
+using System.Linq;
 
 namespace web_ban_thuoc.Controllers.Admin
 {
@@ -15,7 +16,7 @@ namespace web_ban_thuoc.Controllers.Admin
             _context = context;
         }
 
-        public IActionResult Index(int? parentId1 = null, int? parentId2 = null, int page = 1, string? isFeature = null)
+        public IActionResult Index(int? parentId1 = null, int? parentId2 = null, int page = 1, string? isFeature = null, string? searchName = null)
         {
             int pageSize = 12;
             var categories = _context.Categories
@@ -23,12 +24,25 @@ namespace web_ban_thuoc.Controllers.Admin
                 .OrderBy(c => c.CategoryLevel)
                 .ThenBy(c => c.CategoryName)
                 .AsQueryable();
-            // Lọc theo cấp 1
-            if (parentId1.HasValue)
-                categories = categories.Where(c => c.ParentCategoryId == parentId1 || c.CategoryId == parentId1);
-            // Lọc theo cấp 2
+            // Lọc theo tên
+            if (!string.IsNullOrEmpty(searchName))
+            {
+                categories = categories.Where(c => c.CategoryName.ToLower().Contains(searchName.ToLower()));
+            }
+            // Lấy tất cả id con đệ quy
+            List<int> allIds = null;
             if (parentId2.HasValue)
-                categories = categories.Where(c => c.ParentCategoryId == parentId2 || c.CategoryId == parentId2);
+            {
+                allIds = GetAllChildCategoryIds(_context, parentId2.Value);
+                allIds.Add(parentId2.Value);
+                categories = categories.Where(c => allIds.Contains(c.CategoryId));
+            }
+            else if (parentId1.HasValue)
+            {
+                allIds = GetAllChildCategoryIds(_context, parentId1.Value);
+                allIds.Add(parentId1.Value);
+                categories = categories.Where(c => allIds.Contains(c.CategoryId));
+            }
             // Lọc theo danh mục nổi bật
             if (!string.IsNullOrEmpty(isFeature))
             {
@@ -55,7 +69,20 @@ namespace web_ban_thuoc.Controllers.Admin
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
             ViewBag.SelectedIsFeature = isFeature;
+            ViewBag.SearchName = searchName;
             return View("~/Views/Admin/Category/Index.cshtml", pagedCategories);
+        }
+        // Hàm lấy tất cả id con đệ quy
+        private List<int> GetAllChildCategoryIds(LongChauDbContext context, int parentId)
+        {
+            var result = new List<int>();
+            var children = context.Categories.Where(c => c.ParentCategoryId == parentId).Select(c => c.CategoryId).ToList();
+            foreach (var childId in children)
+            {
+                result.Add(childId);
+                result.AddRange(GetAllChildCategoryIds(context, childId));
+            }
+            return result;
         }
 
         public IActionResult Create()
@@ -67,8 +94,24 @@ namespace web_ban_thuoc.Controllers.Admin
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(Category category, IFormFile? image)
+        public IActionResult Create(Category category, IFormFile? image, int? parentCategoryId1, int? parentCategoryId2)
         {
+            // Xác định ParentCategoryId và CategoryLevel
+            if (parentCategoryId1.HasValue && parentCategoryId2.HasValue)
+            {
+                category.ParentCategoryId = parentCategoryId2;
+                category.CategoryLevel = "3";
+            }
+            else if (parentCategoryId1.HasValue)
+            {
+                category.ParentCategoryId = parentCategoryId1;
+                category.CategoryLevel = "2";
+            }
+            else
+            {
+                category.ParentCategoryId = null;
+                category.CategoryLevel = "1";
+            }
             if (ModelState.IsValid)
             {
                 // Xử lý upload ảnh nếu có

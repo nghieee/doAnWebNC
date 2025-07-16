@@ -16,55 +16,37 @@ namespace web_ban_thuoc.Controllers.Admin
             _context = context;
         }
 
-        public IActionResult Index(int page = 1, int? categoryId = null, string priceRange = null, string origin = null, string search = null)
+        public IActionResult Index(int? categoryId = null, string? origin = null, int page = 1, string? searchName = null)
         {
             int pageSize = 12;
-            var query = _context.Products
+            var products = _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.ProductImages)
+                .OrderByDescending(p => p.ProductId)
                 .AsQueryable();
-
-            // Lọc theo danh mục
-            if (categoryId.HasValue && categoryId.Value > 0)
-                query = query.Where(p => p.CategoryId == categoryId);
-
-            // Lọc theo giá
-            if (!string.IsNullOrEmpty(priceRange))
+            if (!string.IsNullOrEmpty(searchName))
             {
-                switch (priceRange)
-                {
-                    case "1": query = query.Where(p => p.Price < 200000); break;
-                    case "2": query = query.Where(p => p.Price >= 200000 && p.Price <= 500000); break;
-                    case "3": query = query.Where(p => p.Price > 500000); break;
-                }
+                products = products.Where(p => p.ProductName.ToLower().Contains(searchName.ToLower()));
             }
-
-            // Lọc theo nguồn gốc
+            if (categoryId.HasValue)
+            {
+                products = products.Where(p => p.CategoryId == categoryId);
+            }
             if (!string.IsNullOrEmpty(origin))
-                query = query.Where(p => p.Origin == origin);
-
-            // Lọc theo tên sản phẩm
-            if (!string.IsNullOrEmpty(search))
-                query = query.Where(p => p.ProductName.Contains(search));
-
-            int totalProducts = query.Count();
+            {
+                products = products.Where(p => p.Origin == origin);
+            }
+            int totalProducts = products.Count();
             int totalPages = (int)Math.Ceiling((double)totalProducts / pageSize);
-            var products = query.OrderByDescending(p => p.ProductId)
-                .Skip((page - 1) * pageSize).Take(pageSize).ToList();
-
-            // Truyền dữ liệu filter cho view
-            ViewBag.Categories = _context.Categories
-                .Where(c => c.CategoryLevel == "2" || c.CategoryLevel == "3")
-                .OrderBy(c => c.CategoryName)
-                .ToList();
-            ViewBag.Origins = _context.Products.Where(p => !string.IsNullOrEmpty(p.Origin)).Select(p => p.Origin).Distinct().OrderBy(o => o).ToList();
+            var pagedProducts = products.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            ViewBag.Categories = _context.Categories.OrderBy(c => c.CategoryName).ToList();
+            ViewBag.Origins = _context.Products.Select(p => p.Origin).Distinct().ToList();
+            ViewBag.SelectedCategory = categoryId;
+            ViewBag.SelectedOrigin = origin;
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
-            ViewBag.SelectedCategory = categoryId;
-            ViewBag.SelectedPrice = priceRange;
-            ViewBag.SelectedOrigin = origin;
-            ViewBag.Search = search;
-            return View("~/Views/Admin/Product/Index.cshtml", products);
+            ViewBag.SearchName = searchName;
+            return View("~/Views/Admin/Product/Index.cshtml", pagedProducts);
         }
 
         public IActionResult Create()

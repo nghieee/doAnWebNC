@@ -61,6 +61,14 @@
       "PackagePath": "staticwebassets\\images\\bg_doctor.png"
     },
     {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\3e327b38-a353-4f75-9248-1d78547d4b88.png",
+      "PackagePath": "staticwebassets\\images\\categories\\3e327b38-a353-4f75-9248-1d78547d4b88.png"
+    },
+    {
+      "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\b59728a4-e65f-4e0e-97b9-ac81933a9b1a.png",
+      "PackagePath": "staticwebassets\\images\\categories\\b59728a4-e65f-4e0e-97b9-ac81933a9b1a.png"
+    },
+    {
       "Id": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\categories\\level_2\\cscn_cham_soc_rang_mieng_level_2.png",
       "PackagePath": "staticwebassets\\images\\categories\\level_2\\cscn_cham_soc_rang_mieng_level_2.png"
     },
