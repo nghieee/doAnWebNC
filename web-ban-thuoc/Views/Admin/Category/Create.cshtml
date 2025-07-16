@@ -1,0 +1,66 @@
+@model web_ban_thuoc.Models.Category
+@{
+    ViewData["Title"] = "Thêm danh mục";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+    var parentCategories = ViewBag.ParentCategories as List<web_ban_thuoc.Models.Category>;
+}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white fw-bold fs-5">
+                    <i class="fa fa-plus me-2"></i>Thêm danh mục mới
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Tên danh mục</label>
+                            <input asp-for="CategoryName" class="form-control" required />
+                            <span asp-validation-for="CategoryName" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Mô tả</label>
+                            <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Ảnh đại diện</label>
+                            <input type="file" name="image" class="form-control" accept="image/*" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Danh mục cha</label>
+                            <select asp-for="ParentCategoryId" class="form-select">
+                                <option value="">-- Không có --</option>
+                                @foreach (var cat in parentCategories)
+                                {
+                                    <option value="@cat.CategoryId">@cat.CategoryName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Cấp</label>
+                            <select asp-for="CategoryLevel" class="form-select" required>
+                                <option value="1">Cấp 1</option>
+                                <option value="2">Cấp 2</option>
+                                <option value="3">Cấp 3</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Trạng thái</label>
+                            <select asp-for="IsFeature" class="form-select">
+                                <option value="true">Hiển thị</option>
+                                <option value="false">Ẩn</option>
+                            </select>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="@Url.Action("Index")" class="btn btn-secondary">Quay lại</a>
+                            <button type="submit" class="btn btn-primary"><i class="fa fa-save me-1"></i> Lưu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+} 

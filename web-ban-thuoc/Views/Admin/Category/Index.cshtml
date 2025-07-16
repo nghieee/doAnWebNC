@@ -2,14 +2,49 @@
 @{
     ViewData["Title"] = "Quản lý danh mục";
     Layout = "~/Views/Admin/_Layout.cshtml";
+    var parentCategories1 = ViewBag.ParentCategories1 as List<web_ban_thuoc.Models.Category> ?? new List<web_ban_thuoc.Models.Category>();
+    var parentCategories2 = ViewBag.ParentCategories2 as List<web_ban_thuoc.Models.Category> ?? new List<web_ban_thuoc.Models.Category>();
+    int? selectedParentId1 = ViewBag.SelectedParentId1 as int?;
+    int? selectedParentId2 = ViewBag.SelectedParentId2 as int?;
+    var parentOptions1 = "<option value=\"\">Tất cả</option>";
+    foreach (var cat in parentCategories1)
+    {
+        var selected = (selectedParentId1 == cat.CategoryId) ? "selected" : "";
+        parentOptions1 += $"<option value='{cat.CategoryId}' {selected}>{cat.CategoryName}</option>";
+    }
+    var parentOptions2 = "<option value=\"\">Tất cả</option>";
+    foreach (var cat in parentCategories2)
+    {
+        var selected = (selectedParentId2 == cat.CategoryId) ? "selected" : "";
+        parentOptions2 += $"<option value='{cat.CategoryId}' {selected}>{cat.CategoryName}</option>";
+    }
 }
 <div class="container-fluid py-3">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold mb-0">Danh sách danh mục</h2>
-        <a href="#" class="btn btn-primary btn-lg d-flex align-items-center gap-2">
-            <i class="fa fa-plus"></i> Thêm danh mục
-        </a>
-    </div>
+    <form method="get" class="row g-3 align-items-end mb-4 bg-white shadow-sm rounded-4 px-4 py-3" style="max-width: 900px;">
+        <div class="col-md-5">
+            <label class="form-label fw-semibold">Lọc theo danh mục cấp 1</label>
+            <select class="form-select" name="parentId1" id="parentId1">
+                @Html.Raw(parentOptions1)
+            </select>
+        </div>
+        <div class="col-md-5">
+            <label class="form-label fw-semibold">Lọc theo danh mục cấp 2</label>
+            <select class="form-select" name="parentId2" id="parentId2">
+                @Html.Raw(parentOptions2)
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2 align-items-end">
+            <button type="submit" class="btn btn-primary w-100 d-flex"><i class="fa fa-filter me-1 align-self-center"></i> Lọc</button>
+            <a href="@Url.Action("Index", "AdminCategory")" class="btn btn-outline-secondary w-100">Xóa</a>
+        </div>
+    </form>
+    <script>
+        // Khi chọn cấp 1, submit form để reload filter cấp 2
+        document.getElementById('parentId1').addEventListener('change', function () {
+            document.getElementById('parentId2').selectedIndex = 0;
+            this.form.submit();
+        });
+    </script>
     <div class="table-responsive">
         <table class="table table-hover align-middle table-bordered bg-white shadow-sm overflow-hidden" style="min-width: 900px;">
             <thead class="table-light sticky-top">
@@ -31,7 +66,7 @@
                         <td class="fw-semibold">@item.CategoryName</td>
                         <td class="text-center">@item.CategoryLevel</td>
                         <td>@item.ParentCategory?.CategoryName</td>
-                        <td class="text-center">@item.Products?.Count() ?? 0</td>
+                        <td class="text-center">@item.ProductCount sản phẩm</td>
                         <td class="text-center">
                             @if (item.IsFeature)
                             {
@@ -57,6 +92,29 @@
             </tbody>
         </table>
     </div>
+    @if (ViewBag.TotalPages > 1)
+    {
+        <nav class="d-flex justify-content-center mt-4">
+            <ul class="pagination pagination-sm">
+                <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { parentId1 = ViewBag.SelectedParentId1, parentId2 = ViewBag.SelectedParentId2, page = ViewBag.CurrentPage - 1 })" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+                {
+                    <li class="page-item @(i == (int)ViewBag.CurrentPage ? "active" : "")">
+                        <a class="page-link @(i == (int)ViewBag.CurrentPage ? "bg-primary text-white" : "")" href="@Url.Action("Index", new { parentId1 = ViewBag.SelectedParentId1, parentId2 = ViewBag.SelectedParentId2, page = i })">@i</a>
+                    </li>
+                }
+                <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { parentId1 = ViewBag.SelectedParentId1, parentId2 = ViewBag.SelectedParentId2, page = ViewBag.CurrentPage + 1 })" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
 </div>
 @section Scripts {
     <script>
