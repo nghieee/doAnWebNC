@@ -64,7 +64,36 @@
             <dt class="col-5">Tồn kho:</dt><dd class="col-7">@Model.StockQuantity</dd>
             @if (!string.IsNullOrEmpty(Model.Ingredients))
             {
-                <dt class="col-5">Thành phần:</dt><dd class="col-7">@Model.Ingredients</dd>
+                <dt class="col-5">Thành phần:</dt>
+                <dd class="col-7">
+                    @{
+                        var ingredients = new List<Dictionary<string, string>>();
+                        try {
+                            ingredients = System.Text.Json.JsonSerializer.Deserialize<List<Dictionary<string, string>>>(Model.Ingredients);
+                        } catch {}
+                    }
+                    @if (ingredients != null && ingredients.Count > 0)
+                    {
+                        <table class="table table-sm table-bordered mb-0">
+                            <thead class="table-light">
+                                <tr><th>Tên thành phần</th><th>Liều lượng</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in ingredients)
+                                {
+                                    <tr>
+                                        <td>@item["name"]</td>
+                                        <td>@item["amount"]</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Không có dữ liệu</span>
+                    }
+                </dd>
             }
             @if (!string.IsNullOrEmpty(Model.Uses))
             {

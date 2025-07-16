@@ -1,0 +1,198 @@
+@model web_ban_thuoc.Models.Product
+@{
+    ViewData["Title"] = "Sửa sản phẩm";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+    var categories = ViewBag.Categories as IEnumerable<dynamic>;
+    var categoryOptions = "";
+    foreach (var cat in categories)
+    {
+        var selected = (Model.CategoryId == cat.CategoryId) ? "selected" : "";
+        categoryOptions += $"<option value='{cat.CategoryId}' {selected}>{cat.CategoryName}</option>";
+    }
+    var isActiveOptions = "";
+    isActiveOptions += $"<option value='true' {(Model.IsActive ? "selected" : "")}>Hiển thị</option>";
+    isActiveOptions += $"<option value='false' {(!Model.IsActive ? "selected" : "")}>Ẩn</option>";
+}
+<h2 class="mb-4 text-primary fw-bold"><i class="fa fa-edit"></i> Sửa sản phẩm</h2>
+<form asp-action="Edit" method="post" enctype="multipart/form-data" class="row g-4 bg-white shadow-sm rounded-4 p-4">
+    <input type="hidden" asp-for="ProductId" />
+    <div class="col-md-6">
+        <label class="form-label fw-semibold">Tên sản phẩm</label>
+        <input asp-for="ProductName" class="form-control" required />
+        <span asp-validation-for="ProductName" class="text-danger"></span>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label fw-semibold">Giá (VNĐ)</label>
+        <input asp-for="Price" class="form-control" type="number" min="0" required />
+        <span asp-validation-for="Price" class="text-danger"></span>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label fw-semibold">Danh mục</label>
+        <select asp-for="CategoryId" class="form-select" required>
+            <option value="">Chọn danh mục</option>
+            @Html.Raw(categoryOptions)
+        </select>
+        <span asp-validation-for="CategoryId" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Nguồn gốc</label>
+        <input asp-for="Origin" class="form-control" />
+        <span asp-validation-for="Origin" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Thương hiệu</label>
+        <input asp-for="Brand" class="form-control" />
+        <span asp-validation-for="Brand" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Quy cách</label>
+        <input asp-for="Package" class="form-control" />
+        <span asp-validation-for="Package" class="text-danger"></span>
+    </div>
+    <div class="col-md-12">
+        <label class="form-label fw-semibold">Thành phần</label>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle" id="ingredientTable">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:55%">Tên thành phần</th>
+                        <th style="width:35%">Liều lượng</th>
+                        <th style="width:10%"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <button type="button" class="btn btn-success btn-sm" id="addIngredientRow"><i class="fa fa-plus"></i> Thêm dòng</button>
+        </div>
+        <input type="hidden" asp-for="Ingredients" id="IngredientsJson" />
+        <span asp-validation-for="Ingredients" class="text-danger"></span>
+    </div>
+    <div class="col-md-12">
+        <label class="form-label fw-semibold">Công dụng</label>
+        <textarea asp-for="Uses" class="form-control" rows="2"></textarea>
+        <span asp-validation-for="Uses" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label fw-semibold">Đối tượng sử dụng</label>
+        <input asp-for="TargetUsers" class="form-control" />
+        <span asp-validation-for="TargetUsers" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label fw-semibold">Chống chỉ định</label>
+        <input asp-for="Contraindications" class="form-control" />
+        <span asp-validation-for="Contraindications" class="text-danger"></span>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label fw-semibold">Tồn kho</label>
+        <input asp-for="StockQuantity" class="form-control" type="number" min="0" required />
+        <span asp-validation-for="StockQuantity" class="text-danger"></span>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label fw-semibold">Trạng thái</label>
+        <select asp-for="IsActive" class="form-select">
+            @Html.Raw(isActiveOptions)
+        </select>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label fw-semibold">Thêm ảnh mới (có thể chọn nhiều)</label>
+        <input type="file" name="images" class="form-control" multiple accept="image/*" />
+        <div class="form-text">Chọn nhiều ảnh, ảnh đầu tiên sẽ là ảnh đại diện mới nếu có upload.</div>
+    </div>
+    <div class="col-md-12">
+        <label class="form-label fw-semibold">Ảnh hiện tại</label>
+        <div class="d-flex flex-wrap gap-3">
+            @if (Model.ProductImages != null && Model.ProductImages.Any())
+            {
+                foreach (var img in Model.ProductImages)
+                {
+                    <div class="position-relative border rounded-3 p-2" style="width:110px;">
+                        <img src="/images/products/@img.ImageUrl" class="w-100 rounded-2 mb-1" style="height:80px;object-fit:cover;" />
+                        @if (img.IsMain == true)
+                        {
+                            <span class="badge bg-primary position-absolute top-0 start-0 m-1">Ảnh đại diện</span>
+                        }
+                        <div class="form-check mt-1">
+                            <input class="form-check-input" type="radio" name="mainImageId" value="@img.ProductImageId" @(img.IsMain == true ? "checked" : "") />
+                            <label class="form-check-label">Chọn làm đại diện</label>
+                        </div>
+                        <div class="form-check mt-1">
+                            <input class="form-check-input" type="checkbox" name="deleteImageIds" value="@img.ProductImageId" />
+                            <label class="form-check-label text-danger">Xóa ảnh</label>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <span class="text-secondary">Chưa có ảnh nào</span>
+            }
+        </div>
+    </div>
+    <div class="col-12 d-flex justify-content-end gap-2 mt-3">
+        <a href="@Url.Action("Index", "AdminProduct")" class="btn btn-secondary px-4">Quay lại</a>
+        <button type="submit" class="btn btn-primary px-4"><i class="fa fa-save me-1"></i> Lưu thay đổi</button>
+    </div>
+</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Hàm render lại bảng từ dữ liệu JSON
+        function renderIngredientTable(data) {
+            var tbody = $('#ingredientTable tbody');
+            tbody.empty();
+            if (data && data.length > 0) {
+                data.forEach(function(item) {
+                    tbody.append(`
+                        <tr>
+                            <td><input type="text" class="form-control" placeholder="Tên thành phần" value="${item.name}" /></td>
+                            <td><input type="text" class="form-control" placeholder="Liều lượng" value="${item.amount}" /></td>
+                            <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-row"><i class="fa fa-trash"></i></button></td>
+                        </tr>
+                    `);
+                });
+            } else {
+                tbody.append(`
+                    <tr>
+                        <td><input type="text" class="form-control" placeholder="Tên thành phần" /></td>
+                        <td><input type="text" class="form-control" placeholder="Liều lượng" /></td>
+                        <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-row"><i class="fa fa-trash"></i></button></td>
+                    </tr>
+                `);
+            }
+        }
+        // Khởi tạo bảng khi load trang
+        $(document).ready(function() {
+            var ingredientsJson = $('#IngredientsJson').val();
+            var data = [];
+            try {
+                if (ingredientsJson) data = JSON.parse(ingredientsJson);
+            } catch {}
+            renderIngredientTable(data);
+        });
+        // Thêm dòng
+        $(document).on('click', '#addIngredientRow', function() {
+            $('#ingredientTable tbody').append(`
+                <tr>
+                    <td><input type="text" class="form-control" placeholder="Tên thành phần" /></td>
+                    <td><input type="text" class="form-control" placeholder="Liều lượng" /></td>
+                    <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-row"><i class="fa fa-trash"></i></button></td>
+                </tr>
+            `);
+        });
+        // Xóa dòng
+        $(document).on('click', '.remove-row', function() {
+            if ($('#ingredientTable tbody tr').length > 1) $(this).closest('tr').remove();
+        });
+        // Gom dữ liệu thành JSON khi submit
+        $('form').on('submit', function() {
+            var ingredients = [];
+            $('#ingredientTable tbody tr').each(function() {
+                var name = $(this).find('td:eq(0) input').val().trim();
+                var amount = $(this).find('td:eq(1) input').val().trim();
+                if (name) ingredients.push({ name: name, amount: amount });
+            });
+            $('#IngredientsJson').val(JSON.stringify(ingredients));
+        });
+    </script>
+} 
