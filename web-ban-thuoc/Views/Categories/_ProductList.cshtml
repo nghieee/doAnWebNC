@@ -13,7 +13,7 @@
                         <img src="/images/products/@(mainImage?.ImageUrl ?? "/images/sanpham.png")" class="p-3 w-100"
                             alt="@product.ProductName" />
                         <div class="px-3 pb-3">
-                            <h5 class="text-sm text-black line-clamp-3">@product.ProductName</h5>
+                            <h5 class="text-sm text-black line-clamp-3" style="height: 44px;">@product.ProductName</h5>
                             <div class="mt-1 text-primary fw-semibold">@product.Price.ToString("N0")đ</div>
                             <div class="text-gray-500 text-sm text-decoration-line-through opacity-50">@((product.Price *
                                                                             1.25m).ToString("N0"))đ</div>

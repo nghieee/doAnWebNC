@@ -19,6 +19,7 @@ public class LongChauDbContext : IdentityDbContext
     public DbSet<Review> Reviews { get; set; }
     public DbSet<Payment> Payments { get; set; }
     public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
+    public DbSet<ProductImage> ProductImages { get; set; }
     // ... các DbSet khác nếu có
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
