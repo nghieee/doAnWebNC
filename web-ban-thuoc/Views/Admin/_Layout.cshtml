@@ -146,7 +146,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="/AdminProduct" class="nav-link">
+                        <a href="/AdminProduct" class="nav-link @(Context.Request.Path.StartsWithSegments("/AdminProduct") ? "active" : "")">
                             <i class="fa-solid fa-box"></i>
                             <span class="sidebar-text">Sản phẩm</span>
                         </a>
@@ -170,12 +170,30 @@
                         </a>
                     </li>
                 </ul>
-                <div class="logout mt-auto">
-                    <a href="/Auth/Logout" class="nav-link">
-                        <i class="fa-solid fa-right-from-bracket"></i>
-                        <span class="sidebar-text">Đăng xuất</span>
-                    </a>
+                <div class="mt-auto px-3 pb-3">
+                    <form id="logoutForm" method="post" action="/Auth/Logout">
+                        <button type="submit" class="btn btn-danger w-100 d-flex align-items-center gap-2 justify-content-center" style="font-size: 1.1rem; font-weight: 500; border-radius: 0.5rem;">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            <span class="sidebar-text">Đăng xuất</span>
+                        </button>
+                    </form>
                 </div>
+                <style>
+                    .nav .nav-link {
+                        color: #fff;
+                        background: transparent;
+                        transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+                    }
+                    .nav .nav-link.active, .nav .nav-link:hover, .nav .nav-link:focus {
+                        background: #fff !important;
+                        color: #1976d2 !important;
+                        box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+                        outline: none;
+                    }
+                    .nav .fa-right-from-bracket {
+                        font-size: 1.1em;
+                    }
+                </style>
             </nav>
             <main class="col py-3">
                 <div class="admin-header">

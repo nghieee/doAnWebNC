@@ -134,6 +134,73 @@ namespace web_ban_thuoc.Controllers.Admin
             return View("~/Views/Admin/Category/Create.cshtml", category);
         }
 
+        public IActionResult Edit(int id)
+        {
+            var category = _context.Categories.Find(id);
+            if (category == null) return NotFound();
+            ViewBag.ParentCategories1 = _context.Categories.Where(c => c.CategoryLevel == "1" && c.CategoryId != id).OrderBy(c => c.CategoryName).ToList();
+            ViewBag.ParentCategories2 = _context.Categories.Where(c => c.CategoryLevel == "2" && c.CategoryId != id).OrderBy(c => c.CategoryName).ToList();
+            return View("~/Views/Admin/Category/Edit.cshtml", category);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Edit(int id, Category category, IFormFile? image, int? parentCategoryId1, int? parentCategoryId2)
+        {
+            var cat = _context.Categories.Find(id);
+            if (cat == null) return NotFound();
+            // Cập nhật thông tin
+            cat.CategoryName = category.CategoryName;
+            cat.Description = category.Description;
+            cat.IsFeature = category.IsFeature;
+            // Xác định ParentCategoryId và CategoryLevel
+            if (parentCategoryId1.HasValue && parentCategoryId2.HasValue)
+            {
+                cat.ParentCategoryId = parentCategoryId2;
+                cat.CategoryLevel = "3";
+            }
+            else if (parentCategoryId1.HasValue)
+            {
+                cat.ParentCategoryId = parentCategoryId1;
+                cat.CategoryLevel = "2";
+            }
+            else
+            {
+                cat.ParentCategoryId = null;
+                cat.CategoryLevel = "1";
+            }
+            // Xử lý upload ảnh nếu có
+            if (image != null && image.Length > 0)
+            {
+                var fileName = Guid.NewGuid() + Path.GetExtension(image.FileName);
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/categories", fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    image.CopyTo(stream);
+                }
+                cat.ImageUrl = fileName;
+            }
+            _context.SaveChanges();
+            return RedirectToAction("Index");
+        }
+        public IActionResult Delete(int id)
+        {
+            var category = _context.Categories
+                .Include(c => c.ParentCategory)
+                .FirstOrDefault(c => c.CategoryId == id);
+            if (category == null) return NotFound();
+            return View("~/Views/Admin/Category/Delete.cshtml", category);
+        }
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteConfirmed(int id)
+        {
+            var category = _context.Categories.Find(id);
+            if (category == null) return NotFound();
+            _context.Categories.Remove(category);
+            _context.SaveChanges();
+            return RedirectToAction("Index");
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult BulkDelete(int[] selectedIds)

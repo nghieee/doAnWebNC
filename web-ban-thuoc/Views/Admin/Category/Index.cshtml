@@ -87,6 +87,7 @@
                         <th style="min-width: 180px;">Danh mục cha</th>
                         <th class="text-center" style="width: 120px;">Số sản phẩm</th>
                         <th class="text-center" style="width: 110px;">Danh mục nổi bật</th>
+                        <th class="text-center" style="width: 70px;">Ảnh</th>
                         <th class="text-center" style="width: 160px;">Hành động</th>
                     </tr>
                 </thead>
@@ -113,11 +114,21 @@
                                 }
                             </td>
                             <td class="text-center">
+                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                {
+                                    <img src="/images/categories/@item.ImageUrl" alt="Ảnh" class="rounded-3 border shadow-sm" style="width: 48px; height: 48px; object-fit: cover; background: #f4f6fb;" />
+                                }
+                                else
+                                {
+                                    <img src="/images/categories/default.png" alt="Ảnh" class="rounded-3 border shadow-sm" style="width: 48px; height: 48px; object-fit: cover; background: #f4f6fb;" />
+                                }
+                            </td>
+                            <td class="text-center">
                                 <div class="btn-group" role="group">
-                                    <a href="#" class="btn btn-warning btn-sm px-3 py-2 me-1" data-bs-toggle="tooltip" title="Sửa danh mục">
+                                    <a href="@Url.Action("Edit", "AdminCategory", new { id = item.CategoryId })" class="btn btn-warning btn-sm px-3 py-2 me-1" data-bs-toggle="tooltip" title="Sửa danh mục">
                                         <i class="fa fa-edit"></i>
                                     </a>
-                                    <a href="#" class="btn btn-danger btn-sm px-3 py-2" data-bs-toggle="tooltip" title="Xóa danh mục">
+                                    <a href="@Url.Action("Delete", "AdminCategory", new { id = item.CategoryId })" class="btn btn-danger btn-sm px-3 py-2" data-bs-toggle="tooltip" title="Xóa danh mục">
                                         <i class="fa fa-trash"></i>
                                     </a>
                                 </div>

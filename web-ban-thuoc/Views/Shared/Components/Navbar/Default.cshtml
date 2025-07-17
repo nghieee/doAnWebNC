@@ -191,12 +191,12 @@ else
 
     function getImageUrl(imageUrl, level) {
         if (!imageUrl) return '/images/placeholder.png';
-        return imageUrl.startsWith('/images/') ? imageUrl : `/images/categories/${level}/${imageUrl}`;
+        return imageUrl.startsWith('/images/') ? imageUrl : `/images/categories/${imageUrl}`;
     }
 
     function highlightActiveChild(parentId, childId) {
         const childrenContainer = document.getElementById(`children-${parentId}`);
-        if (childrenContainer) {
+        if (childrenContainer) {    
             childrenContainer.querySelectorAll('.child-item').forEach(item =>
                 item.classList.toggle('bg-light', item.dataset.childId === childId)
             );

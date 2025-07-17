@@ -1,0 +1,49 @@
+@model web_ban_thuoc.Models.Category
+@{
+    ViewData["Title"] = "Xóa danh mục";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+
+
+@if (Model != null)
+{
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-lg border-danger">
+                    <div class="card-header bg-danger text-white fw-bold fs-5">
+                        <i class="fa fa-trash me-2"></i>Xác nhận xóa danh mục
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-4 mb-4">
+                            <img src="/images/categories/@(Model.ImageUrl ?? "default.png")" alt="Ảnh danh mục" class="rounded-3 border shadow-sm" style="width: 100px; height: 100px; object-fit: cover; background: #f4f6fb;" />
+                            <div>
+                                <h4 class="fw-bold text-danger mb-1">@Model.CategoryName</h4>
+                                <div class="mb-2 text-secondary">@(Model.ParentCategory?.CategoryName ?? "Danh mục gốc")</div>
+                                <div class="fw-bold text-primary">@Model.ProductCount sản phẩm</div>
+                            </div>
+                        </div>
+                        <div class="alert alert-warning">
+                            <i class="fa fa-exclamation-triangle me-2"></i>
+                            <b>Bạn có chắc chắn muốn xóa danh mục này?</b><br />
+                            Thao tác này <u>không thể hoàn tác</u> và sẽ ảnh hưởng đến tất cả sản phẩm thuộc danh mục!
+                        </div>
+                        <form asp-action="Delete" method="post">
+                            <input type="hidden" asp-for="CategoryId" />
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="@Url.Action("Index", "AdminCategory")" class="btn btn-secondary px-4">Quay lại</a>
+                                <button type="submit" class="btn btn-danger px-4"><i class="fa fa-trash me-1"></i> Xác nhận xóa</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-danger">
+        <strong>Lỗi:</strong> Không tìm thấy danh mục!
+    </div>
+} 

@@ -1,0 +1,111 @@
+@model web_ban_thuoc.Models.Category
+@{
+    ViewData["Title"] = "Chỉnh sửa danh mục";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+    var parentCategories1 = ViewBag.ParentCategories1 as List<web_ban_thuoc.Models.Category> ?? new List<web_ban_thuoc.Models.Category>();
+    var parentCategories2 = ViewBag.ParentCategories2 as List<web_ban_thuoc.Models.Category> ?? new List<web_ban_thuoc.Models.Category>();
+    
+    // Tạo options cho danh mục cha cấp 1
+    var parentOptions1 = "<option value=\"\">-- Không có --</option>";
+    foreach (var cat in parentCategories1)
+    {
+        var selected = (Model.ParentCategoryId == cat.CategoryId || 
+                      (Model.ParentCategory?.ParentCategoryId == cat.CategoryId)) ? "selected" : "";
+        parentOptions1 += $"<option value='{cat.CategoryId}' {selected}>{cat.CategoryName}</option>";
+    }
+    
+    // Tạo options cho danh mục cha cấp 2
+    var parentOptions2 = "<option value=\"\">-- Không có --</option>";
+    foreach (var cat in parentCategories2)
+    {
+        var selected = (Model.ParentCategoryId == cat.CategoryId) ? "selected" : "";
+        parentOptions2 += $"<option value='{cat.CategoryId}' data-parent='{cat.ParentCategoryId}' {selected}>{cat.CategoryName}</option>";
+    }
+}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-warning text-dark fw-bold fs-5">
+                    <i class="fa fa-edit me-2"></i>Chỉnh sửa danh mục
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                        <input type="hidden" asp-for="CategoryId" />
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Tên danh mục</label>
+                            <input asp-for="CategoryName" class="form-control" required />
+                            <span asp-validation-for="CategoryName" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Mô tả</label>
+                            <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Ảnh đại diện</label>
+                            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                            {
+                                <div class="mb-2">
+                                    <img src="/images/categories/@Model.ImageUrl" alt="Ảnh hiện tại" class="img-thumbnail" style="max-width: 200px; max-height: 200px;" />
+                                    <p class="text-muted small">Ảnh hiện tại: @Model.ImageUrl</p>
+                                </div>
+                            }
+                            <input type="file" name="image" class="form-control" accept="image/*" />
+                            <small class="text-muted">Chọn ảnh mới để thay thế ảnh hiện tại</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Danh mục cha cấp 1</label>
+                            <select class="form-select" id="parent1" name="parentCategoryId1" onchange="updateParent2()">
+                                @Html.Raw(parentOptions1)
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Danh mục cha cấp 2</label>
+                            <select class="form-select" id="parent2" name="parentCategoryId2">
+                                @Html.Raw(parentOptions2)
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Trạng thái</label>
+                            <select asp-for="IsFeature" class="form-select">
+                                <option value="true">Nổi bật</option>
+                                <option value="false">Thường</option>
+                            </select>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="@Url.Action("Index")" class="btn btn-secondary">Quay lại</a>
+                            <button type="submit" class="btn btn-warning"><i class="fa fa-save me-1"></i> Cập nhật</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Khi chọn danh mục cha cấp 1, filter lại danh mục cha cấp 2
+        function updateParent2() {
+            var parent1 = document.getElementById('parent1').value;
+            var parent2 = document.getElementById('parent2');
+            for (var i = 0; i < parent2.options.length; i++) {
+                var opt = parent2.options[i];
+                if (opt.value === "" || opt.getAttribute('data-parent') === parent1) {
+                    opt.style.display = '';
+                } else {
+                    opt.style.display = 'none';
+                }
+            }
+            // Reset giá trị nếu danh mục cha cấp 2 không thuộc danh mục cha cấp 1 đã chọn
+            if (parent2.value !== "" && parent2.options[parent2.selectedIndex].getAttribute('data-parent') !== parent1) {
+                parent2.value = "";
+            }
+        }
+        
+        // Khởi tạo filter khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateParent2();
+        });
+    </script>
+} 
