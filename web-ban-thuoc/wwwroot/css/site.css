@@ -14,3 +14,114 @@ html {
   position: relative;
   min-height: 100%;
 }
+
+/* Search functionality styles */
+#searchSuggest {
+    border: 1px solid #dee2e6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+#searchSuggest .list-group-item {
+    border: none;
+    border-bottom: 1px solid #f8f9fa;
+    transition: background-color 0.2s ease;
+    padding: 0.75rem 1rem;
+}
+
+#searchSuggest .list-group-item:last-child {
+    border-bottom: none;
+}
+
+#searchSuggest .list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+#searchSuggest .list-group-item:active {
+    background-color: #e9ecef;
+}
+
+#searchSuggest .list-group-item img {
+    border: 1px solid #dee2e6;
+    object-fit: cover;
+}
+
+/* Clear button styles */
+#clearSearch {
+    transition: opacity 0.2s ease;
+    border: none;
+    background: none;
+    color: #6c757d;
+}
+
+#clearSearch:hover {
+    opacity: 0.7;
+    color: #495057;
+}
+
+/* Loading spinner styles */
+#searchLoading .spinner-border {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Search input focus styles */
+#searchBox:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Search suggestions categories */
+#searchSuggest .small.text-muted.fw-semibold {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Product suggestion items */
+#searchSuggest .list-group-item .flex-grow-1 .fw-medium {
+    font-weight: 500;
+    color: #212529;
+}
+
+#searchSuggest .list-group-item .flex-grow-1 .small.text-muted {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+/* Category and brand suggestion items */
+#searchSuggest .list-group-item .fas {
+    width: 16px;
+    text-align: center;
+}
+
+/* Empty state */
+#searchSuggest .list-group-item.text-muted.text-center {
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Error state */
+#searchSuggest .list-group-item.text-danger.text-center {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #searchSuggest {
+        max-height: 300px;
+    }
+    
+    #searchSuggest .list-group-item {
+        padding: 0.75rem;
+    }
+    
+    #searchSuggest .list-group-item img {
+        width: 32px !important;
+        height: 32px !important;
+    }
+}

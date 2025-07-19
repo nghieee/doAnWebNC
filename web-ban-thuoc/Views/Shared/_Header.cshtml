@@ -28,16 +28,197 @@
 
             <!-- Search Box -->
             <div class="col-12 col-md-6">
-                <form class="w-100">
+                <form class="w-100 position-relative" method="get" action="/Categories/0">
                     <div class="position-relative">
                         <div class="position-absolute top-50 start-0 translate-middle-y ps-3">
                             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"></path>
                             </svg>
                         </div>
-                        <input type="search" placeholder="Search Mockups, Logos..." class="form-control ps-5 py-3 px-4 rounded-pill text-primary border-gray-300 focus-ring focus-border-primary" required="">
+                        <input id="searchBox" type="search" name="search" autocomplete="off" placeholder="Tìm sản phẩm, danh mục, thương hiệu..." class="form-control ps-5 py-3 px-4 rounded-pill text-primary border-gray-300 focus-ring focus-border-primary" required>
+                        
+                        <!-- Clear button -->
+                        <button type="button" id="clearSearch" class="position-absolute top-50 end-0 translate-middle-y pe-3 btn btn-link text-muted d-none" style="border: none; background: none;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        
+                        <!-- Loading spinner -->
+                        <div id="searchLoading" class="position-absolute top-50 end-0 translate-middle-y pe-3 d-none">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Đang tìm kiếm...</span>
+                            </div>
+                        </div>
+                        
+                        <div id="searchSuggest" class="list-group position-absolute w-100 shadow-sm bg-white rounded-3 mt-1 d-none" style="z-index: 1000; top: 110%; left: 0; max-height: 400px; overflow-y: auto;"></div>
                     </div>
                 </form>
+                <script>
+                    const searchBox = document.getElementById('searchBox');
+                    const suggestBox = document.getElementById('searchSuggest');
+                    const clearBtn = document.getElementById('clearSearch');
+                    const loadingSpinner = document.getElementById('searchLoading');
+                    let suggestTimeout;
+                    let currentQuery = '';
+
+                    // Xử lý input search
+                    searchBox.addEventListener('input', function() {
+                        const query = this.value.trim();
+                        currentQuery = query;
+                        
+                        // Hiển thị/ẩn clear button
+                        if (query.length > 0) {
+                            clearBtn.classList.remove('d-none');
+                        } else {
+                            clearBtn.classList.add('d-none');
+                        }
+                        
+                        clearTimeout(suggestTimeout);
+                        
+                        if (query.length < 2) {
+                            hideSuggestions();
+                            return;
+                        }
+                        
+                        // Hiển thị loading
+                        loadingSpinner.classList.remove('d-none');
+                        clearBtn.classList.add('d-none');
+                        
+                        suggestTimeout = setTimeout(() => {
+                            fetchSuggestions(query);
+                        }, 300);
+                    });
+
+                    // Clear search
+                    clearBtn.addEventListener('click', function() {
+                        searchBox.value = '';
+                        searchBox.focus();
+                        hideSuggestions();
+                        clearBtn.classList.add('d-none');
+                    });
+
+                    // Fetch suggestions
+                    function fetchSuggestions(query) {
+                        fetch(`/Products/Suggest?query=${encodeURIComponent(query)}`)
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Network response was not ok');
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                if (currentQuery !== query) return; // Ignore if query changed
+                                
+                                // Debug: Log received data
+                                console.log('Received suggestions data:', data);
+                                if (data.products && data.products.length > 0) {
+                                    console.log('First product:', data.products[0]);
+                                }
+                                
+                                displaySuggestions(data);
+                            })
+                            .catch(error => {
+                                console.error('Error fetching suggestions:', error);
+                                if (currentQuery === query) {
+                                    showError('Có lỗi xảy ra khi tìm kiếm');
+                                }
+                            })
+                            .finally(() => {
+                                loadingSpinner.classList.add('d-none');
+                                if (currentQuery === query && query.length > 0) {
+                                    clearBtn.classList.remove('d-none');
+                                }
+                            });
+                    }
+
+                    // Display suggestions
+                    function displaySuggestions(data) {
+                        let html = '';
+                        
+                        // Products
+                        if (data.products && data.products.length > 0) {
+                            html += '<div class="px-3 pt-2 pb-1 small text-muted fw-semibold">Sản phẩm</div>';
+                            data.products.forEach(product => {
+                                console.log('Processing product:', product);
+                                html += `
+                                    <a href="/Products/${product.productId}" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-2">
+                                        <img src="/images/products/${product.imageUrl}" width="40" height="40" class="rounded" style="object-fit: cover;" alt="${product.productName}">
+                                        <div class="flex-grow-1">
+                                            <div class="fw-medium">${product.productName}</div>
+                                            <div class="small text-muted">${product.brand}</div>
+                                        </div>
+                                    </a>
+                                `;
+                            });
+                        }
+                        
+                        // Categories
+                        if (data.categories && data.categories.length > 0) {
+                            html += '<div class="px-3 pt-2 pb-1 small text-muted fw-semibold">Danh mục</div>';
+                            data.categories.forEach(category => {
+                                html += `
+                                    <a href="/Categories/${category.categoryId}" class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2">
+                                        <i class="fas fa-tags text-primary"></i>
+                                        <span>${category.categoryName}</span>
+                                    </a>
+                                `;
+                            });
+                        }
+                        
+                        // Brands
+                        if (data.brands && data.brands.length > 0) {
+                            html += '<div class="px-3 pt-2 pb-1 small text-muted fw-semibold">Thương hiệu</div>';
+                            data.brands.forEach(brand => {
+                                html += `
+                                    <a href="/Categories/0?search=${encodeURIComponent(brand)}" class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2">
+                                        <i class="fas fa-industry text-primary"></i>
+                                        <span>${brand}</span>
+                                    </a>
+                                `;
+                            });
+                        }
+                        
+                        if (!html) {
+                            html = '<div class="list-group-item text-muted text-center py-3">Không có gợi ý phù hợp</div>';
+                        }
+                        
+                        suggestBox.innerHTML = html;
+                        suggestBox.classList.remove('d-none');
+                    }
+
+                    // Show error message
+                    function showError(message) {
+                        suggestBox.innerHTML = `<div class="list-group-item text-danger text-center py-3">${message}</div>`;
+                        suggestBox.classList.remove('d-none');
+                    }
+
+                    // Hide suggestions
+                    function hideSuggestions() {
+                        suggestBox.classList.add('d-none');
+                        suggestBox.innerHTML = '';
+                    }
+
+                    // Hide suggestions when clicking outside
+                    document.addEventListener('click', function(e) {
+                        if (!searchBox.contains(e.target) && !suggestBox.contains(e.target)) {
+                            hideSuggestions();
+                        }
+                    });
+
+                    // Handle keyboard navigation
+                    searchBox.addEventListener('keydown', function(e) {
+                        if (e.key === 'Escape') {
+                            hideSuggestions();
+                            this.blur();
+                        }
+                    });
+
+                    // Show suggestions on focus if there's content
+                    searchBox.addEventListener('focus', function() {
+                        if (this.value.trim().length >= 2 && suggestBox.innerHTML.trim()) {
+                            suggestBox.classList.remove('d-none');
+                        }
+                    });
+                </script>
             </div>
 
             <!-- Cart and Login -->

@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "xwYojxB3luzddmIj+C6U2mbDNkr/uJMBnjUV12KyAAU=",
+  "Hash": "qOSZCluL9xOTnsLa6MgpV9l3EpPf2L8g5Ie3IQb+T0g=",
   "Source": "web-ban-thuoc",
   "BasePath": "_content/web-ban-thuoc",
   "Mode": "Default",
@@ -2732,6 +2732,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\images\\products\\canxi_d3k2_6.png"
+    },
+    {
+      "Identity": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\products\\default.png",
+      "SourceId": "web-ban-thuoc",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\",
+      "BasePath": "_content/web-ban-thuoc",
+      "RelativePath": "images/products/default.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\products\\default.png"
     },
     {
       "Identity": "D:\\DoAnCaNhan\\doAnWebNC\\web-ban-thuoc\\wwwroot\\images\\products\\immuvita_easylife_1.png",

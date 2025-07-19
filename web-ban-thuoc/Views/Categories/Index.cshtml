@@ -1,15 +1,37 @@
 @*
-    Trang danh sách sản phẩm theo danh mục
+    Trang danh sách sản phẩm theo danh mục hoặc kết quả tìm kiếm
     Usage: <partial name="_CategoryList" /> hoặc truy cập /Categories/CategoryList
 *@
 
 @{
-    ViewData["Title"] = "Danh mục sản phẩm - Nhà Thuốc Long Châu";
+    ViewData["Title"] = ViewData["Title"] ?? "Danh mục sản phẩm - Nhà Thuốc Long Châu";
     var products = ViewBag.Products as List<web_ban_thuoc.Models.Product>;
     var category = ViewBag.Category as web_ban_thuoc.Models.Category;
+    var isSearchMode = ViewBag.IsSearchMode ?? false;
+    var searchQuery = ViewBag.SearchQuery as string;
+    var totalCount = ViewBag.TotalCount ?? 0;
+    var currentPage = ViewBag.CurrentPage ?? 1;
+    var totalPages = ViewBag.TotalPages ?? 1;
 }
 
 <div class="container mx-auto py-6 px-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="/" class="text-decoration-none">Trang chủ</a>
+            </li>
+            @if (isSearchMode)
+            {
+                <li class="breadcrumb-item active" aria-current="page">Tìm kiếm</li>
+            }
+            else if (category != null)
+            {
+                <li class="breadcrumb-item active" aria-current="page">@category.CategoryName</li>
+            }
+        </ol>
+    </nav>
+
     <div class="row g-6">
         <!-- Bộ lọc bên trái -->
         <div class="col-12 col-lg-3">
@@ -18,52 +40,179 @@
 
         <!-- Danh sách sản phẩm bên phải -->
         <div class="col-12 col-lg-9">
+            <!-- Header với tiêu đề và sắp xếp -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h4 class="text-black mb-1">@(category?.CategoryName ?? "Danh mục sản phẩm")</h4>
-                    <p class="text-muted mb-0" id="product-count">
-                        Tìm thấy <span class="fw-semibold">@(products?.Count ?? 0)</span> sản phẩm
-                    </p>
-                </div>
-                <div class="d-flex align-items-center">
-                    <span class="me-2 text-muted">Sắp xếp theo:</span>
-                    @{
-                        var sort = Context.Request.Query["sort"].ToString();
-                        string sortActive(string value) => sort == value ? "btn-primary text-white" : "btn-outline-primary";
+                    @if (isSearchMode)
+                    {
+                        <h4 class="text-black mb-1">Kết quả tìm kiếm</h4>
+                        <p class="text-muted mb-0">
+                            Tìm thấy <span class="fw-semibold">@totalCount</span> sản phẩm cho từ khóa: 
+                            <span class="text-primary fw-semibold">"@searchQuery"</span>
+                        </p>
                     }
-                    <button type="button" class="btn @sortActive("") me-2 rounded-5 btn-sort" data-sort="" onclick="sortProducts('')">Bán chạy</button>
-                    <button type="button" class="btn @sortActive("price_asc") me-2 rounded-5 btn-sort" data-sort="price_asc" onclick="sortProducts('price_asc')">Giá thấp</button>
-                    <button type="button" class="btn @sortActive("price_desc") rounded-5 btn-sort" data-sort="price_desc" onclick="sortProducts('price_desc')">Giá cao</button>
+                    else
+                    {
+                        <h4 class="text-black mb-1">@(category?.CategoryName ?? "Danh mục sản phẩm")</h4>
+                        <p class="text-muted mb-0">
+                            Tìm thấy <span class="fw-semibold">@totalCount</span> sản phẩm
+                        </p>
+                    }
                 </div>
+                
+                @if (products?.Any() == true)
+                {
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted small">Sắp xếp:</span>
+                        @{
+                            var sort = Context.Request.Query["sort"].ToString();
+                            string sortActive(string value) => sort == value ? "btn-primary" : "btn-outline-primary";
+                        }
+                        <button type="button" class="btn @sortActive("") btn-sm btn-sort" data-sort="" onclick="sortProducts('')">
+                            <i class="fas fa-fire me-1"></i>Bán chạy
+                        </button>
+                        <button type="button" class="btn @sortActive("name") btn-sm btn-sort" data-sort="name" onclick="sortProducts('name')">
+                            <i class="fas fa-sort-alpha-down me-1"></i>Tên
+                        </button>
+                        <button type="button" class="btn @sortActive("price_asc") btn-sm btn-sort" data-sort="price_asc" onclick="sortProducts('price_asc')">
+                            <i class="fas fa-sort-numeric-down me-1"></i>Giá thấp
+                        </button>
+                        <button type="button" class="btn @sortActive("price_desc") btn-sm btn-sort" data-sort="price_desc" onclick="sortProducts('price_desc')">
+                            <i class="fas fa-sort-numeric-up me-1"></i>Giá cao
+                        </button>
+                    </div>
+                }
             </div>
             
-            <!-- Sử dụng partial view để hiển thị danh sách sản phẩm -->
-            <partial name="_ProductList" model="products" />
+            <!-- Thông báo không có kết quả -->
+            @if (!products?.Any() == true)
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">Không tìm thấy sản phẩm nào</h4>
+                    @if (isSearchMode)
+                    {
+                        <p class="text-muted">Không có sản phẩm nào phù hợp với từ khóa "@searchQuery"</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Danh mục này chưa có sản phẩm nào</p>
+                    }
+                    <div class="mt-3">
+                        <a href="/" class="btn btn-primary me-2">
+                            <i class="fas fa-home me-2"></i>Về trang chủ
+                        </a>
+                        <button onclick="history.back()" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Quay lại
+                        </button>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Sử dụng partial view để hiển thị danh sách sản phẩm -->
+                <partial name="_ProductList" model="products" />
+                
+                <!-- Phân trang -->
+                @if (totalPages > 1)
+                {
+                    <nav class="d-flex justify-content-center mt-5">
+                        <ul class="pagination">
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" href="@BuildPaginationUrl(currentPage - 1)" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            
+                            @{
+                                int startPage = Math.Max(1, currentPage - 2);
+                                int endPage = Math.Min(totalPages, currentPage + 2);
+                            }
+                            
+                            @if (startPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@BuildPaginationUrl(1)">1</a>
+                                </li>
+                                @if (startPage > 2)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                }
+                            }
+                            
+                            @for (int i = startPage; i <= endPage; i++)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link" href="@BuildPaginationUrl(i)">@i</a>
+                                </li>
+                            }
+                            
+                            @if (endPage < totalPages)
+                            {
+                                @if (endPage < totalPages - 1)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                }
+                                <li class="page-item">
+                                    <a class="page-link" href="@BuildPaginationUrl(totalPages)">@totalPages</a>
+                                </li>
+                            }
+                            
+                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                <a class="page-link" href="@BuildPaginationUrl(currentPage + 1)" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            }
         </div>
     </div>
 </div>
 
-<style>
-    .line-clamp-3 {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+@functions {
+    private string BuildPaginationUrl(int page)
+    {
+        var query = Context.Request.Query;
+        var parameters = new List<string>();
+        
+        // Thêm categoryId hoặc search
+        if (ViewBag.IsSearchMode == true)
+        {
+            parameters.Add($"search={Uri.EscapeDataString(ViewBag.SearchQuery)}");
+        }
+        else
+        {
+            parameters.Add($"categoryId={ViewBag.Category?.CategoryId}");
+        }
+        
+        // Thêm các tham số khác
+        if (!string.IsNullOrEmpty(query["sort"]))
+            parameters.Add($"sort={query["sort"]}");
+        if (!string.IsNullOrEmpty(query["brands"]))
+            parameters.Add($"brands={query["brands"]}");
+        if (!string.IsNullOrEmpty(query["origins"]))
+            parameters.Add($"origins={query["origins"]}");
+        if (!string.IsNullOrEmpty(query["priceRange"]))
+            parameters.Add($"priceRange={query["priceRange"]}");
+        
+        // Thêm page
+        parameters.Add($"page={page}");
+        
+        return $"/Categories/0?{string.Join("&", parameters)}";
     }
-
-    .hover-border {
-        border: 1px solid transparent;
-    }
-
-    .hover-border-blue-500:hover {
-        border-color: #3b82f6;
-    }
-</style>
+}
 
 <script>
 function sortProducts(sort) {
     const url = new URL(window.location.href);
     url.searchParams.set('sort', sort);
+    url.searchParams.set('page', '1'); // Reset về trang 1 khi sort
 
     // Cập nhật current filters
     if (typeof currentFilters !== 'undefined') {
@@ -77,7 +226,9 @@ function sortProducts(sort) {
 
     // Hiển thị loading
     const productList = document.getElementById('product-list');
-    productList.innerHTML = '<div class="col-12 text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Đang tải...</span></div></div>';
+    if (productList) {
+        productList.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Đang tải...</span></div></div>';
+    }
 
     fetch(url, { headers })
         .then(res => res.text())
@@ -86,37 +237,37 @@ function sortProducts(sort) {
             const doc = parser.parseFromString(html, 'text/html');
             const newList = doc.querySelector('#product-list');
             
-            if (newList) {
+            if (newList && productList) {
                 productList.innerHTML = newList.innerHTML;
                 
                 // Cập nhật số lượng sản phẩm
                 const productCount = newList.querySelectorAll('.col').length;
-                const productCountElement = document.getElementById('product-count');
+                const productCountElement = document.querySelector('.text-muted .fw-semibold');
                 if (productCountElement) {
-                    productCountElement.innerHTML = `Tìm thấy <span class="fw-semibold">${productCount}</span> sản phẩm`;
+                    productCountElement.textContent = productCount;
                 }
             } else {
-                productList.innerHTML = '<div class="col-12 text-center text-muted">Không tìm thấy sản phẩm nào.</div>';
-                const productCountElement = document.getElementById('product-count');
-                if (productCountElement) {
-                    productCountElement.innerHTML = 'Tìm thấy <span class="fw-semibold">0</span> sản phẩm';
+                if (productList) {
+                    productList.innerHTML = '<div class="col-12 text-center text-muted py-5">Không tìm thấy sản phẩm nào.</div>';
                 }
             }
 
             // Cập nhật trạng thái active cho các button sort
             document.querySelectorAll('.btn-sort').forEach(btn => {
-                btn.classList.remove('btn-primary', 'text-white');
+                btn.classList.remove('btn-primary');
                 btn.classList.add('btn-outline-primary');
             });
             const activeBtn = document.querySelector(`.btn-sort[data-sort="${sort}"]`);
             if (activeBtn) {
                 activeBtn.classList.remove('btn-outline-primary');
-                activeBtn.classList.add('btn-primary', 'text-white');
+                activeBtn.classList.add('btn-primary');
             }
         })
         .catch(error => {
             console.error('Lỗi khi sắp xếp sản phẩm:', error);
-            productList.innerHTML = '<div class="col-12 text-center text-danger">Có lỗi xảy ra khi sắp xếp sản phẩm.</div>';
+            if (productList) {
+                productList.innerHTML = '<div class="col-12 text-center text-danger py-5">Có lỗi xảy ra khi sắp xếp sản phẩm.</div>';
+            }
         });
 }
 </script>
