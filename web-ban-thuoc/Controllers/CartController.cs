@@ -186,26 +186,65 @@ public class CartController : Controller
         return Json(new { success = false, message = "Số lượng không hợp lệ!" });
     }
 
-    // Thanh toán - chỉ hiển thị toast nếu chưa đăng nhập
-    public IActionResult Checkout()
+    // Đã chuyển toàn bộ logic sang modal, xóa các action Checkout cũ dùng CheckoutViewModel
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult CheckoutPopup([FromBody] CheckoutPopupViewModel model)
     {
-        if (!User.Identity.IsAuthenticated)
+        if (!ModelState.IsValid)
         {
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-            {
-                return Json(new { 
-                    success = false, 
-                    message = "Bạn cần đăng nhập để thanh toán!",
-                    requireLogin = true
-                });
-            }
-            
-            TempData["LoginError"] = "Bạn cần đăng nhập để thanh toán!";
-            return RedirectToAction("Index", "Auth");
+            return Json(new { success = false, message = "Vui lòng nhập đầy đủ thông tin!" });
         }
-        
-        // Nếu đã đăng nhập, chuyển sang trang thanh toán thực sự
-        return View("Checkout");
+        var userId = _userManager.GetUserId(User);
+        var dbCart = _context.Orders
+            .Include(o => o.OrderItems)
+            .FirstOrDefault(o => o.UserId == userId && o.Status == "Cart");
+        if (dbCart == null || dbCart.OrderItems.Count == 0)
+        {
+            return Json(new { success = false, message = "Giỏ hàng của bạn đang trống!" });
+        }
+        // Cập nhật thông tin đơn hàng
+        dbCart.Status = "Chờ xác nhận";
+        dbCart.OrderDate = DateTime.Now;
+        dbCart.ShippingAddress = model.ShippingAddress;
+        dbCart.PaymentStatus = "Chưa thanh toán";
+        // Lưu thêm tên và sđt vào Order nếu muốn (bạn có thể mở rộng model Order)
+        _context.SaveChanges();
+        // Thêm record vào bảng Payment
+        var payment = new Payment
+        {
+            OrderId = dbCart.OrderId,
+            PaymentMethod = "COD",
+            Amount = dbCart.TotalAmount,
+            PaymentStatus = "Pending",
+            PaymentDate = null
+        };
+        _context.Payments.Add(payment);
+        _context.SaveChanges();
+        return Json(new { success = true });
+    }
+
+    public IActionResult ThankYou()
+    {
+        return View();
+    }
+
+    // Lấy tóm tắt giỏ hàng cho modal (AJAX)
+    [HttpGet]
+    public IActionResult GetCartSummary()
+    {
+        var cart = GetCart();
+        var total = cart.Sum(i => i.Price * i.Quantity);
+        return Json(new {
+            items = cart.Select(i => new {
+                productName = i.ProductName,
+                imageUrl = i.ImageUrl,
+                quantity = i.Quantity,
+                total = i.Price * i.Quantity
+            }),
+            total
+        });
     }
 
     // Lấy giỏ hàng từ database
