@@ -234,6 +234,11 @@
                             <li class="px-3 py-2 small text-muted">@User.Identity.Name</li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
+                                <a class="dropdown-item" href="/Auth/Profile">
+                                    Chi tiết tài khoản
+                                </a>
+                            </li>
+                            <li>
                                 <form asp-action="Logout" asp-controller="Auth" method="post" class="m-0">
                                     <button type="submit" class="dropdown-item">Đăng xuất</button>
                                 </form>
