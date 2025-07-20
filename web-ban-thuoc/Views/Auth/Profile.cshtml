@@ -20,28 +20,30 @@
         });
     </script>
 }
-<div style="background-color: #ededed; min-height: 100vh;">
+<div>
     <div class="container pt-3">
         <div class="row">
-            <div class="col-12 col-lg-4 mb-4 mb-lg-0">
-                <div class="bg-white shadow-sm rounded-4 p-0">
-                    <div class="text-center pt-4 pb-3 border-bottom">
-                        <img src="https://nhathuoclongchau.com.vn/estore-images/profile/v2/avatar-profile-large.svg" style="width: 96px; height: 96px;" class="mb-2 rounded-circle bg-light border" alt="avatar">
-                        <div class="fw-bold fs-5">@Model.UserName</div>
-                        <div class="text-muted small">@Model.Email</div>
+            <div class="col-12 col-lg-4 mb-lg-0">
+                <div class="sticky-sidebar mb-5">
+                    <div class="bg-white shadow-sm rounded-4 p-0">
+                        <div class="text-center pt-4 pb-3 border-bottom">
+                            <img src="https://nhathuoclongchau.com.vn/estore-images/profile/v2/avatar-profile-large.svg" style="width: 96px; height: 96px;" class="mb-2 rounded-circle bg-light border" alt="avatar">
+                            <div class="fw-bold fs-5">@Model.UserName</div>
+                            <div class="text-muted small">@Model.Email</div>
+                        </div>
+                        <ul class="nav flex-lg-column flex-row nav-pills gap-2 p-3" id="profileTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active w-100 text-start" id="info-tab" data-bs-toggle="pill" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">
+                                    <i class="fas fa-user me-2"></i>Thông tin cá nhân
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link w-100 text-start" id="orders-tab" data-bs-toggle="pill" data-bs-target="#orders" type="button" role="tab" aria-controls="orders" aria-selected="false">
+                                    <i class="fas fa-box me-2"></i>Đơn hàng
+                                </button>
+                            </li>
+                        </ul>
                     </div>
-                    <ul class="nav flex-lg-column flex-row nav-pills gap-2 p-3" id="profileTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active w-100 text-start" id="info-tab" data-bs-toggle="pill" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">
-                                <i class="fas fa-user me-2"></i>Thông tin cá nhân
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link w-100 text-start" id="orders-tab" data-bs-toggle="pill" data-bs-target="#orders" type="button" role="tab" aria-controls="orders" aria-selected="false">
-                                <i class="fas fa-box me-2"></i>Đơn hàng
-                            </button>
-                        </li>
-                    </ul>
                 </div>
             </div>
             <div class="col-12 col-lg-8">
@@ -176,9 +178,95 @@
                         </script>
                     </div>
                     <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
-                        <div class="bg-white shadow-sm rounded-4 p-4">
+                        <div class="bg-white shadow-sm rounded-4 p-4 mb-5">
                             <h5 class="fw-bold mb-4"><i class="fas fa-box me-2"></i>Lịch sử đơn hàng</h5>
-                            <div class="alert alert-info">Chức năng xem lịch sử đơn hàng sẽ được bổ sung ở đây.</div>
+                            
+                            @if (!Model.Orders.Any())
+                            {
+                                <div class="text-center py-5">
+                                    <i class="fas fa-box-open text-muted mb-3" style="font-size: 4rem;"></i>
+                                    <h6 class="text-muted mb-2">Bạn chưa có đơn hàng nào</h6>
+                                    <p class="text-muted small">Hãy mua sắm để có đơn hàng đầu tiên!</p>
+                                    <a href="/" class="btn btn-primary rounded-pill px-4 py-2">
+                                        <i class="fas fa-shopping-bag me-2"></i>Mua sắm ngay
+                                    </a>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="accordion" id="ordersAccordion">
+                                    @foreach (var order in Model.Orders)
+                                    {
+                                        <div class="accordion-item border-0 mb-3 shadow-sm rounded-3">
+                                            <h2 class="accordion-header" id="heading@(order.OrderId)">
+                                                <button class="accordion-button collapsed bg-white rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse@(order.OrderId)" aria-expanded="false" aria-controls="collapse@(order.OrderId)">
+                                                    <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="me-3">
+                                                                <div class="fw-bold text-dark">Đơn hàng #@order.OrderId</div>
+                                                                <div class="small text-muted">@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <div class="fw-bold text-primary">@order.TotalAmount.ToString("N0")đ</div>
+                                                            <div class="small">
+                                                                <span class="badge @GetStatusBadgeClass(order.Status)">@GetStatusText(order.Status)</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            </h2>
+                                            <div id="collapse@(order.OrderId)" class="accordion-collapse collapse" aria-labelledby="heading@(order.OrderId)" data-bs-parent="#ordersAccordion">
+                                                <div class="accordion-body pt-0">
+                                                    <!-- Thông tin đơn hàng -->
+                                                    <div class="row mb-3">
+                                                        <div class="col-md-6">
+                                                            <div class="small text-muted mb-1">Người nhận:</div>
+                                                            <div class="fw-semibold">@order.FullName</div>
+                                                            <div class="small text-muted">@order.Phone</div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="small text-muted mb-1">Địa chỉ:</div>
+                                                            <div class="small">@order.ShippingAddress</div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Danh sách sản phẩm -->
+                                                    <div class="border-top pt-3">
+                                                        <h6 class="fw-semibold mb-3">Sản phẩm đã đặt:</h6>
+                                                        @foreach (var item in order.Items)
+                                                        {
+                                                            <div class="d-flex align-items-center mb-3 p-3 bg-light rounded-3">
+                                                                <img src="/images/products/@item.ImageUrl" alt="@item.ProductName" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                                                <div class="flex-grow-1">
+                                                                    <div class="fw-semibold">@item.ProductName</div>
+                                                                    <div class="small text-muted">Số lượng: @item.Quantity</div>
+                                                                </div>
+                                                                <div class="text-end">
+                                                                    <div class="fw-semibold">@item.Price.ToString("N0")đ</div>
+                                                                    <div class="small text-muted">@item.TotalPrice.ToString("N0")đ</div>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                    
+                                                    <!-- Tổng tiền -->
+                                                    <div class="border-top pt-3">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <span class="fw-bold">Tổng cộng:</span>
+                                                            <span class="fw-bold text-primary fs-5">@order.TotalAmount.ToString("N0")đ</span>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between align-items-center mt-2">
+                                                            <span class="small text-muted">Trạng thái thanh toán:</span>
+                                                            <span class="badge @GetPaymentStatusBadgeClass(order.PaymentStatus)">@GetPaymentStatusText(order.PaymentStatus)</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -213,4 +301,73 @@
         border-color: #1250dc;
         box-shadow: 0 0 0 2px #eaeffa;
     }
-</style> 
+    
+    /* Sticky Sidebar */
+    .sticky-sidebar {
+        position: sticky;
+        top: 20px;
+        z-index: 100;
+    }
+    
+    /* Responsive cho mobile */
+    @@media (max-width: 991.98px) {
+        .sticky-sidebar {
+            position: static;
+            top: auto;
+        }
+    }
+</style>
+
+@functions {
+    string GetStatusText(string status)
+    {
+        return status switch
+        {
+            "Chờ xác nhận" => "Chờ xác nhận",
+            "Đã xác nhận" => "Đã xác nhận", 
+            "Đang giao" => "Đang giao",
+            "Đã giao" => "Đã giao",
+            "Đã hủy" => "Đã hủy",
+            _ => status
+        };
+    }
+    
+    string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Chờ xác nhận" => "bg-warning text-dark",
+            "Đã xác nhận" => "bg-info text-white",
+            "Đang giao" => "bg-primary text-white", 
+            "Đã giao" => "bg-success text-white",
+            "Đã hủy" => "bg-danger text-white",
+            _ => "bg-secondary text-white"
+        };
+    }
+    
+    string GetPaymentStatusText(string paymentStatus)
+    {
+        return paymentStatus switch
+        {
+            "Chưa thanh toán" => "Chưa thanh toán",
+            "Đã thanh toán" => "Đã thanh toán",
+            "Pending" => "Chờ xử lý",
+            "Completed" => "Hoàn thành",
+            "Failed" => "Thất bại",
+            _ => paymentStatus
+        };
+    }
+    
+    string GetPaymentStatusBadgeClass(string paymentStatus)
+    {
+        return paymentStatus switch
+        {
+            "Chưa thanh toán" => "bg-warning text-dark",
+            "Đã thanh toán" => "bg-success text-white",
+            "Pending" => "bg-info text-white",
+            "Completed" => "bg-success text-white",
+            "Failed" => "bg-danger text-white",
+            _ => "bg-secondary text-white"
+        };
+    }
+} 

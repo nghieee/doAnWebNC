@@ -1,28 +1,88 @@
 @{
-    ViewData["Title"] = "Đặt hàng thành công";
+    ViewData["Title"] = "Đặt hàng thành công - Nhà Thuốc Long Châu";
 }
+
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-12 col-md-8 col-lg-6">
-            <div class="card shadow-sm border-0 rounded-4 text-center p-4">
-                <div class="mb-4">
-                    <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
-                </div>
-                <h2 class="fw-bold text-success mb-3">Đặt hàng thành công!</h2>
-                <p class="lead mb-4">Cảm ơn bạn đã đặt hàng tại <span class="fw-semibold text-primary">Nhà Thuốc Long Châu</span>.<br>Chúng tôi sẽ liên hệ xác nhận và giao hàng trong thời gian sớm nhất.</p>
-                <div class="alert alert-info mb-4">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Bạn có thể kiểm tra trạng thái đơn hàng trong mục <b>Đơn mua</b> của tài khoản.
-                </div>
-                <div class="d-grid gap-2 d-md-flex justify-content-center">
-                    <a href="/" class="btn btn-primary rounded-pill px-4 py-2 fw-semibold">
-                        <i class="fas fa-home me-2"></i>Về trang chủ
-                    </a>
-                    <a href="/Account/Orders" class="btn btn-outline-primary rounded-pill px-4 py-2 fw-semibold">
-                        <i class="fas fa-receipt me-2"></i>Xem đơn hàng
-                    </a>
+            <div class="card shadow-sm border-0 rounded-4 text-center">
+                <div class="card-body py-5">
+                    <!-- Icon thành công -->
+                    <div class="mb-4">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-success text-white rounded-circle" style="width: 80px; height: 80px;">
+                            <i class="fas fa-check" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Tiêu đề -->
+                    <h3 class="fw-bold text-success mb-3">Đặt hàng thành công!</h3>
+                    
+                    <!-- Thông báo -->
+                    <p class="text-muted mb-4">
+                        Cảm ơn bạn đã đặt hàng tại Nhà Thuốc Long Châu.<br>
+                        Chúng tôi sẽ xử lý đơn hàng của bạn trong thời gian sớm nhất.
+                    </p>
+                    
+                    <!-- Thông tin bổ sung -->
+                    <div class="bg-light rounded-3 p-4 mb-4">
+                        <div class="row text-start">
+                            <div class="col-12 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-envelope text-primary me-3"></i>
+                                    <div>
+                                        <div class="fw-semibold">Email xác nhận</div>
+                                        <div class="small text-muted">Chúng tôi sẽ gửi email xác nhận đến hộp thư của bạn sau khi đơn hàng được xác nhận</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-phone text-primary me-3"></i>
+                                    <div>
+                                        <div class="fw-semibold">Liên hệ hỗ trợ</div>
+                                        <div class="small text-muted">Hotline: 028.3636.7777</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-clock text-primary me-3"></i>
+                                    <div>
+                                        <div class="fw-semibold">Thời gian xử lý</div>
+                                        <div class="small text-muted">Đơn hàng sẽ được xử lý trong 24-48 giờ</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Các nút hành động -->
+                    <div class="d-grid gap-3">
+                        <a href="/Auth/Profile" class="btn btn-primary rounded-pill py-3">
+                            <i class="fas fa-box me-2"></i>
+                            Xem đơn hàng của tôi
+                        </a>
+                        <a href="/" class="btn btn-outline-primary rounded-pill py-3">
+                            <i class="fas fa-shopping-bag me-2"></i>
+                            Tiếp tục mua sắm
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div> 
+</div>
+
+<style>
+    .card {
+        transition: transform 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .bg-success {
+        background: linear-gradient(135deg, #28a745, #20c997) !important;
+    }
+</style> 

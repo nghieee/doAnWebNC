@@ -208,16 +208,18 @@ public class CartController : Controller
         dbCart.Status = "Chờ xác nhận";
         dbCart.OrderDate = DateTime.Now;
         dbCart.ShippingAddress = model.ShippingAddress;
+        dbCart.FullName = model.FullName;
+        dbCart.Phone = model.Phone;
         dbCart.PaymentStatus = "Chưa thanh toán";
-        // Lưu thêm tên và sđt vào Order nếu muốn (bạn có thể mở rộng model Order)
         _context.SaveChanges();
+        
         // Thêm record vào bảng Payment
         var payment = new Payment
         {
             OrderId = dbCart.OrderId,
-            PaymentMethod = "COD",
+            PaymentMethod = model.PaymentMethod,
             Amount = dbCart.TotalAmount,
-            PaymentStatus = "Pending",
+            PaymentStatus = model.PaymentMethod == "COD" ? "Pending" : "Pending",
             PaymentDate = null
         };
         _context.Payments.Add(payment);

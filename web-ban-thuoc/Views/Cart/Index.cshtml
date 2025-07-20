@@ -204,6 +204,23 @@
             <label class="form-label">Địa chỉ nhận hàng</label>
             <input type="text" class="form-control" name="ShippingAddress" required>
           </div>
+          <div class="mb-3">
+            <label class="form-label">Phương thức thanh toán</label>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio" name="PaymentMethod" id="cod" value="COD" checked>
+              <label class="form-check-label" for="cod">
+                <i class="fas fa-money-bill-wave me-2 text-success"></i>
+                Thanh toán khi nhận hàng (COD)
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="PaymentMethod" id="payos" value="PayOS">
+              <label class="form-check-label" for="payos">
+                <i class="fas fa-credit-card me-2 text-primary"></i>
+                Thanh toán online qua PayOS
+              </label>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -359,7 +376,8 @@ document.getElementById('checkoutForm').addEventListener('submit', function(e) {
     const data = {
         FullName: form.FullName.value,
         Phone: form.Phone.value,
-        ShippingAddress: form.ShippingAddress.value
+        ShippingAddress: form.ShippingAddress.value,
+        PaymentMethod: form.PaymentMethod.value
     };
     fetch('/Cart/CheckoutPopup', {
         method: 'POST',

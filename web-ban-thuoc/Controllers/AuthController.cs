@@ -7,6 +7,7 @@ using System.Text.Encodings.Web;
 using web_ban_thuoc.Services;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
 
 namespace web_ban_thuoc.Controllers
 {
@@ -200,11 +201,43 @@ public class AuthController : Controller
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return RedirectToAction("Index", "Auth");
+            
+            // Lấy lịch sử đơn hàng của user (loại trừ giỏ hàng - Status = "Cart")
+            var orders = await _context.Orders
+                .Where(o => o.UserId == user.Id && o.Status != "Cart")
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .ThenInclude(p => p.ProductImages)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+
+            var orderViewModels = orders.Select(o => new OrderHistoryViewModel
+            {
+                OrderId = o.OrderId,
+                OrderDate = o.OrderDate ?? DateTime.Now,
+                TotalAmount = o.TotalAmount ?? 0,
+                Status = o.Status ?? "",
+                PaymentStatus = o.PaymentStatus ?? "",
+                ShippingAddress = o.ShippingAddress ?? "",
+                FullName = o.FullName ?? "",
+                Phone = o.Phone ?? "",
+                Items = o.OrderItems.Select(oi => new OrderItemViewModel
+                {
+                    ProductId = oi.ProductId ?? 0,
+                    ProductName = oi.Product?.ProductName ?? "",
+                    ImageUrl = oi.Product?.ProductImages?.FirstOrDefault(pi => pi.IsMain == true)?.ImageUrl ?? 
+                               oi.Product?.ProductImages?.FirstOrDefault()?.ImageUrl ?? "sanpham.png",
+                    Quantity = oi.Quantity,
+                    Price = oi.Price
+                }).ToList()
+            }).ToList();
+
             var vm = new ProfileViewModel
             {
                 UserName = user.UserName,
                 Email = user.Email,
-                PhoneNumber = user.PhoneNumber
+                PhoneNumber = user.PhoneNumber,
+                Orders = orderViewModels
             };
             return View("~/Views/Auth/Profile.cshtml", vm);
         }
