@@ -53,10 +53,10 @@
                     }
                     else
                     {
-                        <h4 class="text-black mb-1">@(category?.CategoryName ?? "Danh mục sản phẩm")</h4>
+                    <h4 class="text-black mb-1">@(category?.CategoryName ?? "Danh mục sản phẩm")</h4>
                         <p class="text-muted mb-0">
                             Tìm thấy <span class="fw-semibold">@totalCount</span> sản phẩm
-                        </p>
+                    </p>
                     }
                 </div>
                 
@@ -64,10 +64,10 @@
                 {
                     <div class="d-flex align-items-center gap-2">
                         <span class="text-muted small">Sắp xếp:</span>
-                        @{
-                            var sort = Context.Request.Query["sort"].ToString();
+                    @{
+                        var sort = Context.Request.Query["sort"].ToString();
                             string sortActive(string value) => sort == value ? "btn-primary" : "btn-outline-primary";
-                        }
+                    }
                         <button type="button" class="btn @sortActive("") btn-sm btn-sort" data-sort="" onclick="sortProducts('')">
                             <i class="fas fa-fire me-1"></i>Bán chạy
                         </button>
@@ -80,7 +80,7 @@
                         <button type="button" class="btn @sortActive("price_desc") btn-sm btn-sort" data-sort="price_desc" onclick="sortProducts('price_desc')">
                             <i class="fas fa-sort-numeric-up me-1"></i>Giá cao
                         </button>
-                    </div>
+                </div>
                 }
             </div>
             
@@ -110,8 +110,8 @@
             }
             else
             {
-                <!-- Sử dụng partial view để hiển thị danh sách sản phẩm -->
-                <partial name="_ProductList" model="products" />
+            <!-- Sử dụng partial view để hiển thị danh sách sản phẩm -->
+            <partial name="_ProductList" model="products" />
                 
                 <!-- Phân trang -->
                 @if (totalPages > 1)
@@ -185,7 +185,7 @@
         if (ViewBag.IsSearchMode == true)
         {
             parameters.Add($"search={Uri.EscapeDataString(ViewBag.SearchQuery)}");
-        }
+    }
         else
         {
             parameters.Add($"categoryId={ViewBag.Category?.CategoryId}");

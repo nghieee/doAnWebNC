@@ -20,6 +20,9 @@ public partial class Order
 
     public string? PaymentStatus { get; set; }
 
+    public string? FullName { get; set; }
+    public string? Phone { get; set; }
+
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();

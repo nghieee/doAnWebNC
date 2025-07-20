@@ -112,7 +112,7 @@
                                 <i class="fas fa-arrow-left me-2"></i>
                                 Tiếp tục mua hàng
                             </a>
-                            <button type="button" class="btn btn-primary rounded-pill py-3 fw-bold" onclick="checkout()">
+                            <button type="button" class="btn btn-primary rounded-pill py-3 w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#checkoutModal">
                                 <i class="fas fa-credit-card me-2"></i>
                                 Thanh toán ngay
                             </button>
@@ -151,6 +151,84 @@
             </div>
         </div>
     }
+</div>
+
+<!-- Modal popup thanh toán -->
+<div class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <form id="checkoutForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="checkoutModalLabel">Xác nhận đơn hàng</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Danh sách sản phẩm -->
+          <div id="checkout-products">
+            @foreach (var item in Model)
+            {
+                <div class="d-flex align-items-center mb-3">
+                    <img src="/images/products/@(item.ImageUrl ?? "sanpham.png")" width="60" height="60" class="rounded me-3" style="object-fit:cover;">
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold">@item.ProductName</div>
+                        <div class="small text-muted">Số lượng: @item.Quantity</div>
+                    </div>
+                    <div class="fw-bold text-primary">@((item.Price * item.Quantity).ToString("N0"))đ</div>
+                </div>
+            }
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between">
+            <span>Tạm tính:</span>
+            <span class="fw-bold">@Model.Sum(i => i.Price * i.Quantity).ToString("N0")đ</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span>Phí vận chuyển:</span>
+            <span class="fw-bold text-success">Miễn phí</span>
+          </div>
+          <div class="d-flex justify-content-between fs-5 mt-2">
+            <span>Tổng cộng:</span>
+            <span class="fw-bold text-primary">@Model.Sum(i => i.Price * i.Quantity).ToString("N0")đ</span>
+          </div>
+          <hr>
+          <!-- Form nhập thông tin nhận hàng -->
+          <div class="mb-3">
+            <label class="form-label">Họ tên người nhận</label>
+            <input type="text" class="form-control" name="FullName" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Số điện thoại</label>
+            <input type="text" class="form-control" name="Phone" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Địa chỉ nhận hàng</label>
+            <input type="text" class="form-control" name="ShippingAddress" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Phương thức thanh toán</label>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio" name="PaymentMethod" id="cod" value="COD" checked>
+              <label class="form-check-label" for="cod">
+                <i class="fas fa-money-bill-wave me-2 text-success"></i>
+                Thanh toán khi nhận hàng (COD)
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="PaymentMethod" id="payos" value="PayOS">
+              <label class="form-check-label" for="payos">
+                <i class="fas fa-credit-card me-2 text-primary"></i>
+                Thanh toán online qua PayOS
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="submit" class="btn btn-primary">Xác nhận đặt hàng</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 
 <style>
@@ -288,25 +366,64 @@
         document.getElementById('subtotal').textContent = subtotal.toLocaleString('vi-VN') + 'đ';
         document.getElementById('total').textContent = subtotal.toLocaleString('vi-VN') + 'đ';
     }
-    
-    function checkout() {
-        fetch('/Cart/Checkout', {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.location.href = '/Cart/Checkout';
-            } else {
-                showToast(data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Có lỗi xảy ra khi thanh toán!', 'error');
-        });
-    }
 </script> 
+
+@section Scripts {
+<script>
+document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const data = {
+        FullName: form.FullName.value,
+        Phone: form.Phone.value,
+        ShippingAddress: form.ShippingAddress.value,
+        PaymentMethod: form.PaymentMethod.value
+    };
+    fetch('/Cart/CheckoutPopup', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            window.location.href = '/Cart/ThankYou';
+        } else {
+            alert(result.message || 'Có lỗi xảy ra!');
+        }
+    });
+});
+
+// Cập nhật lại nội dung modal khi mở
+var checkoutModal = document.getElementById('checkoutModal');
+checkoutModal.addEventListener('show.bs.modal', function (event) {
+    fetch('/Cart/GetCartSummary')
+        .then(res => res.json())
+        .then(data => {
+            // Render lại danh sách sản phẩm
+            let html = '';
+            data.items.forEach(item => {
+                html += `
+                <div class="d-flex align-items-center mb-3">
+                    <img src="/images/products/${item.imageUrl || 'sanpham.png'}" width="60" height="60" class="rounded me-3" style="object-fit:cover;">
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold">${item.productName}</div>
+                        <div class="small text-muted">Số lượng: ${item.quantity}</div>
+                    </div>
+                    <div class="fw-bold text-primary">${item.total.toLocaleString('vi-VN')}đ</div>
+                </div>`;
+            });
+            document.getElementById('checkout-products').innerHTML = html;
+            // Cập nhật tổng tiền
+            let total = data.total.toLocaleString('vi-VN') + 'đ';
+            // Tìm và cập nhật các span tổng tiền trong modal
+            let modalBody = checkoutModal.querySelector('.modal-body');
+            let totalSpans = modalBody.querySelectorAll('.fw-bold.text-primary');
+            totalSpans.forEach(span => { span.textContent = total; });
+        });
+});
+</script>
+} 

@@ -74,8 +74,16 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXV0aFxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Auth/Profile.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXV0aFxQcm9maWxlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Cart/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2FydFxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Cart/ThankYou.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2FydFxUaGFua1lvdS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Categories/Index.cshtml]
