@@ -5,18 +5,18 @@
     var userId = user?.Id ?? "guest";
     var userName = user?.UserName ?? "Khách";
 }
-<div id="chat-fab" style="position:fixed;bottom:24px;right:24px;z-index:9999;">
-    <button id="open-chat" class="btn btn-primary rounded-circle shadow-lg" style="width:60px;height:60px;display:flex;align-items:center;justify-content:center;font-size:2rem;">
+<div id="chat-fab" class="position-fixed bottom-0 end-0 m-4" style="z-index:9999;">
+    <button id="open-chat" class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center" style="width:60px;height:60px;font-size:2rem;">
         <i class="fa-solid fa-comments"></i>
     </button>
 </div>
-<div id="chat-popup" style="position:fixed;bottom:24px;right:24px;z-index:10000;width:350px;max-width:95vw;display:none;">
-    <div id="chat-header" class="bg-primary text-white rounded-top-3 px-3 py-2 d-flex align-items-center justify-content-between" style="cursor:pointer;">
+<div id="chat-popup" class="position-fixed bottom-0 end-0 m-4" style="z-index:10000;width:350px;max-width:95vw;display:none;">
+    <div id="chat-header" class="bg-primary text-white rounded-top px-3 py-2 d-flex align-items-center justify-content-between">
         <span><i class="fa-solid fa-comments me-2"></i>Hỗ trợ trực tuyến</span>
-        <button id="chat-close" class="btn btn-sm btn-light text-primary" style="border-radius:50%;"><i class="fa-solid fa-xmark"></i></button>
+        <button id="chat-close" class="btn btn-sm btn-light text-primary rounded-circle"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div id="chat-body" class="bg-white border border-top-0 rounded-bottom-3 p-3" style="height:350px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;">
-        <div id="chat-messages" style="flex:1 1 auto;overflow-y:auto;"></div>
+    <div id="chat-body" class="bg-white border border-top-0 rounded-bottom p-3 d-flex flex-column gap-2" style="height:350px;overflow-y:auto;">
+        <div id="chat-messages" class="flex-grow-1 overflow-auto mb-2"></div>
         <form id="chat-form" class="d-flex gap-2 mt-2">
             <input type="text" id="chat-input" class="form-control" placeholder="Nhập tin nhắn..." autocomplete="off" />
             <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i></button>
@@ -24,19 +24,6 @@
     </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
-<style>
-#chat-popup { box-shadow: 0 4px 24px #0002; }
-#chat-header { user-select: none; }
-#chat-body { min-height: 350px; background: #fff; }
-#chat-messages { max-height: 260px; overflow-y: auto; }
-.chat-msg { display: flex; margin-bottom: 8px; }
-.chat-msg.user { justify-content: flex-end; }
-.chat-msg.admin { justify-content: flex-start; }
-.chat-bubble { padding: 8px 14px; border-radius: 18px; max-width: 70%; font-size: 1rem; }
-.chat-msg.user .chat-bubble { background: #e0f2fe; color: #2563eb; border-bottom-right-radius: 4px; }
-.chat-msg.admin .chat-bubble { background: #f3f4f6; color: #111; border-bottom-left-radius: 4px; }
-#chat-fab { transition: opacity 0.2s; }
-</style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 <script>
     const userId = '@userId';
@@ -76,15 +63,30 @@
             addMessage('user', msg);
             input.value = '';
         };
-        function addMessage(type, msg) {
+        function addMessage(type, msg, isHtml) {
             const msgDiv = document.createElement('div');
-            msgDiv.className = 'chat-msg ' + type;
+            msgDiv.className = 'd-flex mb-2 ' + (type === 'user' ? 'justify-content-end' : 'justify-content-start');
             const bubble = document.createElement('div');
-            bubble.className = 'chat-bubble';
-            bubble.innerText = msg;
+            bubble.className = 'px-3 py-2 rounded shadow-sm ' + (type === 'user' ? 'bg-info text-primary' : 'bg-light text-dark');
+            bubble.style.maxWidth = '70%';
+            bubble.style.wordBreak = 'break-word';
+            bubble.style.whiteSpace = 'pre-line';
+            bubble.style.lineHeight = '1.5';
+            if (isHtml) bubble.innerHTML = msg;
+            else bubble.innerText = msg;
             msgDiv.appendChild(bubble);
             document.getElementById('chat-messages').appendChild(msgDiv);
             document.getElementById('chat-messages').scrollTop = 99999;
+        }
+        window.addProductPingToChat = function(product) {
+            const html = `<a href='/Products/${product.id}' target='_blank' class='d-flex align-items-center bg-light rounded p-1 mb-2 text-decoration-none' style='height:40px;max-width:220px;'>`
+                + `<img src='${product.image}' alt='${product.name}' class='rounded me-2' style='width:32px;height:32px;object-fit:cover;'>`
+                + `<div class='flex-grow-1 min-width-0'>`
+                + `<div class='fw-semibold text-dark text-truncate' style='max-width:140px;font-size:1rem;'>${product.name}</div>`
+                + `<div class='small text-muted text-truncate'>Mã: ${product.id}</div>`
+                + `</div>`
+                + `</a>`;
+            addMessage('user', html, true);
         }
     });
 </script> 
