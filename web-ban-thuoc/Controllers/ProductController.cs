@@ -1,17 +1,20 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using web_ban_thuoc.Models;
+using Microsoft.AspNetCore.Identity;
 
 [Route("Products")]
 public class ProductController : Controller
 {
     private readonly LongChauDbContext _context;
     private readonly ILogger<ProductController> _logger;
+    private readonly UserManager<IdentityUser> _userManager;
 
-    public ProductController(LongChauDbContext context, ILogger<ProductController> logger)
+    public ProductController(LongChauDbContext context, ILogger<ProductController> logger, UserManager<IdentityUser> userManager)
     {
         _context = context;
         _logger = logger;
+        _userManager = userManager;
     }
 
     [HttpGet("{id}")]
@@ -21,6 +24,8 @@ public class ProductController : Controller
         var product = _context.Products
             .Include(p => p.ProductImages)
             .Include(p => p.Category)
+            .Include(p => p.Reviews)
+            .ThenInclude(r => r.User)
             .FirstOrDefault(p => p.ProductId == id);
 
         if (product == null)
@@ -28,7 +33,90 @@ public class ProductController : Controller
             return NotFound();
         }
 
+        if (User.Identity.IsAuthenticated)
+        {
+            var userId = _userManager.GetUserId(User);
+            var userReview = product.Reviews.FirstOrDefault(r => r.UserId == userId);
+            if (userReview != null)
+            {
+                ViewBag.UserReview = userReview;
+            }
+            else
+            {
+                // Kiểm tra user đã mua sản phẩm này với đơn hàng đã giao/thanh toán
+                bool canReview = _context.Orders
+                    .Where(o => o.UserId == userId && (o.Status == "Đã giao" || o.PaymentStatus == "Đã thanh toán"))
+                    .SelectMany(o => o.OrderItems)
+                    .Any(oi => oi.ProductId == id);
+                ViewBag.CanReview = canReview;
+            }
+        }
         return View(product);
+    }
+
+    [HttpPost("AddReview")]
+    [ValidateAntiForgeryToken]
+    public IActionResult AddReview(int productId, int rating, string comment)
+    {
+        if (!User.Identity.IsAuthenticated)
+        {
+            TempData["ReviewError"] = "Bạn cần đăng nhập để đánh giá sản phẩm.";
+            return RedirectToAction("Details", new { id = productId });
+        }
+        var userId = _userManager.GetUserId(User);
+        // Kiểm tra đã mua hàng
+        bool hasPurchased = _context.Orders
+            .Where(o => o.UserId == userId && (o.Status == "Đã giao" || o.PaymentStatus == "Đã thanh toán"))
+            .SelectMany(o => o.OrderItems)
+            .Any(oi => oi.ProductId == productId);
+        if (!hasPurchased)
+        {
+            TempData["ReviewError"] = "Bạn chỉ có thể đánh giá khi đã mua sản phẩm này.";
+            return RedirectToAction("Details", new { id = productId });
+        }
+        // Kiểm tra đã đánh giá chưa
+        if (_context.Reviews.Any(r => r.UserId == userId && r.ProductId == productId))
+        {
+            TempData["ReviewError"] = "Bạn đã đánh giá sản phẩm này rồi.";
+            return RedirectToAction("Details", new { id = productId });
+        }
+        var review = new Review
+        {
+            UserId = userId,
+            ProductId = productId,
+            Rating = rating,
+            Comment = comment,
+            ReviewDate = DateTime.Now
+        };
+        _context.Reviews.Add(review);
+        _context.SaveChanges();
+        TempData["ReviewSuccess"] = "Đánh giá của bạn đã được ghi nhận!";
+        return RedirectToAction("Details", new { id = productId });
+    }
+
+    [HttpPost("EditReview")]
+    [ValidateAntiForgeryToken]
+    public IActionResult EditReview(int reviewId, int rating, string comment)
+    {
+        var review = _context.Reviews.FirstOrDefault(r => r.ReviewId == reviewId);
+        if (review == null)
+        {
+            TempData["ReviewError"] = "Không tìm thấy đánh giá để sửa.";
+            return RedirectToAction("Details", new { id = review?.ProductId ?? 0 });
+        }
+        var userId = _userManager.GetUserId(User);
+        if (review.UserId != userId)
+        {
+            TempData["ReviewError"] = "Bạn không có quyền sửa đánh giá này.";
+            return RedirectToAction("Details", new { id = review.ProductId });
+        }
+        // Xác nhận lại (có thể xác nhận ở phía client bằng JS, ở đây chỉ cập nhật)
+        review.Rating = rating;
+        review.Comment = comment;
+        review.ReviewDate = DateTime.Now;
+        _context.SaveChanges();
+        TempData["ReviewSuccess"] = "Đã cập nhật đánh giá thành công!";
+        return RedirectToAction("Details", new { id = review.ProductId });
     }
 
     [HttpGet("Search")]
