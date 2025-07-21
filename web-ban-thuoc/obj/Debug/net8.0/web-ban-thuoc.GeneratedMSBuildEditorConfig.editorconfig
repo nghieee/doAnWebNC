@@ -70,12 +70,20 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cX0xheW91dC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Auth/ForgotPassword.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXV0aFxGb3Jnb3RQYXNzd29yZC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Auth/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXV0aFxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Auth/Profile.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXV0aFxQcm9maWxlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Auth/VerifyResetCode.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQXV0aFxWZXJpZnlSZXNldENvZGUuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/DoAnCaNhan/doAnWebNC/web-ban-thuoc/Views/Cart/Index.cshtml]

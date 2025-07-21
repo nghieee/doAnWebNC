@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("web-ban-thuoc")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+84819e4de0c1fa36efa1ebeb4c5b5b1a631691be")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5799d4168d3dfe1f1b36cffc02f0b55f73db8b23")]
 [assembly: System.Reflection.AssemblyProductAttribute("web-ban-thuoc")]
 [assembly: System.Reflection.AssemblyTitleAttribute("web-ban-thuoc")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
