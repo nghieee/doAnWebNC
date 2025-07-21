@@ -7,6 +7,10 @@
 @{
     ViewData["Title"] = "Chi tiết sản phẩm - Nhà Thuốc Long Châu";
 }
+@{
+    var userReview = ViewBag.UserReview as web_ban_thuoc.Models.Review;
+    bool canReview = ViewBag.CanReview == true;
+}
 <div class="pb-5">
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb">
@@ -504,3 +508,192 @@
         if (firstImage) imageClicked(firstImage.src);
     });
 </script>
+@if (TempData["ReviewError"] != null)
+{
+    <div class="alert alert-danger">@TempData["ReviewError"]</div>
+}
+@if (TempData["ReviewSuccess"] != null)
+{
+    <div class="alert alert-success">@TempData["ReviewSuccess"]</div>
+}
+@if (User.Identity.IsAuthenticated && userReview != null)
+{
+    <div class="card p-4 mb-4 mt-4 shadow-sm">
+        <h5 class="mb-3">Sửa đánh giá của bạn</h5>
+        <form asp-action="EditReview" asp-controller="Product" method="post" id="editReviewForm" onsubmit="return confirm('Bạn có chắc chắn muốn cập nhật đánh giá?');">
+            <input type="hidden" name="reviewId" value="@userReview.ReviewId" />
+            <div class="mb-3">
+                <label class="form-label">Chọn số sao</label>
+                <div id="editStarRating" class="star-rating selectable">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        var selected = i <= (userReview.Rating ?? 0) ? "fa-solid fa-star text-warning" : "fa-regular fa-star text-secondary";
+                        <i class="star @selected" data-value="@i"></i>
+                    }
+                </div>
+                <input type="hidden" name="rating" id="editRatingInput" value="@userReview.Rating" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Nhận xét</label>
+                <textarea name="comment" class="form-control" rows="3" required>@userReview.Comment</textarea>
+            </div>
+            <button type="submit" class="btn btn-warning">Cập nhật đánh giá</button>
+        </form>
+    </div>
+}
+else if (User.Identity.IsAuthenticated && canReview)
+{
+    <div class="card p-4 mb-4 mt-4 shadow-sm">
+        <h5 class="mb-3">Đánh giá sản phẩm</h5>
+        <form asp-action="AddReview" asp-controller="Product" method="post" id="reviewForm">
+            <input type="hidden" name="productId" value="@Model.ProductId" />
+            <div class="mb-3">
+                <label class="form-label">Chọn số sao</label>
+                <div id="starRating" class="star-rating selectable">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <i class="star fa-regular fa-star text-secondary" data-value="@i"></i>
+                    }
+                </div>
+                <input type="hidden" name="rating" id="ratingInput" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Nhận xét</label>
+                <textarea name="comment" class="form-control" rows="3" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+        </form>
+    </div>
+}
+else if (!User.Identity.IsAuthenticated)
+{
+    <div class="alert alert-warning mt-4">Vui lòng <a href="/Auth/Index">đăng nhập</a> để đánh giá sản phẩm.</div>
+}
+
+<!-- Danh sách đánh giá -->
+<div class="mt-5">
+    <h5 class="mb-3">Đánh giá của khách hàng</h5>
+    @if (Model.Reviews != null && Model.Reviews.Any())
+    {
+        foreach (var review in Model.Reviews.OrderByDescending(r => r.ReviewDate))
+        {
+            <div class="review-item d-flex align-items-start gap-3 pb-3 mb-4 bg-white rounded-4 shadow-sm border position-relative" style="padding: 20px 24px;">
+                <div class="avatar flex-shrink-0">
+                    <img src="https://nhathuoclongchau.com.vn/estore-images/profile/v2/avatar-profile-large.svg" alt="avatar" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
+                </div>
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        @{
+                            string displayName = "Ẩn danh";
+                            if (review.User != null)
+                            {
+                                if (!string.IsNullOrEmpty(review.User.UserName) && !review.User.UserName.Contains("@"))
+                                {
+                                    displayName = review.User.UserName;
+                                }
+                                else if (!string.IsNullOrEmpty(review.User.Email))
+                                {
+                                    displayName = review.User.Email.Split('@')[0];
+                                }
+                            }
+                        }
+                        <span class="fw-bold text-dark">@displayName</span>
+                        <span class="ms-2">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= (review.Rating ?? 0))
+                                {
+                                    <i class="fa-solid fa-star text-warning"></i>
+                                }
+                                else
+                                {
+                                    <i class="fa-regular fa-star text-secondary"></i>
+                                }
+                            }
+                        </span>
+                        <span class="text-muted small ms-3">@review.ReviewDate?.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+                    <div class="text-dark" style="font-size:1.05rem;">@review.Comment</div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="text-muted">Chưa có đánh giá nào cho sản phẩm này.</div>
+    }
+</div>
+<style>
+.star-rating {
+    font-size: 2.1rem;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    gap: 2px;
+}
+.star-rating .star {
+    transition: color 0.2s;
+    margin-right: 2px;
+    font-size: 2.1rem;
+}
+.star-rating .star.selected,
+.star-rating .star.hovered {
+    color: #ffc107 !important;
+}
+.star-rating .star.text-secondary {
+    color: #d1d5db !important;
+}
+.star-rating .star.text-warning {
+    color: #ffc107 !important;
+}
+.review-item {
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    box-shadow: 0 2px 8px rgba(96, 165, 250, 0.07);
+}
+.avatar img {
+    border: 2px solid #e5e7eb;
+    background: #f3f4f6;
+}
+</style>
+@section Scripts {
+    <script>
+        // Form đánh giá mới
+        document.addEventListener('DOMContentLoaded', function () {
+            function setupStarRating(starSelector, inputSelector) {
+                const stars = document.querySelectorAll(starSelector);
+                const ratingInput = document.querySelector(inputSelector);
+                let selected = ratingInput && ratingInput.value ? parseInt(ratingInput.value) : 0;
+                if (stars.length > 0) {
+                    stars.forEach((star, idx) => {
+                        star.addEventListener('mouseenter', function () {
+                            highlightStars(idx + 1);
+                        });
+                        star.addEventListener('mouseleave', function () {
+                            highlightStars(selected);
+                        });
+                        star.addEventListener('click', function () {
+                            selected = idx + 1;
+                            ratingInput.value = selected;
+                            highlightStars(selected);
+                        });
+                    });
+                    function highlightStars(count) {
+                        stars.forEach((star, i) => {
+                            if (i < count) {
+                                star.classList.remove('fa-regular','text-secondary');
+                                star.classList.add('fa-solid','text-warning','selected');
+                            } else {
+                                star.classList.remove('fa-solid','text-warning','selected');
+                                star.classList.add('fa-regular','text-secondary');
+                            }
+                        });
+                    }
+                    highlightStars(selected);
+                }
+            }
+            setupStarRating('#starRating .star', '#ratingInput');
+            setupStarRating('#editStarRating .star', '#editRatingInput');
+        });
+    </script>
+}
