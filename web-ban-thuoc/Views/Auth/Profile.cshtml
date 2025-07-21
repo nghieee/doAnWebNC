@@ -1,0 +1,373 @@
+@model web_ban_thuoc.Models.ProfileViewModel
+@{
+    ViewData["Title"] = "Thông tin cá nhân";
+    Layout = "_Layout";
+    ViewData["CurrentPage"] = "ProfileDetail";
+}
+@if (TempData["ShowToast"] != null && TempData["ProfileSuccess"] != null)
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            showToast('@Html.Raw(TempData["ProfileSuccess"]?.ToString())', 'success');
+        });
+    </script>
+}
+@if (TempData["ShowToast"] != null && TempData["ProfileError"] != null)
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            showToast('@Html.Raw(TempData["ProfileError"]?.ToString())', 'error');
+        });
+    </script>
+}
+<div>
+    <div class="container pt-3">
+        <div class="row">
+            <div class="col-12 col-lg-4 mb-lg-0">
+                <div class="sticky-sidebar mb-5">
+                    <div class="bg-white shadow-sm rounded-4 p-0">
+                        <div class="text-center pt-4 pb-3 border-bottom">
+                            <img src="https://nhathuoclongchau.com.vn/estore-images/profile/v2/avatar-profile-large.svg" style="width: 96px; height: 96px;" class="mb-2 rounded-circle bg-light border" alt="avatar">
+                            <div class="fw-bold fs-5">@Model.UserName</div>
+                            <div class="text-muted small">@Model.Email</div>
+                        </div>
+                        <ul class="nav flex-lg-column flex-row nav-pills gap-2 p-3" id="profileTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active w-100 text-start" id="info-tab" data-bs-toggle="pill" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">
+                                    <i class="fas fa-user me-2"></i>Thông tin cá nhân
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link w-100 text-start" id="orders-tab" data-bs-toggle="pill" data-bs-target="#orders" type="button" role="tab" aria-controls="orders" aria-selected="false">
+                                    <i class="fas fa-box me-2"></i>Đơn hàng
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-8">
+                <div class="tab-content" id="profileTabContent">
+                    <div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
+                        <div class="bg-white mb-5 shadow-sm rounded-4">
+                            <div class="pt-3 px-4 border-bottom">
+                                <p class="fw-bold fs-5">Thông tin cá nhân</p>
+                            </div>
+                            <div class="pt-3 me-auto ms-auto" style="max-width: 440px;">
+                                <div class="text-center pt-4 pb-4">
+                                    <div class="px-4">
+                                        <div class="d-flex justify-content-between pt-4 pb-4 border-bottom">
+                                            <span class="text-muted">Tên người dùng</span>
+                                            <span class="fw-semibold">@Model.UserName</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between pt-4 pb-4 border-bottom">
+                                            <span class="text-muted">Email</span>
+                                            <span class="fw-semibold">@Model.Email</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between pt-4 pb-4 border-bottom">
+                                            <span class="text-muted">Số điện thoại</span>
+                                            <span class="fw-semibold">@Model.PhoneNumber</span>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary mb-5 mt-5 px-4 py-2 rounded-pill fw-semibold" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                                        <i class="fas fa-edit me-2"></i>Chỉnh sửa thông tin
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Modal chỉnh sửa thông tin -->
+                        <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+                          <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h5 class="modal-title" id="editProfileModalLabel">Chỉnh sửa thông tin cá nhân</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                              </div>
+                              <div class="modal-body">
+                                @if (Model.RequireVerification)
+                                {
+                                    <form asp-action="VerifyProfile" method="post" id="verifyForm">
+                                        <input type="hidden" name="VerificationType" value="@Model.VerificationType" />
+                                        <div class="mb-3 text-center">
+                                            <label class="form-label mb-3">Nhập mã xác nhận gồm 6 số đã gửi qua email của bạn</label>
+                                            <div class="d-flex justify-content-center gap-2 mb-2">
+                                                @for (int i = 0; i < 6; i++)
+                                                {
+                                                    <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" class="form-control text-center code-input" name="CodeDigit" style="width: 40px; font-size: 1.5rem;" required />
+                                                }
+                                            </div>
+                                            <input type="hidden" name="VerificationCode" id="VerificationCode" />
+                                            @Html.ValidationMessage("VerificationCode", null, new { @class = "text-danger" })
+                                        </div>
+                                        <button type="submit" class="btn btn-primary w-100">Xác nhận</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form asp-action="Profile" method="post" id="profileForm">
+                                        <div class="mb-3">
+                                            <label class="form-label">Tên hiển thị</label>
+                                            <input type="text" name="UserName" class="form-control" value="@Model.UserName" required />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Email</label>
+                                            <input type="email" class="form-control" value="@Model.Email" disabled />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Số điện thoại</label>
+                                            <input type="text" name="PhoneNumber" class="form-control" value="@Model.PhoneNumber" />
+                                        </div>
+                                        <hr />
+                                        <div class="mb-3">
+                                            <label class="form-label">Đổi email mới</label>
+                                            <input type="email" name="NewEmail" class="form-control" placeholder="Nhập email mới nếu muốn đổi" />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Mật khẩu cũ</label>
+                                            <input type="password" name="CurrentPassword" class="form-control" placeholder="Nhập mật khẩu hiện tại nếu muốn đổi mật khẩu" />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Đổi mật khẩu mới</label>
+                                            <input type="password" name="NewPassword" class="form-control" placeholder="Nhập mật khẩu mới nếu muốn đổi" />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Xác nhận mật khẩu mới</label>
+                                            <input type="password" name="ConfirmPassword" class="form-control" placeholder="Nhập lại mật khẩu mới" />
+                                            @Html.ValidationMessage("ConfirmPassword", null, new { @class = "text-danger" })
+                                        </div>
+                                        <button type="submit" class="btn btn-primary w-100">Cập nhật thông tin</button>
+                                    </form>
+                                }
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <script>
+                        // Tự động mở lại modal xác thực nếu RequireVerification
+                        document.addEventListener('DOMContentLoaded', function() {
+                            if (@(Model.RequireVerification.ToString().ToLower())) {
+                                var modal = new bootstrap.Modal(document.getElementById('editProfileModal'));
+                                setTimeout(function() { modal.show(); }, 300);
+                            }
+                        });
+                        // Xử lý nhập 6 ô mã xác nhận
+                        document.addEventListener('DOMContentLoaded', function() {
+                            var codeInputs = document.querySelectorAll('.code-input');
+                            if (codeInputs.length > 0) {
+                                codeInputs[0].focus();
+                                codeInputs.forEach((input, idx) => {
+                                    input.addEventListener('input', function(e) {
+                                        if (this.value.length === 1 && idx < 5) {
+                                            codeInputs[idx+1].focus();
+                                        }
+                                        updateHiddenCode();
+                                    });
+                                    input.addEventListener('keydown', function(e) {
+                                        if (e.key === 'Backspace' && this.value === '' && idx > 0) {
+                                            codeInputs[idx-1].focus();
+                                        }
+                                    });
+                                });
+                                function updateHiddenCode() {
+                                    var code = '';
+                                    codeInputs.forEach(i => code += i.value);
+                                    document.getElementById('VerificationCode').value = code;
+                                }
+                            }
+                        });
+                        </script>
+                    </div>
+                    <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+                        <div class="bg-white shadow-sm rounded-4 p-4 mb-5">
+                            <h5 class="fw-bold mb-4"><i class="fas fa-box me-2"></i>Lịch sử đơn hàng</h5>
+                            
+                            @if (!Model.Orders.Any())
+                            {
+                                <div class="text-center py-5">
+                                    <i class="fas fa-box-open text-muted mb-3" style="font-size: 4rem;"></i>
+                                    <h6 class="text-muted mb-2">Bạn chưa có đơn hàng nào</h6>
+                                    <p class="text-muted small">Hãy mua sắm để có đơn hàng đầu tiên!</p>
+                                    <a href="/" class="btn btn-primary rounded-pill px-4 py-2">
+                                        <i class="fas fa-shopping-bag me-2"></i>Mua sắm ngay
+                                    </a>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="accordion" id="ordersAccordion">
+                                    @foreach (var order in Model.Orders)
+                                    {
+                                        <div class="accordion-item border-0 mb-3 shadow-sm rounded-3">
+                                            <h2 class="accordion-header" id="heading@(order.OrderId)">
+                                                <button class="accordion-button collapsed bg-white rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse@(order.OrderId)" aria-expanded="false" aria-controls="collapse@(order.OrderId)">
+                                                    <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="me-3">
+                                                                <div class="fw-bold text-dark">Đơn hàng #@order.OrderId</div>
+                                                                <div class="small text-muted">@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <div class="fw-bold text-primary">@order.TotalAmount.ToString("N0")đ</div>
+                                                            <div class="small">
+                                                                <span class="badge @GetStatusBadgeClass(order.Status)">@GetStatusText(order.Status)</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            </h2>
+                                            <div id="collapse@(order.OrderId)" class="accordion-collapse collapse" aria-labelledby="heading@(order.OrderId)" data-bs-parent="#ordersAccordion">
+                                                <div class="accordion-body pt-0">
+                                                    <!-- Thông tin đơn hàng -->
+                                                    <div class="row mb-3">
+                                                        <div class="col-md-6">
+                                                            <div class="small text-muted mb-1">Người nhận:</div>
+                                                            <div class="fw-semibold">@order.FullName</div>
+                                                            <div class="small text-muted">@order.Phone</div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="small text-muted mb-1">Địa chỉ:</div>
+                                                            <div class="small">@order.ShippingAddress</div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Danh sách sản phẩm -->
+                                                    <div class="border-top pt-3">
+                                                        <h6 class="fw-semibold mb-3">Sản phẩm đã đặt:</h6>
+                                                        @foreach (var item in order.Items)
+                                                        {
+                                                            <div class="d-flex align-items-center mb-3 p-3 bg-light rounded-3">
+                                                                <img src="/images/products/@item.ImageUrl" alt="@item.ProductName" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                                                <div class="flex-grow-1">
+                                                                    <div class="fw-semibold">@item.ProductName</div>
+                                                                    <div class="small text-muted">Số lượng: @item.Quantity</div>
+                                                                </div>
+                                                                <div class="text-end">
+                                                                    <div class="fw-semibold">@item.Price.ToString("N0")đ</div>
+                                                                    <div class="small text-muted">@item.TotalPrice.ToString("N0")đ</div>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                    
+                                                    <!-- Tổng tiền -->
+                                                    <div class="border-top pt-3">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <span class="fw-bold">Tổng cộng:</span>
+                                                            <span class="fw-bold text-primary fs-5">@order.TotalAmount.ToString("N0")đ</span>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between align-items-center mt-2">
+                                                            <span class="small text-muted">Trạng thái thanh toán:</span>
+                                                            <span class="badge @GetPaymentStatusBadgeClass(order.PaymentStatus)">@GetPaymentStatusText(order.PaymentStatus)</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .breadcrumb {
+        background: #fff;
+    }
+    .list-group-item.active, .nav-link.active {
+        background: #1250dc;
+        border-color: #1250dc;
+        color: #fff !important;
+    }
+    .nav-link {
+        color: #333;
+    }
+    .code-input {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 1.5rem;
+        width: 40px;
+        height: 48px;
+        text-align: center;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    .code-input:focus {
+        border-color: #1250dc;
+        box-shadow: 0 0 0 2px #eaeffa;
+    }
+    
+    /* Sticky Sidebar */
+    .sticky-sidebar {
+        position: sticky;
+        top: 20px;
+        z-index: 100;
+    }
+    
+    /* Responsive cho mobile */
+    @@media (max-width: 991.98px) {
+        .sticky-sidebar {
+            position: static;
+            top: auto;
+        }
+    }
+</style>
+
+@functions {
+    string GetStatusText(string status)
+    {
+        return status switch
+        {
+            "Chờ xác nhận" => "Chờ xác nhận",
+            "Đã xác nhận" => "Đã xác nhận", 
+            "Đang giao" => "Đang giao",
+            "Đã giao" => "Đã giao",
+            "Đã hủy" => "Đã hủy",
+            _ => status
+        };
+    }
+    
+    string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Chờ xác nhận" => "bg-warning text-dark",
+            "Đã xác nhận" => "bg-info text-white",
+            "Đang giao" => "bg-primary text-white", 
+            "Đã giao" => "bg-success text-white",
+            "Đã hủy" => "bg-danger text-white",
+            _ => "bg-secondary text-white"
+        };
+    }
+    
+    string GetPaymentStatusText(string paymentStatus)
+    {
+        return paymentStatus switch
+        {
+            "Chưa thanh toán" => "Chưa thanh toán",
+            "Đã thanh toán" => "Đã thanh toán",
+            "Pending" => "Chờ xử lý",
+            "Completed" => "Hoàn thành",
+            "Failed" => "Thất bại",
+            _ => paymentStatus
+        };
+    }
+    
+    string GetPaymentStatusBadgeClass(string paymentStatus)
+    {
+        return paymentStatus switch
+        {
+            "Chưa thanh toán" => "bg-warning text-dark",
+            "Đã thanh toán" => "bg-success text-white",
+            "Pending" => "bg-info text-white",
+            "Completed" => "bg-success text-white",
+            "Failed" => "bg-danger text-white",
+            _ => "bg-secondary text-white"
+        };
+    }
+} 

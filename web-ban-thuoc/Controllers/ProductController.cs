@@ -54,46 +54,46 @@ public class ProductController : Controller
         try
         {
             if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
-            {
-                return Json(new { products = new List<object>(), categories = new List<object>(), brands = new List<string>() });
-            }
+        {
+            return Json(new { products = new List<object>(), categories = new List<object>(), brands = new List<string>() });
+        }
 
             _logger.LogInformation($"Searching for suggestions with query: {query}");
 
-            // Gợi ý sản phẩm (tối đa 5)
-            var products = _context.Products
-                .Include(p => p.ProductImages)
+        // Gợi ý sản phẩm (tối đa 5)
+        var products = _context.Products
+            .Include(p => p.ProductImages)
                 .Where(p => p.ProductName.Contains(query) && p.IsActive)
-                .OrderBy(p => p.ProductName)
-                .Select(p => new {
+            .OrderBy(p => p.ProductName)
+            .Select(p => new {
                     productId = p.ProductId,
                     productName = p.ProductName ?? "Không xác định",
                     brand = p.Brand ?? "Không xác định",
                     imageUrl = p.ProductImages.FirstOrDefault(pi => pi.IsMain == true).ImageUrl ?? 
                                p.ProductImages.FirstOrDefault().ImageUrl ?? "default.png"
-                })
-                .Take(5)
-                .ToList();
+            })
+            .Take(5)
+            .ToList();
 
-            // Gợi ý danh mục lv2, lv3 (tối đa 5)
-            var categories = _context.Categories
-                .Where(c => (c.CategoryLevel == "2" || c.CategoryLevel == "3") && c.CategoryName.Contains(query))
-                .OrderBy(c => c.CategoryName)
-                .Select(c => new {
+        // Gợi ý danh mục lv2, lv3 (tối đa 5)
+        var categories = _context.Categories
+            .Where(c => (c.CategoryLevel == "2" || c.CategoryLevel == "3") && c.CategoryName.Contains(query))
+            .OrderBy(c => c.CategoryName)
+            .Select(c => new {
                     categoryId = c.CategoryId,
                     categoryName = c.CategoryName ?? "Không xác định",
                     categoryLevel = c.CategoryLevel ?? "2"
-                })
-                .Take(5)
-                .ToList();
+            })
+            .Take(5)
+            .ToList();
 
-            // Gợi ý thương hiệu (brand, tối đa 5, distinct)
-            var brands = _context.Products
+        // Gợi ý thương hiệu (brand, tối đa 5, distinct)
+        var brands = _context.Products
                 .Where(p => p.Brand != null && p.Brand.Contains(query) && p.IsActive)
-                .Select(p => p.Brand)
-                .Distinct()
-                .Take(5)
-                .ToList();
+            .Select(p => p.Brand)
+            .Distinct()
+            .Take(5)
+            .ToList();
 
             var result = new { products, categories, brands };
             

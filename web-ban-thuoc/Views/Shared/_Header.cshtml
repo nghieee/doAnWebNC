@@ -105,7 +105,7 @@
                                 }
                                 return response.json();
                             })
-                            .then(data => {
+                                .then(data => {
                                 if (currentQuery !== query) return; // Ignore if query changed
                                 
                                 // Debug: Log received data
@@ -132,7 +132,7 @@
 
                     // Display suggestions
                     function displaySuggestions(data) {
-                        let html = '';
+                                    let html = '';
                         
                         // Products
                         if (data.products && data.products.length > 0) {
@@ -148,8 +148,8 @@
                                         </div>
                                     </a>
                                 `;
-                            });
-                        }
+                                        });
+                                    }
                         
                         // Categories
                         if (data.categories && data.categories.length > 0) {
@@ -161,8 +161,8 @@
                                         <span>${category.categoryName}</span>
                                     </a>
                                 `;
-                            });
-                        }
+                                        });
+                                    }
                         
                         // Brands
                         if (data.brands && data.brands.length > 0) {
@@ -174,15 +174,15 @@
                                         <span>${brand}</span>
                                     </a>
                                 `;
-                            });
-                        }
+                                        });
+                                    }
                         
                         if (!html) {
                             html = '<div class="list-group-item text-muted text-center py-3">Không có gợi ý phù hợp</div>';
                         }
                         
-                        suggestBox.innerHTML = html;
-                        suggestBox.classList.remove('d-none');
+                                    suggestBox.innerHTML = html;
+                                    suggestBox.classList.remove('d-none');
                     }
 
                     // Show error message
@@ -233,6 +233,11 @@
                         <ul class="dropdown-menu dropdown-menu-end mt-2" aria-labelledby="accountDropdown">
                             <li class="px-3 py-2 small text-muted">@User.Identity.Name</li>
                             <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="/Auth/Profile">
+                                    Chi tiết tài khoản
+                                </a>
+                            </li>
                             <li>
                                 <form asp-action="Logout" asp-controller="Auth" method="post" class="m-0">
                                     <button type="submit" class="dropdown-item">Đăng xuất</button>

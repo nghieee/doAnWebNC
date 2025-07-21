@@ -1,0 +1,70 @@
+@{
+    ViewData["Title"] = "Xác nhận mã đặt lại mật khẩu";
+}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card p-5 shadow-lg border-0 rounded-4">
+                <div class="text-center mb-4">
+                    <i class="fa-solid fa-shield-keyhole fa-3x text-primary mb-2"></i>
+                    <h3 class="fw-bold text-primary mb-2">Nhập mã xác nhận</h3>
+                    <div class="text-muted mb-2">Nhập 6 số vừa được gửi về email của bạn.</div>
+                </div>
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger small">@Html.Raw(ViewBag.Error)</div>
+                }
+                <form asp-action="VerifyResetCode" method="post" autocomplete="off">
+                    <div class="mb-4 d-flex justify-content-center gap-2">
+                        @for (int i = 0; i < 6; i++)
+                        {
+                            <input type="text" maxlength="1" pattern="\d" inputmode="numeric" class="form-control text-center code-input" name="code" style="width:48px; font-size:2rem; font-weight:bold;" required />
+                        }
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mật khẩu mới</label>
+                        <input type="password" name="newPassword" class="form-control form-control-lg rounded-3" placeholder="Mật khẩu mới" required />
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Xác nhận mật khẩu mới</label>
+                        <input type="password" name="confirmPassword" class="form-control form-control-lg rounded-3" placeholder="Xác nhận mật khẩu mới" required />
+                    </div>
+                    <input type="hidden" id="fullCode" name="code" />
+                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-3 fw-bold py-2">Xác nhận & Đổi mật khẩu</button>
+                </form>
+                <div class="mt-4 text-center">
+                    <a href="/Auth/Index" class="text-secondary small text-decoration-none"><i class="fa fa-arrow-left me-1"></i>Quay lại đăng nhập</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
+    <script>
+        // Tự động focus chuyển ô khi nhập mã
+        const inputs = document.querySelectorAll('.code-input');
+        inputs.forEach((input, idx) => {
+            input.addEventListener('input', function(e) {
+                if (this.value.length === 1 && idx < inputs.length - 1) {
+                    inputs[idx + 1].focus();
+                }
+                updateFullCode();
+            });
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && this.value === '' && idx > 0) {
+                    inputs[idx - 1].focus();
+                }
+            });
+        });
+        function updateFullCode() {
+            let code = '';
+            inputs.forEach(i => code += i.value);
+            document.getElementById('fullCode').value = code;
+        }
+        // Khi submit, gộp 6 số vào input ẩn
+        document.querySelector('form').addEventListener('submit', function(e) {
+            updateFullCode();
+        });
+    </script>
+} 
