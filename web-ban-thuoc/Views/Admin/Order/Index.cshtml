@@ -1,0 +1,170 @@
+@model List<web_ban_thuoc.Models.Order>
+@{
+    Layout = "~/Views/Admin/_Layout.cshtml";
+    ViewData["Title"] = "Quản lý đơn hàng";
+    var statusList = new List<string> { "Chờ xác nhận", "Đã xác nhận", "Đang giao", "Đã giao" };
+}
+<div class="container-fluid">
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-body p-4">
+            <form method="get" class="row g-3 mb-4 align-items-end">
+                @Html.AntiForgeryToken()
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="Tìm theo tên, SĐT, mã đơn..." value="@ViewBag.Search" />
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        @{
+                            var allStatus = new List<string> { "Tất cả", "Chờ xác nhận", "Đã xác nhận", "Đang giao", "Đã giao", "Đã hủy" };
+                        }
+                        @foreach (var s in allStatus)
+                        {
+                            var isSelected = Convert.ToString(ViewBag.Status) == s || (ViewBag.Status == null && s == "Tất cả");
+                            if (isSelected)
+                            {
+                                <option value="@s" selected>@s</option>
+                            }
+                            else
+                            {
+                                <option value="@s">@s</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100"><i class="fa fa-filter me-1 align-self-center"></i>Lọc</button>
+                    <a href="/Admin/Order" class="btn btn-outline-secondary w-100">Xóa lọc</a>
+                </div>
+            </form>
+            <div class="accordion" id="ordersAccordion">
+                @foreach (var order in Model)
+                {
+                    var collapseId = $"collapse_order_{order.OrderId}";
+                    var headingId = $"heading_order_{order.OrderId}";
+                    <div class="accordion-item mb-2 border-0 shadow-sm rounded-3">
+                        <h2 class="accordion-header" id="@headingId">
+                            <button class="accordion-button collapsed bg-white rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="false" aria-controls="@collapseId">
+                                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            <div class="fw-bold text-dark">Đơn hàng #@order.OrderId</div>
+                                            <div class="small text-muted">@order.OrderDate?.ToString("dd/MM/yyyy HH:mm")</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold text-primary">@order.TotalAmount?.ToString("N0")đ</div>
+                                        <div class="small">
+                                            <span class="badge @GetStatusBadgeClass(order.Status)">@order.Status</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="@collapseId" class="accordion-collapse collapse" aria-labelledby="@headingId" data-bs-parent="#ordersAccordion">
+                            <div class="accordion-body pt-0">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="small text-muted mb-1">Người nhận:</div>
+                                        <div class="fw-semibold">@order.FullName</div>
+                                        <div class="small text-muted">@order.Phone</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="small text-muted mb-1">Địa chỉ:</div>
+                                        <div class="small">@order.ShippingAddress</div>
+                                    </div>
+                                </div>
+                                <div class="border-top pt-3">
+                                    <h6 class="fw-semibold mb-3">Sản phẩm đã đặt:</h6>
+                                    @foreach (var item in order.OrderItems)
+                                    {
+                                        <div class="d-flex align-items-center mb-3 p-3 bg-light rounded-3">
+                                            <img src="/images/products/@(item.Product?.ProductImages?.FirstOrDefault(i => i.IsMain == true)?.ImageUrl ?? item.Product?.ProductImages?.FirstOrDefault()?.ImageUrl ?? "sanpham.png")" alt="@item.Product?.ProductName" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                            <div class="flex-grow-1">
+                                                <div class="fw-semibold">@item.Product?.ProductName</div>
+                                                <div class="small text-muted">Số lượng: @item.Quantity</div>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="fw-semibold">@item.Price.ToString("N0")đ</div>
+                                                <div class="small text-muted">@((item.Price * item.Quantity).ToString("N0"))đ</div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="border-top pt-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold">Tổng cộng:</span>
+                                        <span class="fw-bold text-primary fs-5">@order.TotalAmount?.ToString("N0")đ</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <span class="small text-muted">Trạng thái thanh toán:</span>
+                                        <span class="badge bg-secondary">@order.PaymentStatus</span>
+                                    </div>
+                                </div>
+                                @if (order.Status != "Đã hủy")
+                                {
+                                    <div class="mt-3 d-flex gap-2">
+                                        <select class="form-select form-select-sm status-select" data-order-id="@order.OrderId" style="width: 140px;" @(order.Status == "Đã hủy" ? "disabled" : "")>
+                                            @foreach (var s in statusList)
+                                            {
+                                                var selected = order.Status == s ? "selected" : "";
+                                                var disabled = (s == "Chờ xác nhận" && order.Status != "Chờ xác nhận") ? "disabled" : "";
+                                                @:<option value="@s" @selected @disabled>@s</option>
+                                            }
+                                        </select>
+                                        <button type="button" class="btn btn-sm btn-success change-status-btn" data-order-id="@order.OrderId" @(order.Status == "Đã hủy" ? "disabled" : "")>Cập nhật</button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.querySelectorAll('.change-status-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            var orderId = this.getAttribute('data-order-id');
+            var select = document.querySelector('.status-select[data-order-id="' + orderId + '"]');
+            var newStatus = select.value;
+            var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+            var formData = new FormData();
+            formData.append("orderId", orderId);
+            formData.append("newStatus", newStatus);
+            formData.append("__RequestVerificationToken", token);
+
+            fetch('@Url.Action("ChangeStatus", "AdminOrder")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        });
+    });
+</script>
+}
+
+@functions {
+    string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Chờ xác nhận" => "bg-warning text-dark",
+            "Đã xác nhận" => "bg-info text-white",
+            "Đang giao" => "bg-primary text-white",
+            "Đã giao" => "bg-success text-white",
+            "Đã hủy" => "bg-danger text-white",
+            _ => "bg-secondary text-white"
+        };
+    }
+} 
