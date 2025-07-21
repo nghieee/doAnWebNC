@@ -94,6 +94,21 @@ namespace web_ban_thuoc.Controllers.Admin
                     }
                 }
 
+                // Khi chuyển sang 'Đã giao', cập nhật SoldQuantity cho từng sản phẩm
+                if (order.Status == "Đã giao")
+                {
+                    // Lấy lại OrderItems nếu chưa có
+                    var orderItems = await _context.OrderItems.Where(oi => oi.OrderId == order.OrderId).ToListAsync();
+                    foreach (var item in orderItems)
+                    {
+                        var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == item.ProductId);
+                        if (product != null)
+                        {
+                            product.SoldQuantity = (product.SoldQuantity ?? 0) + item.Quantity;
+                        }
+                    }
+                }
+
                 await _context.SaveChangesAsync();
                 return Json(new { success = true, message = "Đã cập nhật trạng thái đơn hàng!" });
             }

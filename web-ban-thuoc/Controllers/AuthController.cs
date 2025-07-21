@@ -384,5 +384,91 @@ public class AuthController : Controller
             }
             return RedirectToAction("Profile");
         }
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ForgotPassword(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                ViewBag.Error = "Vui lòng nhập email.";
+                return View();
+            }
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                ViewBag.Error = "Email không tồn tại trong hệ thống.";
+                return View();
+            }
+            // Sinh mã 6 số
+            var code = new Random().Next(100000, 999999).ToString();
+            // Lưu mã vào Session (an toàn khi redirect)
+            HttpContext.Session.SetString("ResetCode", code);
+            HttpContext.Session.SetString("ResetEmail", email);
+            // Gửi email
+            var emailSender = HttpContext.RequestServices.GetService(typeof(Services.IEmailSender)) as Services.IEmailSender;
+            await emailSender.SendEmailAsync(email, "Mã xác nhận đặt lại mật khẩu", $"Mã xác nhận của bạn là: <b>{code}</b>");
+            // Chuyển sang trang nhập mã xác nhận
+            return RedirectToAction("VerifyResetCode");
+        }
+
+        [HttpGet]
+        public IActionResult VerifyResetCode()
+        {
+            return View("VerifyResetCode");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> VerifyResetCode(string code, string newPassword, string confirmPassword)
+        {
+            var expectedCode = HttpContext.Session.GetString("ResetCode");
+            var email = HttpContext.Session.GetString("ResetEmail");
+            if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(newPassword) || string.IsNullOrEmpty(confirmPassword))
+            {
+                ViewBag.Error = "Vui lòng nhập đầy đủ thông tin.";
+                return View("VerifyResetCode");
+            }
+            if (newPassword != confirmPassword)
+            {
+                ViewBag.Error = "Mật khẩu xác nhận không khớp.";
+                return View("VerifyResetCode");
+            }
+            if (expectedCode == null || email == null)
+            {
+                ViewBag.Error = "Phiên xác nhận đã hết hạn. Vui lòng thử lại.";
+                return RedirectToAction("ForgotPassword");
+            }
+            if (code != expectedCode)
+            {
+                ViewBag.Error = "Mã xác nhận không đúng.";
+                return View("VerifyResetCode");
+            }
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                ViewBag.Error = "Không tìm thấy tài khoản.";
+                return View("VerifyResetCode");
+            }
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
+            if (result.Succeeded)
+            {
+                TempData["SuccessMessage"] = "Đổi mật khẩu thành công. Bạn có thể đăng nhập với mật khẩu mới.";
+                // Xóa session sau khi thành công
+                HttpContext.Session.Remove("ResetCode");
+                HttpContext.Session.Remove("ResetEmail");
+                return RedirectToAction("Index");
+            }
+            else
+            {
+                ViewBag.Error = string.Join("<br>", result.Errors.Select(e => e.Description));
+                return View("VerifyResetCode");
+            }
+        }
     }
 }

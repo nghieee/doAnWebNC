@@ -1,0 +1,92 @@
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<IdentityUser> UserManager
+@{
+    var user = UserManager.GetUserAsync(User).Result;
+    var userId = user?.Id ?? "guest";
+    var userName = user?.UserName ?? "Khách";
+}
+<div id="chat-fab" class="position-fixed bottom-0 end-0 m-4" style="z-index:9999;">
+    <button id="open-chat" class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center" style="width:60px;height:60px;font-size:2rem;">
+        <i class="fa-solid fa-comments"></i>
+    </button>
+</div>
+<div id="chat-popup" class="position-fixed bottom-0 end-0 m-4" style="z-index:10000;width:350px;max-width:95vw;display:none;">
+    <div id="chat-header" class="bg-primary text-white rounded-top px-3 py-2 d-flex align-items-center justify-content-between">
+        <span><i class="fa-solid fa-comments me-2"></i>Hỗ trợ trực tuyến</span>
+        <button id="chat-close" class="btn btn-sm btn-light text-primary rounded-circle"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="chat-body" class="bg-white border border-top-0 rounded-bottom p-3 d-flex flex-column gap-2" style="height:350px;overflow-y:auto;">
+        <div id="chat-messages" class="flex-grow-1 overflow-auto mb-2"></div>
+        <form id="chat-form" class="d-flex gap-2 mt-2">
+            <input type="text" id="chat-input" class="form-control" placeholder="Nhập tin nhắn..." autocomplete="off" />
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i></button>
+        </form>
+    </div>
+</div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+<script>
+    const userId = '@userId';
+    const userName = '@userName';
+    let connection = null;
+    let adminId = 'admin'; // Có thể lấy từ backend nếu cần
+    document.addEventListener('DOMContentLoaded', function () {
+        // Ẩn/hiện popup
+        const popup = document.getElementById('chat-popup');
+        const fab = document.getElementById('chat-fab');
+        const openBtn = document.getElementById('open-chat');
+        const closeBtn = document.getElementById('chat-close');
+        openBtn.onclick = function () {
+            popup.style.display = 'block';
+            fab.style.display = 'none';
+        };
+        closeBtn.onclick = function () {
+            popup.style.display = 'none';
+            fab.style.display = 'block';
+        };
+        // Kết nối SignalR
+        connection = new signalR.HubConnectionBuilder().withUrl('/chathub').build();
+        connection.start().then(() => {
+            // Có thể load lịch sử chat ở đây (AJAX)
+        });
+        // Nhận tin nhắn
+        connection.on('ReceiveMessage', function (senderId, message) {
+            addMessage(senderId === userId ? 'user' : 'admin', message);
+        });
+        // Gửi tin nhắn
+        document.getElementById('chat-form').onsubmit = function (e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            if (!msg) return;
+            connection.invoke('SendMessage', userId, adminId, msg);
+            addMessage('user', msg);
+            input.value = '';
+        };
+        function addMessage(type, msg, isHtml) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'd-flex mb-2 ' + (type === 'user' ? 'justify-content-end' : 'justify-content-start');
+            const bubble = document.createElement('div');
+            bubble.className = 'px-3 py-2 rounded shadow-sm ' + (type === 'user' ? 'bg-info text-primary' : 'bg-light text-dark');
+            bubble.style.maxWidth = '70%';
+            bubble.style.wordBreak = 'break-word';
+            bubble.style.whiteSpace = 'pre-line';
+            bubble.style.lineHeight = '1.5';
+            if (isHtml) bubble.innerHTML = msg;
+            else bubble.innerText = msg;
+            msgDiv.appendChild(bubble);
+            document.getElementById('chat-messages').appendChild(msgDiv);
+            document.getElementById('chat-messages').scrollTop = 99999;
+        }
+        window.addProductPingToChat = function(product) {
+            const html = `<a href='/Products/${product.id}' target='_blank' class='d-flex align-items-center bg-light rounded p-1 mb-2 text-decoration-none' style='height:40px;max-width:220px;'>`
+                + `<img src='${product.image}' alt='${product.name}' class='rounded me-2' style='width:32px;height:32px;object-fit:cover;'>`
+                + `<div class='flex-grow-1 min-width-0'>`
+                + `<div class='fw-semibold text-dark text-truncate' style='max-width:140px;font-size:1rem;'>${product.name}</div>`
+                + `<div class='small text-muted text-truncate'>Mã: ${product.id}</div>`
+                + `</div>`
+                + `</a>`;
+            addMessage('user', html, true);
+        }
+    });
+</script> 
