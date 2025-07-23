@@ -68,7 +68,8 @@
                     <th style="min-width: 320px;">Tên sản phẩm</th>
                     <th class="text-center" style="width: 120px;">Giá</th>
                     <th class="text-center" style="width: 180px;">Danh mục</th>
-                    <th class="text-center" style="width: 110px;">Trạng thái</th>
+                    <th class="text-center" style="width: 90px;">Đã bán</th>
+                    <th class="text-center" style="width: 110px;">Nổi bật</th>
                     <th class="text-center" style="width: 170px;">Hành động</th>
             </tr>
         </thead>
@@ -90,14 +91,15 @@
                         <td class="fw-semibold text-wrap">@item.ProductName</td>
                         <td class="text-primary fw-bold text-center">@item.Price.ToString("N0") đ</td>
                         <td class="text-center">@item.Category?.CategoryName</td>
+                        <td class="text-center">@((item.SoldQuantity ?? 0).ToString("N0"))</td>
                         <td class="text-center">
-                            @if (item.IsActive)
+                            @if (item.IsFeature)
                             {
-                                <span class="badge bg-success-subtle text-success px-3 py-2 fs-6">Hiển thị</span>
+                                <span class="badge bg-warning-subtle text-warning px-3 py-2 fs-6">Nổi bật</span>
                             }
                             else
                             {
-                                <span class="badge bg-secondary-subtle text-secondary px-3 py-2 fs-6">Ẩn</span>
+                                <span class="badge bg-secondary-subtle text-secondary px-3 py-2 fs-6">Thường</span>
                             }
                     </td>
                     <td class="text-center">
