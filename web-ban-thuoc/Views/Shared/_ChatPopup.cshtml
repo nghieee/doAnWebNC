@@ -59,8 +59,12 @@
             const input = document.getElementById('chat-input');
             const msg = input.value.trim();
             if (!msg) return;
+            if (!userId || userId === 'guest') {
+                alert('Bạn cần đăng nhập để sử dụng chức năng chat với admin!');
+                return;
+            }
             connection.invoke('SendMessage', userId, adminId, msg);
-            addMessage('user', msg);
+            // KHÔNG tự addMessage ở đây nữa để tránh lặp
             input.value = '';
         };
         function addMessage(type, msg, isHtml) {

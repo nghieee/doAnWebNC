@@ -1,0 +1,151 @@
+@{
+    Layout = "~/Views/Admin/_Layout.cshtml";
+    ViewData["Title"] = "Tin nhắn khách hàng";
+    var users = ViewBag.Users as List<Microsoft.AspNetCore.Identity.IdentityUser>;
+    var lastMessages = ViewBag.LastMessages as List<web_ban_thuoc.Models.ChatMessage>;
+    var unreadCounts = ViewBag.UnreadCounts as Dictionary<string, int>;
+    var selectedUser = ViewBag.SelectedUser as Microsoft.AspNetCore.Identity.IdentityUser;
+    var messages = ViewBag.Messages as List<web_ban_thuoc.Models.ChatMessage>;
+}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-4 col-lg-3 mb-3">
+            <div class="bg-white rounded shadow-sm p-0">
+                <div class="fw-bold fs-5 px-3 py-2 border-bottom"><i class="fa-regular fa-message me-2"></i>Messages</div>
+                <div class="list-group list-group-flush">
+                    @for (int i = 0; i < users.Count; i++)
+                    {
+                        var user = users[i];
+                        var msg = lastMessages[i];
+                        var unread = unreadCounts[user.Id];
+                        <a href="@Url.Action("Index", new { userId = user.Id })" class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-3 @(selectedUser?.Id == user.Id ? "active" : "")">
+                            <div class="flex-grow-1 min-width-0">
+                                <div class="fw-semibold text-dark text-truncate">@user.UserName</div>
+                                <div class="small text-muted text-truncate">@msg?.Message</div>
+                            </div>
+                            <div class="d-flex flex-column align-items-end">
+                                <span class="small text-muted">@msg?.SentAt.ToString("HH:mm dd/MM")</span>
+                                @if (unread > 0)
+                                {
+                                    <span class="badge bg-danger mt-1">@unread</span>
+                                }
+                            </div>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-8 col-lg-6">
+            @if (selectedUser != null)
+            {
+                <div class="bg-white rounded shadow-sm p-0 d-flex flex-column" style="height:500px;">
+                    <div class="d-flex align-items-center px-3 py-2 border-bottom">
+                        <img src="https://nhathuoclongchau.com.vn/estore-images/profile/v2/avatar-profile-large.svg" alt="avatar" class="rounded-circle me-2" style="width:40px;height:40px;object-fit:cover;">
+                        <span class="fw-bold fs-5">@selectedUser.UserName</span>
+                    </div>
+                    <div class="flex-grow-1 bg-light p-3 overflow-auto" style="min-height:0;">
+                        @foreach (var msg in messages)
+                        {
+                            <div class="d-flex mb-2 @(msg.SenderId == "admin" ? "justify-content-end" : "justify-content-start")">
+                                <div class="px-3 py-2 rounded shadow-sm @(msg.SenderId == "admin" ? "bg-info text-primary" : "bg-white text-dark")" style="max-width:70%;word-break:break-word;white-space:pre-line;line-height:1.5;">
+                                    @msg.Message
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <form id="admin-chat-form" class="d-flex gap-2 border-top p-3" style="background:#f8f9fa;" autocomplete="off" onsubmit="return false;">
+                        <input type="hidden" name="userId" value="@selectedUser.Id" />
+                        <input type="text" id="admin-chat-input" name="message" class="form-control" placeholder="Nhập tin nhắn..." autocomplete="off" required />
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i></button>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="bg-white rounded shadow-sm d-flex align-items-center justify-content-center" style="height:500px;">
+                    <span class="text-muted">Bạn chưa có tin nhắn</span>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<style>
+    .list-group-item.active {
+        background: #e3f0ff;
+        color: #1976d2;
+        border-color: #1976d2;
+    }
+</style>
+@section Scripts {
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+<script>
+    const adminId = 'admin';
+    const selectedUserId = '@(selectedUser?.Id ?? "")';
+    let connection = new signalR.HubConnectionBuilder().withUrl('/chathub').build();
+    connection.start();
+    // Gửi tin nhắn từ admin
+    const adminForm = document.getElementById('admin-chat-form');
+    if(adminForm) {
+        adminForm.onsubmit = function(e) {
+            e.preventDefault();
+            const input = document.getElementById('admin-chat-input');
+            const msg = input.value.trim();
+            if (!msg || !selectedUserId) return;
+            connection.invoke('SendMessage', adminId, selectedUserId, msg);
+            input.value = '';
+        };
+    }
+    connection.on('ReceiveMessage', function(senderId, message) {
+        // Nếu đang chat với user này thì append tin nhắn vào khung chat
+        if(senderId === selectedUserId && selectedUserId) {
+            const chatBox = document.querySelector('.col-md-8 .flex-grow-1.bg-light.p-3.overflow-auto');
+            if(chatBox) {
+                const msgDiv = document.createElement('div');
+                if(senderId === adminId) {
+                    msgDiv.className = 'd-flex mb-2 justify-content-end';
+                } else {
+                    msgDiv.className = 'd-flex mb-2 justify-content-start';
+                }
+                const bubble = document.createElement('div');
+                bubble.className = (senderId === adminId ? 'px-3 py-2 rounded shadow-sm bg-info text-primary' : 'px-3 py-2 rounded shadow-sm bg-white text-dark');
+                bubble.style.maxWidth = '70%';
+                bubble.style.wordBreak = 'break-word';
+                bubble.style.whiteSpace = 'pre-line';
+                bubble.style.lineHeight = '1.5';
+                bubble.innerText = message;
+                msgDiv.appendChild(bubble);
+                chatBox.appendChild(msgDiv);
+                setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 100);
+            }
+        } else if(senderId !== adminId) {
+            // Nếu không phải user đang chat và sender là user, cập nhật badge số tin chưa đọc ở danh sách user
+            const userList = document.querySelectorAll('.list-group-item');
+            userList.forEach(function(item) {
+                if(item.getAttribute('href') && item.getAttribute('href').includes(senderId)) {
+                    let badge = item.querySelector('.badge.bg-danger');
+                    if(badge) {
+                        let count = parseInt(badge.textContent) || 0;
+                        badge.textContent = count + 1;
+                    } else {
+                        const newBadge = document.createElement('span');
+                        newBadge.className = 'badge bg-danger mt-1';
+                        newBadge.textContent = '1';
+                        item.querySelector('.d-flex.flex-column.align-items-end').appendChild(newBadge);
+                    }
+                }
+            });
+        }
+    });
+    // Khi click vào user bên trái, xóa badge đỏ của user đó
+    document.querySelectorAll('.list-group-item').forEach(function(item) {
+        item.addEventListener('click', function() {
+            let badge = item.querySelector('.badge.bg-danger');
+            if(badge) badge.remove();
+        });
+    });
+    window.addEventListener('DOMContentLoaded', function() {
+        const chatBox = document.querySelector('.col-md-8 .flex-grow-1.bg-light.p-3.overflow-auto');
+        if(chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+    });
+</script>
+} 
