@@ -140,7 +140,7 @@
                 </div>
                 <ul class="nav nav-pills flex-column mb-auto">
                     <li class="nav-item">
-                        <a href="/admin" class="nav-link @(Context.Request.Path == "/admin" ? "active" : "")">
+                        <a href="/admin" class="nav-link @(Context.Request.Path == "/admin" || Context.Request.Path == "/admin/index" ? "active" : "")">
                             <i class="fa-solid fa-gauge"></i>
                             <span class="sidebar-text">Dashboard</span>
                         </a>
