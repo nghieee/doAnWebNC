@@ -6,29 +6,23 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace web_ban_thuoc.Migrations
 {
     /// <inheritdoc />
-    public partial class AddChatMessageTable : Migration
+    public partial class SyncUserRankInfo : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "ChatMessages",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    SenderId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ReceiverId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsRead = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ChatMessages", x => x.Id);
-                });
+            migrationBuilder.DropColumn(
+                name: "LastRankMailSent",
+                table: "AspNetUsers");
 
-            // Migration tạo bảng UserRankInfo
+            migrationBuilder.DropColumn(
+                name: "LastRankNotiSent",
+                table: "AspNetUsers");
+
+            migrationBuilder.DropColumn(
+                name: "UserRank",
+                table: "AspNetUsers");
+
             migrationBuilder.CreateTable(
                 name: "UserRankInfos",
                 columns: table => new
@@ -49,7 +43,26 @@ namespace web_ban_thuoc.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ChatMessages");
+                name: "UserRankInfos");
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "LastRankMailSent",
+                table: "AspNetUsers",
+                type: "datetime2",
+                nullable: true);
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "LastRankNotiSent",
+                table: "AspNetUsers",
+                type: "datetime2",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "UserRank",
+                table: "AspNetUsers",
+                type: "nvarchar(max)",
+                nullable: false,
+                defaultValue: "");
         }
     }
 }

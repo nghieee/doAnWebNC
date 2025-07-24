@@ -23,6 +23,7 @@ namespace web_ban_thuoc.Controllers.Admin
             var totalOrders = await _context.Orders.CountAsync();
             var totalRevenue = await _context.Orders.Where(o => o.Status == "Đã giao").SumAsync(o => o.TotalAmount ?? 0);
             var pendingOrders = await _context.Orders.CountAsync(o => o.Status == "Chờ xác nhận");
+            var unreadMessages = await _context.ChatMessages.CountAsync(m => m.ReceiverId == "admin" && !m.IsRead);
             var totalProducts = await _context.Products.CountAsync();
             var totalCustomers = await _context.Users.CountAsync();
             var today = DateTime.Today;
@@ -43,6 +44,7 @@ namespace web_ban_thuoc.Controllers.Admin
             ViewBag.TotalOrders = totalOrders;
             ViewBag.TotalRevenue = totalRevenue;
             ViewBag.PendingOrders = pendingOrders;
+            ViewBag.UnreadMessages = unreadMessages;
             ViewBag.TotalProducts = totalProducts;
             ViewBag.TotalCustomers = totalCustomers;
             ViewBag.TodayOrders = todayOrders;

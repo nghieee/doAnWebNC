@@ -21,6 +21,9 @@ public class LongChauDbContext : IdentityDbContext
     public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
     public DbSet<ProductImage> ProductImages { get; set; }
     public DbSet<ChatMessage> ChatMessages { get; set; }
+    public DbSet<UserRankInfo> UserRankInfos { get; set; }
+    public DbSet<Voucher> Vouchers { get; set; }
+    public DbSet<UserVoucher> UserVouchers { get; set; }
     // ... các DbSet khác nếu có
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

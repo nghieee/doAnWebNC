@@ -158,9 +158,15 @@
                         </a>
                     </li>
                     <li>
-                        <a href="/AdminOrder" class="nav-link @(Context.Request.Path.StartsWithSegments("/Admin/Order") ? "active" : "")">
+                        <a href="/AdminOrder" class="nav-link @(Context.Request.Path.StartsWithSegments("/Admin/Order") ? "active" : "") position-relative">
                             <i class="fa-solid fa-cart-shopping"></i>
                             <span class="sidebar-text">Đơn hàng</span>
+                            @if (ViewBag.PendingOrders != null && (int)ViewBag.PendingOrders > 0)
+                            {
+                                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                                    <span class="visually-hidden">Đơn hàng mới</span>
+                                </span>
+                            }
                         </a>
                     </li>
                     <li>
@@ -170,8 +176,14 @@
                         </a>
                     </li>
                     <li class="nav-item" style="position:relative;">
-                        <a class="nav-link" href="/admin/chat">
+                        <a class="nav-link position-relative" href="/admin/chat">
                             <i class="fa-regular fa-message me-1"></i> Tin nhắn
+                            @if (ViewBag.UnreadMessages != null && (int)ViewBag.UnreadMessages > 0)
+                            {
+                                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                                    <span class="visually-hidden">Tin nhắn mới</span>
+                                </span>
+                            }
                         </a>
                     </li>
                 </ul>
