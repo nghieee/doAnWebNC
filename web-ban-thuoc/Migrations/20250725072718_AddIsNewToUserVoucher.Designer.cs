@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using web_ban_thuoc.Models;
 
@@ -11,9 +12,11 @@ using web_ban_thuoc.Models;
 namespace web_ban_thuoc.Migrations
 {
     [DbContext(typeof(LongChauDbContext))]
-    partial class LongChauDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250725072718_AddIsNewToUserVoucher")]
+    partial class AddIsNewToUserVoucher
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -642,14 +645,8 @@ namespace web_ban_thuoc.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("MaxUsage")
-                        .HasColumnType("int");
-
                     b.Property<decimal?>("PercentValue")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("UsedCount")
-                        .HasColumnType("int");
 
                     b.HasKey("VoucherId");
 

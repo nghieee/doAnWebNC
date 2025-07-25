@@ -42,6 +42,11 @@
                                     <i class="fas fa-box me-2"></i>Đơn hàng
                                 </button>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link w-100 text-start" id="gift-tab" data-bs-toggle="pill" data-bs-target="#gift" type="button" role="tab" aria-controls="gift" aria-selected="false">
+                                    <i class="fas fa-gift me-2"></i>Quà tặng
+                                </button>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -267,6 +272,97 @@
                                     }
                                 </div>
                             }
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="gift" role="tabpanel" aria-labelledby="gift-tab">
+                        <div class="bg-white shadow-sm rounded-4 p-4 mb-5">
+                            <h5 class="fw-bold mb-4"><i class="fas fa-gift me-2"></i>Quà tặng & Ưu đãi</h5>
+                            <div class="mb-3">
+                                <span class="fw-semibold">Tổng tiền đã tiêu: </span>
+                                <span class="text-primary fw-bold">@Model.TotalSpent.ToString("N0")đ</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="fw-semibold">Tổng tiền đã tiêu 6 tháng gần nhất: </span>
+                                <span class="text-primary fw-bold">@Model.TotalSpent6Months.ToString("N0")đ</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="fw-semibold">Hạng thành viên: </span>
+                                <span class="badge bg-info text-white">@Model.Rank</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="fw-semibold">Danh sách voucher:</span>
+                                <table class="table table-bordered mt-2">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã voucher</th>
+                                            <th>Mô tả</th>
+                                            <th>Loại</th>
+                                            <th>Phần trăm giảm</th>
+                                            <th>Điều kiện áp dụng</th>
+                                            <th>Hạn sử dụng</th>
+                                            <th>Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var v in Model.Vouchers)
+                                        {
+                                            <tr>
+                                                <td>@v.Code</td>
+                                                <td>@v.Description</td>
+                                                <td>
+                                                    @if (v.DiscountType == "Percent")
+                                                    {
+                                                        <span class="badge bg-primary">Giảm % tổng đơn</span>
+                                                    }
+                                                    else if (v.DiscountType == "Category")
+                                                    {
+                                                        <span class="badge bg-info">Giảm theo danh mục</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    @if (v.PercentValue.HasValue)
+                                                    {
+                                                        <span class="fw-bold">@v.PercentValue.Value.ToString("N0")%</span>
+                                                    }
+                                                    else if (v.DiscountAmount.HasValue)
+                                                    {
+                                                        <span class="fw-bold">@v.DiscountAmount.Value.ToString("N0")đ</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    @if (!string.IsNullOrEmpty(v.Detail))
+                                                    {
+                                                        <span>@v.Detail</span>
+                                                    }
+                                                    else if (v.DiscountType == "FullOrder")
+                                                    {
+                                                        <span>Áp dụng cho toàn bộ đơn hàng</span>
+                                                    }
+                                                    else if (v.DiscountType == "Category" && !string.IsNullOrEmpty(v.CategoryName))
+                                                    {
+                                                        <span>Chỉ áp dụng cho sản phẩm thuộc danh mục <b>@v.CategoryName</b></span>
+                                                    }
+                                                </td>
+                                                <td>@v.ExpiryDate.ToString("dd/MM/yyyy")</td>
+                                                <td>
+                                                    @if (v.IsUsed)
+                                                    {
+                                                        <span class="badge bg-secondary">Đã sử dụng</span>
+                                                    }
+                                                    else if (v.IsExpired)
+                                                    {
+                                                        <span class="badge bg-danger">Hết hạn</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-success">Khả dụng</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>

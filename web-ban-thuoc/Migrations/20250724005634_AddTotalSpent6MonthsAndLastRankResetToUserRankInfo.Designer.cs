@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using web_ban_thuoc.Models;
 
@@ -11,9 +12,11 @@ using web_ban_thuoc.Models;
 namespace web_ban_thuoc.Migrations
 {
     [DbContext(typeof(LongChauDbContext))]
-    partial class LongChauDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250724005634_AddTotalSpent6MonthsAndLastRankResetToUserRankInfo")]
+    partial class AddTotalSpent6MonthsAndLastRankResetToUserRankInfo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -345,12 +348,6 @@ namespace web_ban_thuoc.Migrations
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("VoucherCode")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal?>("VoucherDiscount")
-                        .HasColumnType("decimal(18,2)");
-
                     b.HasKey("OrderId");
 
                     b.HasIndex("UserId");
@@ -581,9 +578,6 @@ namespace web_ban_thuoc.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserVoucherId"));
 
-                    b.Property<bool>("IsNew")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsUsed")
                         .HasColumnType("bit");
 
@@ -612,12 +606,6 @@ namespace web_ban_thuoc.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VoucherId"));
 
-                    b.Property<int?>("CategoryId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CategoryName")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -626,30 +614,14 @@ namespace web_ban_thuoc.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Detail")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal?>("DiscountAmount")
+                    b.Property<decimal>("DiscountAmount")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("DiscountType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
-
-                    b.Property<int?>("MaxUsage")
-                        .HasColumnType("int");
-
-                    b.Property<decimal?>("PercentValue")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("UsedCount")
-                        .HasColumnType("int");
 
                     b.HasKey("VoucherId");
 

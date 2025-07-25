@@ -39,6 +39,8 @@ builder.Services.AddControllersWithViews(options =>
 // Thêm vào trước builder.Build()
 builder.Services.AddSession();
 builder.Services.AddSignalR();
+builder.Services.AddScoped<UserRankService>();
+builder.Services.AddHostedService<MonthlyVoucherHostedService>();
 
 var app = builder.Build();
 

@@ -23,6 +23,9 @@ public partial class Order
     public string? FullName { get; set; }
     public string? Phone { get; set; }
 
+    public string? VoucherCode { get; set; }
+    public decimal? VoucherDiscount { get; set; }
+
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();

@@ -32,8 +32,12 @@ public class CartController : Controller
             TempData["LoginError"] = "Bạn cần đăng nhập để xem giỏ hàng!";
             return RedirectToAction("Index", "Auth");
         }
-
         var cart = GetCart();
+        var userId = _userManager.GetUserId(User);
+        var dbCart = _context.Orders.FirstOrDefault(o => o.UserId == userId && o.Status == "Cart");
+        ViewBag.VoucherDiscount = dbCart?.VoucherDiscount ?? 0;
+        ViewBag.VoucherCode = dbCart?.VoucherCode;
+        ViewBag.TotalAmount = dbCart?.TotalAmount ?? cart.Sum(i => i.Price * i.Quantity);
         return View(cart);
     }
 
@@ -212,6 +216,29 @@ public class CartController : Controller
         dbCart.Phone = model.Phone;
         dbCart.PaymentStatus = "Chưa thanh toán";
         _context.SaveChanges();
+        // Đánh dấu voucher đã dùng nếu có
+        if (!string.IsNullOrEmpty(dbCart.VoucherCode))
+        {
+            var userVoucher = _context.UserVouchers.Include(uv => uv.Voucher)
+                .FirstOrDefault(uv => uv.UserId == userId && uv.Voucher.Code == dbCart.VoucherCode && !uv.IsUsed);
+            if (userVoucher != null)
+            {
+                userVoucher.IsUsed = true;
+                // Tăng UsedCount cho voucher
+                userVoucher.Voucher.UsedCount++;
+                _context.SaveChanges();
+            }
+            else
+            {
+                // Nếu là voucher dùng chung (không có userVoucher), vẫn tăng UsedCount
+                var voucher = _context.Vouchers.FirstOrDefault(v => v.Code == dbCart.VoucherCode);
+                if (voucher != null)
+                {
+                    voucher.UsedCount++;
+                    _context.SaveChanges();
+                }
+            }
+        }
         
         // Thêm record vào bảng Payment
         var payment = new Payment
@@ -237,7 +264,12 @@ public class CartController : Controller
     public IActionResult GetCartSummary()
     {
         var cart = GetCart();
-        var total = cart.Sum(i => i.Price * i.Quantity);
+        var subtotal = cart.Sum(i => i.Price * i.Quantity);
+        var userId = _userManager.GetUserId(User);
+        var dbCart = _context.Orders.FirstOrDefault(o => o.UserId == userId && o.Status == "Cart");
+        decimal voucherDiscount = dbCart?.VoucherDiscount ?? 0;
+        decimal total = subtotal - voucherDiscount;
+        if (total < 0) total = 0;
         return Json(new {
             items = cart.Select(i => new {
                 productName = i.ProductName,
@@ -245,6 +277,8 @@ public class CartController : Controller
                 quantity = i.Quantity,
                 total = i.Price * i.Quantity
             }),
+            subtotal,
+            voucherDiscount,
             total
         });
     }
@@ -279,4 +313,42 @@ public class CartController : Controller
         
         return new List<CartItem>();
     }
+
+    [HttpPost]
+    public async Task<IActionResult> ApplyVoucher([FromBody] ApplyVoucherModel model)
+    {
+        if (!User.Identity.IsAuthenticated)
+            return Json(new { success = false, message = "Bạn cần đăng nhập để áp dụng mã giảm giá!" });
+        var userId = _userManager.GetUserId(User);
+        var dbCart = _context.Orders.Include(o => o.OrderItems).FirstOrDefault(o => o.UserId == userId && o.Status == "Cart");
+        if (dbCart == null || dbCart.OrderItems.Count == 0)
+            return Json(new { success = false, message = "Giỏ hàng của bạn đang trống!" });
+        var userVoucher = await _context.UserVouchers.Include(uv => uv.Voucher)
+            .FirstOrDefaultAsync(uv => uv.UserId == userId && uv.Voucher.Code == model.code && !uv.IsUsed && uv.Voucher.IsActive && uv.Voucher.ExpiryDate >= DateTime.Now);
+        if (userVoucher == null)
+            return Json(new { success = false, message = "Mã giảm giá không hợp lệ hoặc đã hết hạn!" });
+        var voucher = userVoucher.Voucher;
+        // Kiểm tra số lượt sử dụng tối đa
+        if (voucher.MaxUsage.HasValue && voucher.UsedCount >= voucher.MaxUsage.Value)
+        {
+            return Json(new { success = false, message = "Voucher đã hết lượt sử dụng!" });
+        }
+        decimal discount = 0;
+        decimal total = dbCart.OrderItems.Sum(i => i.Price * i.Quantity);
+        if (voucher.DiscountType == "FullOrder")
+        {
+            if (voucher.PercentValue.HasValue)
+                discount = Math.Round(total * voucher.PercentValue.Value / 100);
+            else if (voucher.DiscountAmount.HasValue)
+                discount = voucher.DiscountAmount.Value;
+        }
+        // (Có thể mở rộng cho Category...)
+        if (discount > total) discount = total;
+        dbCart.VoucherCode = voucher.Code;
+        dbCart.VoucherDiscount = discount;
+        dbCart.TotalAmount = total - discount;
+        _context.SaveChanges();
+        return Json(new { success = true, message = $"Áp dụng mã thành công! Giảm {discount:N0}đ.", total = (total - discount).ToString("N0") });
+    }
+    public class ApplyVoucherModel { public string code { get; set; } = string.Empty; }
 } 
