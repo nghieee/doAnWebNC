@@ -28,6 +28,8 @@ namespace web_ban_thuoc.Models
         public int? CategoryId { get; set; }
         public string? CategoryName { get; set; }
         public string? Detail { get; set; }
+        public int? MaxUsage { get; set; } // Số lượt sử dụng tối đa (null = không giới hạn)
+        public int UsedCount { get; set; } = 0; // Số lượt đã sử dụng
     }
 
     public class UserVoucher
@@ -40,6 +42,7 @@ namespace web_ban_thuoc.Models
         public int VoucherId { get; set; }
         public bool IsUsed { get; set; } = false;
         public DateTime? UsedDate { get; set; }
+        public bool IsNew { get; set; } = false; // Đánh dấu voucher mới tặng
         public virtual Voucher Voucher { get; set; } = null!;
     }
 } 

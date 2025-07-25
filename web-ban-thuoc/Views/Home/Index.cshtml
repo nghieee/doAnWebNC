@@ -177,6 +177,22 @@
     </div>
 </div>
 
+@if (ViewBag.ShowGiftPopup == true)
+{
+    <div id="gift-popup-overlay" style="position:fixed;z-index:2000;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">
+        <div id="gift-popup-box" style="background:transparent;border:none;box-shadow:none;">
+            <img src="/images/default/gift.png" alt="Quà tặng" id="gift-img" style="width:220px;cursor:pointer;animation:shakeGift 1s infinite alternate;z-index:3000;position:relative;">
+        </div>
+    </div>
+    <style>
+        @@keyframes shakeGift {
+            0% { transform: rotate(-8deg) scale(1.05); }
+            50% { transform: rotate(8deg) scale(1.1); }
+            100% { transform: rotate(-8deg) scale(1.05); }
+        }
+    </style>
+}
+
 <style>
     .hover-bg-light:hover {
         background-color: #f9fafb;
@@ -204,3 +220,14 @@
         overflow: hidden;
     }
 </style>
+@section Scripts {
+<script>
+$(function() {
+    $('#gift-img').on('click', function() {
+        alert('Bạn nhận được voucher, truy cập mục quà tặng để kiểm tra!');
+        $('#gift-popup-overlay').fadeOut(300);
+        $.post('/Home/MarkGiftSeen', function(){});
+    });
+});
+</script>
+}

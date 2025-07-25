@@ -1,0 +1,256 @@
+@model List<web_ban_thuoc.Models.VoucherAdminViewModel>
+@{
+    ViewData["Title"] = "Quản lý Voucher";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+<div class="container-fluid py-4">
+    <h3 class="mb-4 fw-bold"><i class="fa-solid fa-ticket-alt me-2"></i>Quản lý Voucher</h3>
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body">
+            <div class="mb-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addVoucherModal"><i class="fa fa-plus me-1"></i> Thêm voucher mới</button>
+                </div>
+                <div>
+                    <input type="text" class="form-control" style="width:220px;display:inline-block;" placeholder="Tìm kiếm mã, mô tả...">
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã voucher</th>
+                            <th>Mô tả</th>
+                            <th>Loại</th>
+                            <th>% giảm</th>
+                            <th>Số tiền</th>
+                            <th>Hạn dùng</th>
+                            <th>Email</th>
+                            <th>Đã dùng</th>
+                            <th>Còn lại</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var v in Model)
+                        {
+                            <tr>
+                                <td><span class="badge bg-primary">@v.Code</span></td>
+                                <td>@v.Description</td>
+                                <td>
+                                    @if (v.DiscountType == "FullOrder")
+                                    {
+                                        <span class="badge bg-info">Giảm % tổng đơn</span>
+                                    }
+                                    else if (v.DiscountType == "Category")
+                                    {
+                                        <span class="badge bg-warning">Theo danh mục</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Khác</span>
+                                    }
+                                </td>
+                                <td>@(v.PercentValue.HasValue ? v.PercentValue + "%" : "-")</td>
+                                <td>@(v.DiscountAmount.HasValue ? string.Format("{0:N0}đ", v.DiscountAmount) : "-")</td>
+                                <td>@v.ExpiryDate.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @if (v.UserId == "Tất cả")
+                                    {
+                                        <span class="badge bg-secondary">Tất cả</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">@v.UserId</span>
+                                    }
+                                </td>
+                                <td>@v.DaDung</td>
+                                <td>
+                                    @if (v.ConLai == -1)
+                                    {
+                                        <span class="text-secondary">Không giới hạn</span>
+                                    }
+                                    else
+                                    {
+                                        @v.ConLai
+                                    }
+                                </td>
+                                <td>
+                                    @if (v.ConLai == 0)
+                                    {
+                                        <span class="badge bg-danger">Hết lượt</span>
+                                    }
+                                    else if (v.IsActive && v.ExpiryDate >= DateTime.Now)
+                                    {
+                                        <span class="badge bg-success">Khả dụng</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Hết hạn</span>
+                                    }
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger btn-delete-voucher" data-code="@v.Code"><i class="fa fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal thêm voucher mới -->
+<div class="modal fade" id="addVoucherModal" tabindex="-1" aria-labelledby="addVoucherModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+    <!-- Form nhập voucher -->
+      <form id="addVoucherForm" autocomplete="off">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addVoucherModalLabel">Thêm voucher mới</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Mã voucher</label>
+              <input type="text" class="form-control" name="Code" required maxlength="20">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Hạn dùng</label>
+              <input type="date" class="form-control" name="ExpiryDate" required>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Mô tả</label>
+              <input type="text" class="form-control" name="Description" required maxlength="200">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Loại</label>
+              <select class="form-select" name="DiscountType" required>
+                <option value="FullOrder">Giảm tổng đơn</option>
+                <option value="Category">Giảm theo danh mục</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">% giảm</label>
+              <input type="number" class="form-control" name="PercentValue" min="0" max="100" step="0.01">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Số tiền giảm (VNĐ)</label>
+              <input type="number" class="form-control" name="DiscountAmount" min="0" step="1000">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Số lượt sử dụng tối đa</label>
+              <input type="number" class="form-control" name="MaxUsage" min="1" placeholder="Để trống nếu không giới hạn">
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Chi tiết (tuỳ chọn)</label>
+              <input type="text" class="form-control" name="Detail" maxlength="200">
+            </div>
+            <div class="col-md-12">
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" value="1" id="forAllUsers" name="ForAllUsers">
+                <label class="form-check-label" for="forAllUsers">Phát cho tất cả user</label>
+              </div>
+              <div id="rankOptions">
+                <label class="form-label mb-1">Phát cho user theo xếp hạng:</label>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="checkbox" id="rankBac" name="Ranks" value="Bạc">
+                  <label class="form-check-label" for="rankBac">Bạc</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="checkbox" id="rankVang" name="Ranks" value="Vàng">
+                  <label class="form-check-label" for="rankVang">Vàng</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="checkbox" id="rankBachKim" name="Ranks" value="Bạch kim">
+                  <label class="form-check-label" for="rankBachKim">Bạch kim</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+          <button type="submit" class="btn btn-primary">Tạo voucher</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+<script>
+// Disable trường số tiền giảm nếu nhập % giảm và ngược lại
+$(document).on('input', 'input[name="PercentValue"]', function() {
+  if ($(this).val()) {
+    $('input[name="DiscountAmount"]').val('').prop('disabled', true);
+  } else {
+    $('input[name="DiscountAmount"]').prop('disabled', false);
+  }
+});
+$(document).on('input', 'input[name="DiscountAmount"]', function() {
+  if ($(this).val()) {
+    $('input[name="PercentValue"]').val('').prop('disabled', true);
+  } else {
+    $('input[name="PercentValue"]').prop('disabled', false);
+  }
+});
+// Disable chọn xếp hạng nếu chọn tất cả user
+$(document).on('change', '#forAllUsers', function() {
+  if ($(this).is(':checked')) {
+    $('#rankOptions input[type="checkbox"]').prop('checked', false).prop('disabled', true);
+  } else {
+    $('#rankOptions input[type="checkbox"]').prop('disabled', false);
+  }
+});
+// TODO: Thêm autocomplete email, chọn nhiều, submit form ajax
+
+$('#addVoucherForm').on('submit', function(e) {
+  e.preventDefault();
+  var form = $(this)[0];
+  var formData = new FormData(form);
+  // Lấy các rank được chọn
+  var ranks = [];
+  $('#rankOptions input[type="checkbox"]:checked').each(function() {
+    ranks.push($(this).val());
+  });
+  formData.delete('Ranks');
+  for (const r of ranks) formData.append('Ranks', r);
+  // Xử lý ForAllUsers checkbox
+  formData.set('ForAllUsers', $('#forAllUsers').is(':checked') ? 'true' : 'false');
+  $.ajax({
+    url: '/AdminHome/CreateVoucher',
+    type: 'POST',
+    data: formData,
+    processData: false,
+    contentType: false,
+    success: function(res) {
+      if (res.success) {
+        alert('Tạo voucher thành công!');
+        location.reload();
+      } else {
+        alert(res.message || 'Có lỗi xảy ra!');
+      }
+    },
+    error: function() {
+      alert('Có lỗi xảy ra khi gửi dữ liệu!');
+    }
+  });
+});
+$(document).on('click', '.btn-delete-voucher', function() {
+    var code = $(this).data('code');
+    if (confirm('Bạn có chắc chắn muốn xóa voucher này?')) {
+        $.post('/AdminHome/DeleteVoucher', { code: code }, function(res) {
+            if (res.success) {
+                alert('Đã xóa voucher!');
+                location.reload();
+            } else {
+                alert(res.message || 'Xóa voucher thất bại!');
+            }
+        });
+    }
+});
+</script>
+} 

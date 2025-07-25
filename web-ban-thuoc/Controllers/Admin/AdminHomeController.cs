@@ -54,6 +54,116 @@ namespace web_ban_thuoc.Controllers.Admin
             return View("~/Views/Admin/Index.cshtml");
         }
 
+        public async Task<IActionResult> Voucher()
+        {
+            // Lấy tất cả voucher và uservoucher liên quan
+            var vouchers = await _context.Vouchers.ToListAsync();
+            var userVouchers = await _context.UserVouchers.ToListAsync();
+            var users = await _context.Users.ToListAsync();
+            // Lấy danh sách email cho từng voucher
+            var voucherList = vouchers.Select(v => {
+                var relatedUserVouchers = userVouchers.Where(uv => uv.VoucherId == v.VoucherId).ToList();
+                string userEmail = "Tất cả";
+                if (relatedUserVouchers.Count > 0)
+                {
+                    var emails = relatedUserVouchers
+                        .Select(uv => users.FirstOrDefault(u => u.Id == uv.UserId)?.Email ?? uv.UserId)
+                        .Distinct();
+                    userEmail = string.Join(", ", emails);
+                }
+                int daDung = relatedUserVouchers.Count(uv => uv.IsUsed);
+                int conLai;
+                if (v.MaxUsage.HasValue)
+                {
+                    conLai = v.MaxUsage.Value - v.UsedCount;
+                    if (conLai < 0) conLai = 0;
+                }
+                else
+                {
+                    conLai = -1; // Không giới hạn
+                }
+                return new VoucherAdminViewModel {
+                    Code = v.Code,
+                    Description = v.Description,
+                    DiscountType = v.DiscountType,
+                    PercentValue = v.PercentValue,
+                    DiscountAmount = v.DiscountAmount,
+                    ExpiryDate = v.ExpiryDate,
+                    UserId = userEmail,
+                    DaDung = v.UsedCount,
+                    ConLai = conLai,
+                    IsActive = v.IsActive,
+                };
+            }).ToList();
+            return View("~/Views/Admin/Voucher/Index.cshtml", voucherList);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateVoucher([FromForm] VoucherCreateModel model)
+        {
+            if (string.IsNullOrWhiteSpace(model.Code) || string.IsNullOrWhiteSpace(model.Description) || model.ExpiryDate == null)
+                return Json(new { success = false, message = "Vui lòng nhập đầy đủ thông tin!" });
+            if ((model.PercentValue.HasValue && model.PercentValue > 0 && model.DiscountAmount.HasValue && model.DiscountAmount > 0) ||
+                (!model.PercentValue.HasValue && !model.DiscountAmount.HasValue))
+                return Json(new { success = false, message = "Chỉ nhập % giảm hoặc số tiền giảm!" });
+            // Kiểm tra mã voucher trùng
+            if (await _context.Vouchers.AnyAsync(v => v.Code == model.Code))
+                return Json(new { success = false, message = "Mã voucher đã tồn tại!" });
+            var voucher = new Voucher
+            {
+                Code = model.Code,
+                Description = model.Description,
+                DiscountType = model.DiscountType,
+                PercentValue = model.PercentValue,
+                DiscountAmount = model.DiscountAmount,
+                ExpiryDate = model.ExpiryDate,
+                Detail = model.Detail,
+                IsActive = true,
+                MaxUsage = model.MaxUsage
+            };
+            _context.Vouchers.Add(voucher);
+            await _context.SaveChangesAsync();
+            // Phát cho user
+            List<string> userIds = new();
+            if (model.ForAllUsers)
+            {
+                userIds = await _context.Users.Select(u => u.Id).ToListAsync();
+            }
+            else if (model.Ranks != null && model.Ranks.Any())
+            {
+                var rankUsers = await _context.UserRankInfos.Where(u => model.Ranks.Contains(u.Rank)).Select(u => u.UserId).ToListAsync();
+                userIds = rankUsers;
+            }
+            // Nếu có user cụ thể thì phát, còn không thì chỉ tạo voucher chung
+            foreach (var userId in userIds.Distinct())
+            {
+                var userVoucher = new UserVoucher
+                {
+                    UserId = userId,
+                    VoucherId = voucher.VoucherId,
+                    IsUsed = false,
+                    IsNew = true // Đánh dấu là voucher mới tặng
+                };
+                _context.UserVouchers.Add(userVoucher);
+            }
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteVoucher(string code)
+        {
+            var voucher = await _context.Vouchers.FirstOrDefaultAsync(v => v.Code == code);
+            if (voucher == null)
+                return Json(new { success = false, message = "Không tìm thấy voucher!" });
+            // Xóa các UserVoucher liên quan
+            var userVouchers = _context.UserVouchers.Where(uv => uv.VoucherId == voucher.VoucherId);
+            _context.UserVouchers.RemoveRange(userVouchers);
+            _context.Vouchers.Remove(voucher);
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
+        }
+
         [HttpGet]
         public async Task<IActionResult> ExportReport()
         {

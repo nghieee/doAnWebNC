@@ -224,7 +224,19 @@ public class CartController : Controller
             if (userVoucher != null)
             {
                 userVoucher.IsUsed = true;
+                // Tăng UsedCount cho voucher
+                userVoucher.Voucher.UsedCount++;
                 _context.SaveChanges();
+            }
+            else
+            {
+                // Nếu là voucher dùng chung (không có userVoucher), vẫn tăng UsedCount
+                var voucher = _context.Vouchers.FirstOrDefault(v => v.Code == dbCart.VoucherCode);
+                if (voucher != null)
+                {
+                    voucher.UsedCount++;
+                    _context.SaveChanges();
+                }
             }
         }
         
@@ -316,6 +328,11 @@ public class CartController : Controller
         if (userVoucher == null)
             return Json(new { success = false, message = "Mã giảm giá không hợp lệ hoặc đã hết hạn!" });
         var voucher = userVoucher.Voucher;
+        // Kiểm tra số lượt sử dụng tối đa
+        if (voucher.MaxUsage.HasValue && voucher.UsedCount >= voucher.MaxUsage.Value)
+        {
+            return Json(new { success = false, message = "Voucher đã hết lượt sử dụng!" });
+        }
         decimal discount = 0;
         decimal total = dbCart.OrderItems.Sum(i => i.Price * i.Quantity);
         if (voucher.DiscountType == "FullOrder")
