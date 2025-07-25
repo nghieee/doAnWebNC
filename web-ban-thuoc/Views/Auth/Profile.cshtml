@@ -266,6 +266,10 @@
                                                             <span class="badge @GetPaymentStatusBadgeClass(order.PaymentStatus)">@GetPaymentStatusText(order.PaymentStatus)</span>
                                                         </div>
                                                     </div>
+                                                    @if (order.Status == "Chờ xác nhận" || order.Status == "Đã xác nhận")
+                                                    {
+                                                        <button class="btn btn-danger btn-cancel-order mt-3" data-id="@order.OrderId">Hủy đơn</button>
+                                                    }
                                                 </div>
                                             </div>
                                         </div>
@@ -466,4 +470,23 @@
             _ => "bg-secondary text-white"
         };
     }
+} 
+@section Scripts {
+<script>
+$(function() {
+    $('.btn-cancel-order').on('click', function() {
+        if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
+            var orderId = $(this).data('id');
+            $.post('/Order/CancelOrder', { orderId: orderId }, function(res) {
+                if (res.success) {
+                    alert('Đã hủy đơn hàng!');
+                    location.reload();
+                } else {
+                    alert(res.message || 'Hủy đơn thất bại!');
+                }
+            });
+        }
+    });
+});
+</script>
 } 
