@@ -334,4 +334,32 @@ public class CartController : Controller
         return Json(new { success = true, message = $"Áp dụng mã thành công! Giảm {discount:N0}đ.", total = (total - discount).ToString("N0") });
     }
     public class ApplyVoucherModel { public string code { get; set; } = string.Empty; }
+
+    [HttpPost]
+    public async Task<IActionResult> CancelOrder(int orderId)
+    {
+        if (!User.Identity.IsAuthenticated)
+            return Json(new { success = false, message = "Bạn cần đăng nhập!" });
+        var userId = _userManager.GetUserId(User);
+        var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId && o.UserId == userId);
+        if (order == null)
+            return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
+        if (order.Status != "Chờ xác nhận" && order.Status != "Đã xác nhận")
+            return Json(new { success = false, message = "Chỉ có thể hủy đơn khi đang chờ xác nhận hoặc đã xác nhận!" });
+        order.Status = "Đã hủy";
+        // Nếu có voucher thì giảm UsedCount
+        if (!string.IsNullOrEmpty(order.VoucherCode))
+        {
+            var voucher = await _context.Vouchers.FirstOrDefaultAsync(v => v.Code == order.VoucherCode);
+            if (voucher != null && voucher.UsedCount > 0)
+                voucher.UsedCount--;
+            // Nếu có UserVoucher thì mở lại IsUsed = false
+            var userVoucher = await _context.UserVouchers.Include(uv => uv.Voucher)
+                .FirstOrDefaultAsync(uv => uv.UserId == userId && uv.Voucher.Code == order.VoucherCode && uv.IsUsed);
+            if (userVoucher != null)
+                userVoucher.IsUsed = false;
+        }
+        await _context.SaveChangesAsync();
+        return Json(new { success = true });
+    }
 } 
