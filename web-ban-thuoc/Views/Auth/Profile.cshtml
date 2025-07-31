@@ -477,7 +477,7 @@ $(function() {
     $('.btn-cancel-order').on('click', function() {
         if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
             var orderId = $(this).data('id');
-            $.post('/Order/CancelOrder', { orderId: orderId }, function(res) {
+            $.post('/Cart/CancelOrder', { orderId: orderId }, function(res) {
                 if (res.success) {
                     alert('Đã hủy đơn hàng!');
                     location.reload();

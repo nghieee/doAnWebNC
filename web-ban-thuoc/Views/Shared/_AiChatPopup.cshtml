@@ -1,0 +1,387 @@
+@{
+    var chatHistory = Context.Session.GetString("AiChatHistory");
+    var messages = new List<ChatMessage>();
+    if (!string.IsNullOrEmpty(chatHistory))
+    {
+        try
+        {
+            messages = System.Text.Json.JsonSerializer.Deserialize<List<ChatMessage>>(chatHistory) ?? new List<ChatMessage>();
+            Console.WriteLine($"Loaded {messages.Count} messages from session");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deserializing chat history: {ex.Message}");
+            messages = new List<ChatMessage>();
+        }
+    }
+    else
+    {
+        Console.WriteLine("No chat history found in session");
+    }
+}
+
+<div id="ai-chat-fab" class="position-fixed bottom-0 start-0 m-4" style="z-index:9999;pointer-events:auto;">
+    <img id="open-ai-chat" src="/images/default/ai-bot-doctor.png" alt="AI Bot Doctor" style="width:180px;cursor:pointer;pointer-events:auto;" />
+</div>
+
+<div id="ai-chat-popup" class="position-fixed bottom-0 start-0 m-4" style="z-index:10000;width:400px;max-width:95vw;display:none;">
+    <div id="ai-chat-header" class="bg-primary text-white rounded-top px-3 py-2 d-flex align-items-center justify-content-between">
+        <span><img src="/images/default/ai-bot-doctor.png" alt="AI Bot Doctor" style="width:24px;height:24px;object-fit:contain;margin-right:0.5rem;" />AI Tư vấn</span>
+        <button id="ai-chat-close" style="background:none;border:none;color:#fff;font-size:1.3rem;">&times;</button>
+    </div>
+    <div id="ai-chat-body" class="bg-white border border-top-0 rounded-bottom p-3 d-flex flex-column gap-2" style="height:400px;overflow-y:auto;">
+                 <div id="ai-chat-messages" class="flex-grow-1 overflow-auto mb-2">
+             @if (messages.Count == 0)
+             {
+                 <div class="text-center text-muted mt-4">
+                     <img src="/images/default/ai-bot-doctor.png" alt="AI Bot Doctor" style="width:80px;height:80px;object-fit:contain;margin-bottom:1rem;" />
+                     <p>Xin chào! Tôi là trợ lý AI của nhà thuốc. Tôi có thể giúp bạn tìm kiếm sản phẩm phù hợp với nhu cầu của bạn.</p>
+                 </div>
+             }
+             else
+             {
+                 <div class="text-center text-muted mt-2 mb-3">
+                     <small>Cuộc trò chuyện trước đó</small>
+                 </div>
+             }
+         </div>
+        <form id="ai-chat-form" class="d-flex gap-2 mt-2">
+            <input type="text" id="ai-chat-input" class="form-control" placeholder="Nhập câu hỏi..." autocomplete="off" />
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i></button>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Chỉ CSS cho những thứ Bootstrap không có */
+    .ai-product-card {
+        transition: all 0.3s ease;
+        border-radius: 12px !important;
+    }
+    .ai-product-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+    }
+    .ai-product-name {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 1.8rem;
+    }
+    #ai-chat-body {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+</style>
+
+<script>
+    let aiChatHistory = @Html.Raw(chatHistory ?? "[]");
+    console.log('Initial chatHistory from server:', '@Html.Raw(chatHistory ?? "null")');
+    console.log('Parsed aiChatHistory:', aiChatHistory);
+    console.log('aiChatHistory length:', aiChatHistory.length);
+    console.log('aiChatHistory is array:', Array.isArray(aiChatHistory));
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('AI Chat script loaded!');
+        const popup = document.getElementById('ai-chat-popup');
+        const fab = document.getElementById('ai-chat-fab');
+        const openBtn = document.getElementById('open-ai-chat');
+        const closeBtn = document.getElementById('ai-chat-close');
+        
+        console.log('Elements found:', {
+            popup: !!popup,
+            fab: !!fab,
+            openBtn: !!openBtn,
+            closeBtn: !!closeBtn
+        });
+        
+        // Kiểm tra và gán event handlers
+        if (openBtn) {
+            openBtn.onclick = function () {
+                console.log('Robot clicked!');
+                popup.style.display = 'block';
+                fab.style.display = 'none';
+            };
+        }
+        
+        if (closeBtn) {
+            closeBtn.onclick = function () {
+                popup.style.display = 'none';
+                fab.style.display = 'block';
+            };
+        }
+        
+                 // Load existing messages
+         console.log('Checking aiChatHistory for loading messages...');
+         console.log('aiChatHistory:', aiChatHistory);
+         console.log('aiChatHistory type:', typeof aiChatHistory);
+         console.log('aiChatHistory is array:', Array.isArray(aiChatHistory));
+         console.log('aiChatHistory length:', aiChatHistory ? aiChatHistory.length : 'undefined');
+         
+         if (aiChatHistory && Array.isArray(aiChatHistory) && aiChatHistory.length > 0) {
+             console.log('Đang tải lịch sử đoạn chat...:', aiChatHistory.length, 'messages');
+             console.log('Chat history data:', aiChatHistory);
+             console.log('Starting forEach loop...');
+             
+                              // Clear existing messages first
+             const messagesContainer = document.getElementById('ai-chat-messages');
+             console.log('Messages container found for clearing:', !!messagesContainer);
+             if (messagesContainer) {
+                 console.log('Messages container content before clearing:', messagesContainer.innerHTML);
+                 
+                 // Remove welcome message if exists
+                 const welcomeDiv = messagesContainer.querySelector('.text-center.text-muted');
+                 if (welcomeDiv) {
+                     console.log('Removing welcome message');
+                     welcomeDiv.remove();
+                 }
+                 
+                 // Remove "Cuộc trò chuyện trước đó" message if exists
+                 const historyDiv = messagesContainer.querySelector('.text-center.text-muted.mt-2.mb-3');
+                 if (historyDiv) {
+                     console.log('Removing history message');
+                     historyDiv.remove();
+                 }
+                 
+                 console.log('Messages container content after clearing:', messagesContainer.innerHTML);
+             } else {
+                 console.error('Messages container not found for clearing!');
+             }
+             
+             console.log('About to start forEach...');
+             aiChatHistory.forEach((msg, index) => {
+                 console.log(`forEach iteration ${index}:`, msg);
+                 if (msg && (msg.content || msg.Content)) {
+                     const messageContent = msg.content || msg.Content;
+                     const messageType = msg.type || msg.Type;
+                     const messageIsHtml = msg.isHtml || msg.IsHtml || false;
+                     
+                     console.log(`Loading message ${index + 1}:`, msg);
+                     console.log('Calling addAiMessage with:', messageType, messageContent);
+                     addAiMessage(messageType, messageContent, messageIsHtml);
+                     console.log(`addAiMessage called successfully for message ${index + 1}`);
+                     
+                     // Check if message was actually added
+                     setTimeout(() => {
+                         const messagesContainer = document.getElementById('ai-chat-messages');
+                         if (messagesContainer) {
+                             console.log(`Messages container content after message ${index + 1}:`, messagesContainer.innerHTML);
+                         }
+                     }, 100);
+                 } else {
+                     console.log(`Message ${index} is invalid:`, msg);
+                 }
+             });
+             console.log('forEach loop completed');
+         } else {
+             console.log('Chưa có lịch sử đoạn chat');
+         }
+        
+
+        
+        // Gửi tin nhắn
+        const chatForm = document.getElementById('ai-chat-form');
+        if (chatForm) {
+            chatForm.onsubmit = function (e) {
+            e.preventDefault();
+            const input = document.getElementById('ai-chat-input');
+            const msg = input.value.trim();
+            if (!msg) return;
+            
+            // Hiển thị tin nhắn của user
+            addAiMessage('user', msg);
+            saveToSession('user', msg);
+            input.value = '';
+            
+            // Gọi AI bot
+            callAiBot(msg);
+        };
+        }
+        
+        function callAiBot(question) {
+            fetch('/api/aibot/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ question: question })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.answer) {
+                    addAiMessage('bot', data.answer);
+                    saveToSession('bot', data.answer);
+                } else {
+                    const errorMsg = 'Xin lỗi, tôi không thể trả lời câu hỏi này. Vui lòng thử lại sau.';
+                    addAiMessage('bot', errorMsg);
+                    saveToSession('bot', errorMsg);
+                }
+            })
+            .catch(error => {
+                console.error('Error calling AI bot:', error);
+                const errorMsg = 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau.';
+                addAiMessage('bot', errorMsg);
+                saveToSession('bot', errorMsg);
+            });
+        }
+        
+        function addAiMessage(type, msg, isHtml) {
+            console.log('addAiMessage called with:', type, msg, isHtml);
+            
+            // Kiểm tra msg có tồn tại không
+            if (!msg) {
+                console.error('Message is undefined or null');
+                return;
+            }
+            
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'd-flex mb-2 ' + (type === 'user' ? 'justify-content-end' : 'justify-content-start');
+            const bubble = document.createElement('div');
+            bubble.className = 'px-3 py-2 rounded-3 shadow-sm ' + (type === 'user' ? 'bg-primary text-white' : 'bg-light text-dark');
+            bubble.style.maxWidth = '85%';
+            bubble.style.wordBreak = 'break-word';
+            bubble.style.whiteSpace = 'pre-line';
+            bubble.style.lineHeight = '1.5';
+            
+            if (isHtml) {
+                bubble.innerHTML = msg;
+                         } else {
+                 // Xử lý format text và product cards
+                 let processedMsg = msg;
+                 
+                 // Thay thế format markdown **text** thành <strong>text</strong>
+                 processedMsg = processedMsg.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                 
+                 // Tìm và thay thế {PRODUCT:ID} bằng product cards
+                 const productRegex = /\{PRODUCT:(\d+)\}/g;
+                 let match;
+                 let lastIndex = 0;
+                 let htmlContent = '';
+                 
+                 while ((match = productRegex.exec(msg)) !== null) {
+                     // Thêm text trước product
+                     htmlContent += processedMsg.substring(lastIndex, match.index);
+                     
+                     // Thêm placeholder cho product card
+                     const productId = match[1];
+                     htmlContent += `<div class="ai-product-card-placeholder" data-product-id="${productId}">Đang tải sản phẩm...</div>`;
+                     
+                     lastIndex = match.index + match[0].length;
+                 }
+                 
+                 // Thêm phần text còn lại
+                 htmlContent += processedMsg.substring(lastIndex);
+                 
+                 // Loại bỏ các pattern như (Product Name) khỏi text
+                 htmlContent = htmlContent.replace(/\([^)]+\)/g, '');
+                 
+                 // Loại bỏ {PRODUCT:ID} còn sót lại (nếu có)
+                 htmlContent = htmlContent.replace(/\{PRODUCT:\d+\}/g, '');
+                 
+                 // Clean up text: loại bỏ khoảng trắng thừa và dấu câu lạ
+                 htmlContent = htmlContent.replace(/\s+/g, ' ').trim();
+                 htmlContent = htmlContent.replace(/\s+([.,!?])/g, '$1');
+                 
+                 bubble.innerHTML = htmlContent;
+                 
+                 // Load product cards
+                 const placeholders = bubble.querySelectorAll('.ai-product-card-placeholder');
+                 placeholders.forEach(placeholder => {
+                     const productId = placeholder.getAttribute('data-product-id');
+                     loadAiProductCard(placeholder, productId);
+                 });
+             }
+            
+            msgDiv.appendChild(bubble);
+            const messagesContainer = document.getElementById('ai-chat-messages');
+            console.log('Messages container found:', !!messagesContainer);
+            if (messagesContainer) {
+                messagesContainer.appendChild(msgDiv);
+                messagesContainer.scrollTop = 99999;
+                console.log('Message added to container successfully');
+            } else {
+                console.error('Messages container not found!');
+            }
+        }
+        
+        function loadAiProductCard(placeholder, productId) {
+            fetch(`/api/aibot/product/${productId}`)
+                .then(response => response.json())
+                .then(product => {
+                                         const cardHtml = `
+                         <div class="ai-product-card card border-0 shadow-sm mb-2">
+                             <a href="${product.url}" target="_blank" class="text-decoration-none text-dark d-flex align-items-center"
+                                style="max-height: 100px;">
+                                 <div class="card-body p-0">
+                                     <div class="d-flex align-items-center p-2">
+                                         <div class="flex-shrink-0 me-2">
+                                             <img src="${product.image}" alt="${product.name}" class="rounded" style="width:45px;height:45px;object-fit:cover;">
+                                         </div>
+                                         <div class="flex-grow-1 min-w-0">
+                                             <div class="ai-product-name fw-semibold mb-1" style="font-size:0.8rem;line-height:1.2;">${product.name}</div>
+                                             <div class="text-muted" style="font-size:0.7rem; margin-bottom: -30px; margin-top: -16px;">${product.brand || 'Thương hiệu'}</div>
+                                             <div class="d-flex align-items-center justify-content-between">
+                                                 <div class="text-primary fw-bold" style="font-size:0.85rem;">${product.price.toLocaleString('vi-VN')}đ</div>
+                                                 <div class="text-primary small">
+                                                     <i class="fas fa-external-link-alt"></i>
+                                                 </div>
+                                             </div>
+                                         </div>
+                                     </div>
+                                 </div>
+                             </a>
+                         </div>
+                     `;
+                    placeholder.outerHTML = cardHtml;
+                })
+                .catch(error => {
+                    console.error('Error loading product:', error);
+                    placeholder.innerHTML = '<span class="text-muted small">Không tìm thấy sản phẩm</span>';
+                });
+        }
+        
+                 function saveToSession(type, content) {
+             aiChatHistory.push({
+                 type: type,
+                 content: content,
+                 timestamp: new Date().toISOString(),
+                 isHtml: false
+             });
+             
+             // Giới hạn lịch sử 50 tin nhắn gần nhất
+             if (aiChatHistory.length > 50) {
+                 aiChatHistory = aiChatHistory.slice(-50);
+             }
+             
+             // Lưu vào session
+             console.log('Saving to session:', aiChatHistory);
+             fetch('/api/aibot/save-chat-history', {
+                 method: 'POST',
+                 headers: {
+                     'Content-Type': 'application/json',
+                 },
+                 body: JSON.stringify(aiChatHistory)
+             })
+             .then(response => {
+                 console.log('Session save response status:', response.status);
+                 return response.json();
+             })
+             .then(data => {
+                 console.log('Session save response data:', data);
+             })
+             .catch(error => {
+                 console.error('Error saving to session:', error);
+             });
+         }
+    });
+</script>
+
+@functions {
+    public class ChatMessage
+    {
+        public string Type { get; set; }
+        public string Content { get; set; }
+        public string Timestamp { get; set; }
+        public bool IsHtml { get; set; }
+    }
+} 

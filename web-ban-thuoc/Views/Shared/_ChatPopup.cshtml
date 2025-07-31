@@ -13,7 +13,7 @@
 <div id="chat-popup" class="position-fixed bottom-0 end-0 m-4" style="z-index:10000;width:350px;max-width:95vw;display:none;">
     <div id="chat-header" class="bg-primary text-white rounded-top px-3 py-2 d-flex align-items-center justify-content-between">
         <span><i class="fa-solid fa-comments me-2"></i>Hỗ trợ trực tuyến</span>
-        <button id="chat-close" class="btn btn-sm btn-light text-primary rounded-circle"><i class="fa-solid fa-xmark"></i></button>
+        <button id="chat-close" style="background:none;border:none;color:#fff;font-size:1.3rem;">&times;</button>
     </div>
     <div id="chat-body" class="bg-white border border-top-0 rounded-bottom p-3 d-flex flex-column gap-2" style="height:350px;overflow-y:auto;">
         <div id="chat-messages" class="flex-grow-1 overflow-auto mb-2"></div>
@@ -24,6 +24,25 @@
     </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+<style>
+    .product-card {
+        transition: all 0.2s ease;
+    }
+    .product-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+    }
+    .product-card a:hover {
+        text-decoration: none !important;
+    }
+    #chat-body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+    .chat-message-bubble {
+        border-radius: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+</style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 <script>
     const userId = '@userId';

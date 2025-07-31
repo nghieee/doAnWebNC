@@ -105,7 +105,7 @@ namespace web_ban_thuoc.Services
                     var exist = await _context.UserVouchers.Include(uv => uv.Voucher)
                         .AnyAsync(uv => uv.UserId == userId && uv.Voucher.DiscountType == "Percent" && uv.Voucher.PercentValue == 5);
                     if (!exist)
-                    {
+                {
                         string code = await GenerateUniqueVoucherCodeAsync("BAC", 6);
                         var voucher = new Voucher
                         {

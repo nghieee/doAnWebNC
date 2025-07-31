@@ -203,3 +203,27 @@ public class ProductController : Controller
         }
     }
 }
+
+[Route("api/products")]
+[ApiController]
+public class ProductApiController : ControllerBase
+{
+    private readonly LongChauDbContext _context;
+    public ProductApiController(LongChauDbContext context) { _context = context; }
+
+    [HttpGet("{id}")]
+    public IActionResult GetProduct(int id)
+    {
+        var p = _context.Products.FirstOrDefault(x => x.ProductId == id && x.IsActive);
+        if (p == null) return NotFound();
+        return Ok(new {
+            id = p.ProductId,
+            name = p.ProductName,
+            brand = p.Brand,
+            price = p.Price,
+            image = p.ProductImages.FirstOrDefault()?.ImageUrl,
+            uses = p.Uses,
+            targetUsers = p.TargetUsers
+        });
+    }
+}
