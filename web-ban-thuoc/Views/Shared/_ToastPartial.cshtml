@@ -1,0 +1,118 @@
+<!-- Toast notification container -->
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+    <div id="toastContainer"></div>
+</div>
+
+<script>
+    // Hàm hiển thị toast notification
+    function showToast(message, type = 'success') {
+        const toastContainer = document.getElementById('toastContainer');
+        const toastId = 'toast-' + Date.now();
+        
+        let bgClass = 'bg-success';
+        let textClass = 'text-success';
+        let iconClass = 'fas fa-check-circle';
+        let title = 'Thành công';
+        
+        switch(type) {
+            case 'error':
+                bgClass = 'bg-danger';
+                textClass = 'text-danger';
+                iconClass = 'fas fa-exclamation-circle';
+                title = 'Lỗi';
+                break;
+            case 'warning':
+                bgClass = 'bg-warning';
+                textClass = 'text-warning';
+                iconClass = 'fas fa-exclamation-triangle';
+                title = 'Cảnh báo';
+                break;
+            case 'info':
+                bgClass = 'bg-info';
+                textClass = 'text-info';
+                iconClass = 'fas fa-info-circle';
+                title = 'Thông tin';
+                break;
+        }
+        
+        const toastHtml = `
+            <div class="toast show border-0 shadow-sm" id="${toastId}" role="alert" aria-live="assertive" aria-atomic="true" style="min-width: 300px; max-width: 400px;">
+                <div class="toast-header bg-white border-bottom">
+                    <i class="${iconClass} ${textClass} me-2"></i>
+                    <strong class="me-auto">${title}</strong>
+                    <button type="button" class="btn-close" onclick="closeToast('${toastId}')" aria-label="Close"></button>
+                </div>
+                <div class="toast-body bg-white">
+                    ${message}
+                </div>
+            </div>
+        `;
+        
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+        
+        // Tự động ẩn sau 4 giây
+        setTimeout(() => {
+            closeToast(toastId);
+        }, 4000);
+    }
+
+    function closeToast(toastId) {
+        const toast = document.getElementById(toastId);
+        if (toast) {
+            toast.remove();
+        }
+    }
+
+    // Function để chuyển đổi alert cũ thành toast
+    function convertOldAlerts() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            const message = alert.textContent.trim();
+            let type = 'success';
+            
+            if (alert.classList.contains('alert-danger')) {
+                type = 'error';
+            } else if (alert.classList.contains('alert-warning')) {
+                type = 'warning';
+            } else if (alert.classList.contains('alert-info')) {
+                type = 'info';
+            }
+            
+            showToast(message, type);
+        });
+    }
+
+    // Hiển thị toast từ TempData nếu có
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <text>
+        showToast('@Html.Raw(TempData["SuccessMessage"])', 'success');
+        </text>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <text>
+        showToast('@Html.Raw(TempData["ErrorMessage"])', 'error');
+        </text>
+    }
+
+    @if (TempData["WarningMessage"] != null)
+    {
+        <text>
+        showToast('@Html.Raw(TempData["WarningMessage"])', 'warning');
+        </text>
+    }
+
+    @if (TempData["InfoMessage"] != null)
+    {
+        <text>
+        showToast('@Html.Raw(TempData["InfoMessage"])', 'info');
+        </text>
+    }
+
+    // Chuyển đổi alert cũ khi trang load
+    document.addEventListener('DOMContentLoaded', function() {
+        convertOldAlerts();
+    });
+</script> 

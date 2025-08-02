@@ -24,6 +24,7 @@ public class LongChauDbContext : IdentityDbContext
     public DbSet<UserRankInfo> UserRankInfos { get; set; }
     public DbSet<Voucher> Vouchers { get; set; }
     public DbSet<UserVoucher> UserVouchers { get; set; }
+    public DbSet<Banner> Banners { get; set; }
     // ... các DbSet khác nếu có
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

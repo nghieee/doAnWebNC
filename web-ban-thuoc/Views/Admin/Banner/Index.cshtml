@@ -1,0 +1,143 @@
+@model IEnumerable<web_ban_thuoc.Models.Banner>
+
+@{
+    ViewData["Title"] = "Quản lý Banner";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+
+<div class="container-fluid py-3">
+    <!-- Header với nút thêm banner -->
+    <div class="d-flex justify-content-end align-items-center mb-4">
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Create", "AdminBanner")" class="btn btn-primary btn-lg d-flex align-items-center gap-2">
+                <i class="fa fa-plus"></i> Thêm Banner
+            </a>
+        </div>
+    </div>
+
+    <!-- Bảng banner -->
+    <div class="table-responsive">
+        <table class="table table-hover align-middle table-bordered bg-white shadow-sm overflow-hidden" style="min-width: 1000px;">
+            <thead class="table-light sticky-top">
+                <tr style="height: 56px;">
+                    <th class="text-center" style="width: 60px;">ID</th>
+                    <th class="text-center" style="width: 120px;">Ảnh</th>
+                    <th style="min-width: 200px;">Tiêu đề</th>
+                    <th class="text-center" style="width: 120px;">Loại</th>
+                    <th style="min-width: 200px;">Mô tả</th>
+                    <th class="text-center" style="width: 150px;">Link</th>
+                    <th class="text-center" style="width: 100px;">Thứ tự</th>
+                    <th class="text-center" style="width: 120px;">Trạng thái</th>
+                    <th class="text-center" style="width: 160px;">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <div class="d-flex flex-column align-items-center">
+                                <i class="fas fa-images fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Chưa có banner nào</h5>
+                                <p class="text-muted mb-3">Hãy tạo banner đầu tiên để hiển thị trên trang web</p>
+                                <a href="@Url.Action("Create", "AdminBanner")" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Tạo Banner đầu tiên
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr style="height: 88px; vertical-align: middle;" class="table-row-hover">
+                            <td class="fw-bold text-secondary text-center">@item.BannerId</td>
+                            <td class="text-center">
+                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                {
+                                    <img src="@item.ImageUrl" alt="@item.Title" class="rounded-3 border shadow-sm" style="width: 80px; height: 60px; object-fit: cover; background: #f4f6fb;" />
+                                }
+                                else
+                                {
+                                    <div class="d-flex align-items-center justify-content-center" style="width: 80px; height: 60px; background: #f4f6fb; border-radius: 0.5rem;">
+                                        <i class="fas fa-image text-muted"></i>
+                                    </div>
+                                }
+                            </td>
+                            <td class="fw-semibold text-wrap">@item.Title</td>
+                            <td class="text-center">
+                                @if (!string.IsNullOrEmpty(item.BannerType))
+                                {
+                                    @switch (item.BannerType)
+                                    {
+                                        case "FullWidth":
+                                            <span class="badge bg-primary px-3 py-2 fs-6">Full Width</span>
+                                            break;
+                                        case "Main":
+                                            <span class="badge bg-success px-3 py-2 fs-6">Main</span>
+                                            break;
+                                        case "Side":
+                                            <span class="badge bg-info px-3 py-2 fs-6">Side</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary px-3 py-2 fs-6">@item.BannerType</span>
+                                            break;
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa chọn</span>
+                                }
+                            </td>
+                            <td class="text-wrap">
+                                @if (!string.IsNullOrEmpty(item.Description))
+                                {
+                                    <span title="@item.Description">@(item.Description.Length > 50 ? item.Description.Substring(0, 50) + "..." : item.Description)</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không có mô tả</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (!string.IsNullOrEmpty(item.LinkUrl))
+                                {
+                                    <a href="@item.LinkUrl" target="_blank" class="text-primary text-decoration-none" title="@item.LinkUrl">
+                                        <i class="fas fa-external-link-alt me-1"></i>
+                                        @(item.LinkUrl.Length > 30 ? item.LinkUrl.Substring(0, 30) + "..." : item.LinkUrl)
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không có link</span>
+                                }
+                            </td>
+                            <td class="text-center fw-bold">@item.SortOrder</td>
+                            <td class="text-center">
+                                @if (item.IsActive)
+                                {
+                                    <span class="badge bg-success-subtle text-success px-3 py-2 fs-6">Hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-subtle text-secondary px-3 py-2 fs-6">Không hoạt động</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <a href="@Url.Action("Edit", "AdminBanner", new { id = item.BannerId })" class="btn btn-warning btn-sm" title="Chỉnh sửa">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="@Url.Action("Delete", "AdminBanner", new { id = item.BannerId })" class="btn btn-danger btn-sm" title="Xóa">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div> 

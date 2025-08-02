@@ -4,7 +4,6 @@
     Layout = "~/Views/Admin/_Layout.cshtml";
 }
 <div class="container-fluid py-4">
-    <h3 class="mb-4 fw-bold"><i class="fa-solid fa-ticket-alt me-2"></i>Quản lý Voucher</h3>
     <div class="card shadow-sm border-0 rounded-4">
         <div class="card-body">
             <div class="mb-3 d-flex justify-content-between align-items-center">
@@ -228,14 +227,16 @@ $('#addVoucherForm').on('submit', function(e) {
     contentType: false,
     success: function(res) {
       if (res.success) {
-        alert('Tạo voucher thành công!');
-        location.reload();
+        showToast('Tạo voucher thành công!', 'success');
+        setTimeout(function() {
+          location.reload();
+        }, 1500);
       } else {
-        alert(res.message || 'Có lỗi xảy ra!');
+        showToast(res.message || 'Có lỗi xảy ra!', 'error');
       }
     },
     error: function() {
-      alert('Có lỗi xảy ra khi gửi dữ liệu!');
+      showToast('Có lỗi xảy ra khi gửi dữ liệu!', 'error');
     }
   });
 });
@@ -244,10 +245,12 @@ $(document).on('click', '.btn-delete-voucher', function() {
     if (confirm('Bạn có chắc chắn muốn xóa voucher này?')) {
         $.post('/AdminHome/DeleteVoucher', { code: code }, function(res) {
             if (res.success) {
-                alert('Đã xóa voucher!');
-                location.reload();
+                showToast('Đã xóa voucher!', 'success');
+                setTimeout(function() {
+                    location.reload();
+                }, 1500);
             } else {
-                alert(res.message || 'Xóa voucher thất bại!');
+                showToast(res.message || 'Xóa voucher thất bại!', 'error');
             }
         });
     }

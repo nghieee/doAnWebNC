@@ -18,6 +18,11 @@ public class HomeController : Controller
     {
         var viewModel = new HomeViewModel
         {
+            Banners = _context.Banners
+                .Where(b => b.IsActive)
+                .OrderBy(b => b.SortOrder)
+                .ThenBy(b => b.CreatedAt)
+                .ToList(),
             FeaturedCategories = _context.Categories
                 .Where(c => c.IsFeature && c.ParentCategoryId != null && c.CategoryLevel == 2.ToString())
                 .OrderBy(c => c.CategoryName)
