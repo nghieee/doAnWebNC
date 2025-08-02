@@ -19,6 +19,10 @@ public class ProfileViewModel
     
     // Thêm thuộc tính cho lịch sử đơn hàng
     public List<OrderHistoryViewModel> Orders { get; set; } = new List<OrderHistoryViewModel>();
+    public decimal TotalSpent { get; set; }
+    public decimal TotalSpent6Months { get; set; }
+    public string Rank { get; set; } = string.Empty;
+    public List<VoucherViewModel> Vouchers { get; set; } = new();
 }
 
 // ViewModel cho lịch sử đơn hàng
@@ -44,4 +48,18 @@ public class OrderItemViewModel
     public int Quantity { get; set; }
     public decimal Price { get; set; }
     public decimal TotalPrice => Price * Quantity;
+} 
+
+public class VoucherViewModel
+{
+    public string Code { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public DateTime ExpiryDate { get; set; }
+    public bool IsUsed { get; set; }
+    public bool IsExpired => ExpiryDate < DateTime.Now;
+    public string DiscountType { get; set; } = "FullOrder"; // FullOrder, Category
+    public decimal? PercentValue { get; set; }
+    public decimal? DiscountAmount { get; set; }
+    public string? CategoryName { get; set; }
+    public string? Detail { get; set; }
 } 

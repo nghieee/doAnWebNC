@@ -38,6 +38,9 @@ builder.Services.AddControllersWithViews(options =>
 
 // Thêm vào trước builder.Build()
 builder.Services.AddSession();
+builder.Services.AddSignalR();
+builder.Services.AddScoped<UserRankService>();
+builder.Services.AddHostedService<MonthlyVoucherHostedService>();
 
 var app = builder.Build();
 
@@ -107,6 +110,8 @@ app.UseEndpoints(endpoints =>
     endpoints.MapControllerRoute(
         name: "default",
         pattern: "{controller=Home}/{action=Index}/{id?}");
+    // Endpoint cho SignalR ChatHub
+    endpoints.MapHub<web_ban_thuoc.ChatHub>("/chathub");
 });
 
 // Thêm route cho Identity UI

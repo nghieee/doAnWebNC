@@ -18,14 +18,16 @@ public class AuthController : Controller
         private readonly ILogger<AuthController> _logger;
         private readonly IEmailSender _emailSender;
         private readonly LongChauDbContext _context;
+        private readonly UserRankService _userRankService;
 
-        public AuthController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, ILogger<AuthController> logger, IEmailSender emailSender, LongChauDbContext context)
+        public AuthController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, ILogger<AuthController> logger, IEmailSender emailSender, LongChauDbContext context, UserRankService userRankService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
             _context = context;
+            _userRankService = userRankService;
         }
 
         [HttpGet]
@@ -201,7 +203,9 @@ public class AuthController : Controller
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return RedirectToAction("Index", "Auth");
-            
+            // Cập nhật rank và tổng chi tiêu trước khi lấy info
+            await _userRankService.UpdateUserRankAndSendMailAsync(user.Id);
+
             // Lấy lịch sử đơn hàng của user (loại trừ giỏ hàng - Status = "Cart")
             var orders = await _context.Orders
                 .Where(o => o.UserId == user.Id && o.Status != "Cart")
@@ -232,14 +236,38 @@ public class AuthController : Controller
                 }).ToList()
             }).ToList();
 
-            var vm = new ProfileViewModel
+            // Lấy thông tin rank
+            var rankInfo = await _context.UserRankInfos.FindAsync(user.Id);
+            
+            // Lấy danh sách voucher
+            var vouchers = await _context.UserVouchers
+                .Where(uv => uv.UserId == user.Id)
+                .Include(uv => uv.Voucher)
+                .Select(uv => new VoucherViewModel
+                {
+                    Code = uv.Voucher.Code,
+                    Description = uv.Voucher.Description,
+                    ExpiryDate = uv.Voucher.ExpiryDate,
+                    IsUsed = uv.IsUsed,
+                    DiscountType = uv.Voucher.DiscountType,
+                    PercentValue = uv.Voucher.PercentValue,
+                    DiscountAmount = uv.Voucher.DiscountAmount,
+                    CategoryName = uv.Voucher.CategoryName,
+                    Detail = uv.Voucher.Detail
+                }).ToListAsync();
+
+            var model = new ProfileViewModel
             {
-                UserName = user.UserName,
-                Email = user.Email,
-                PhoneNumber = user.PhoneNumber,
-                Orders = orderViewModels
+                UserName = user.UserName ?? "",
+                Email = user.Email ?? "",
+                PhoneNumber = user.PhoneNumber ?? "",
+                Orders = orderViewModels,
+                TotalSpent = rankInfo?.TotalSpent ?? 0,
+                TotalSpent6Months = rankInfo?.TotalSpent6Months ?? 0,
+                Rank = rankInfo?.Rank ?? "Bạc",
+                Vouchers = vouchers
             };
-            return View("~/Views/Auth/Profile.cshtml", vm);
+            return View("~/Views/Auth/Profile.cshtml", model);
         }
 
         [HttpPost]

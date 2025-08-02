@@ -1,0 +1,201 @@
+@model List<web_ban_thuoc.Models.UserAdminViewModel>
+@{
+    ViewData["Title"] = "Quản lý User";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+
+<div class="container-fluid py-3">
+    <!-- Form filter -->
+    <form method="get" class="row g-3 align-items-end mb-4 bg-white shadow-sm rounded-4 px-4 py-3">
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Tìm kiếm</label>
+            <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" 
+                   class="form-control" placeholder="Tìm kiếm username, email, phone...">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Trạng thái</label>
+            <select name="statusFilter" class="form-select">
+                <option value="">Tất cả trạng thái</option>
+                <option value="active" selected="@(ViewBag.StatusFilter == "active")">Hoạt động</option>
+                <option value="locked" selected="@(ViewBag.StatusFilter == "locked")">Đã khóa</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Xếp hạng</label>
+            <select name="rankFilter" class="form-select">
+                <option value="">Tất cả xếp hạng</option>
+                <option value="Bạc" selected="@(ViewBag.RankFilter == "Bạc")">Bạc</option>
+                <option value="Vàng" selected="@(ViewBag.RankFilter == "Vàng")">Vàng</option>
+                <option value="Bạch kim" selected="@(ViewBag.RankFilter == "Bạch kim")">Bạch kim</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2 align-items-end">
+            <button type="submit" class="btn btn-primary">
+                <i class="fa fa-filter me-1"></i> Lọc
+            </button>
+            <a href="@Url.Action("Index", "AdminUser")" class="btn btn-outline-secondary">Xóa bộ lọc</a>
+        </div>
+    </form>
+
+    <!-- Header với nút xuất Excel -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-muted">Tổng: @Model.Count user</span>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Export", "AdminUser")" class="btn btn-success btn-lg d-flex align-items-center gap-2">
+                <i class="fas fa-download"></i> Xuất Excel
+            </a>
+        </div>
+    </div>
+
+    <!-- Bảng danh sách -->
+    <div class="table-responsive">
+        <table class="table table-hover align-middle table-bordered bg-white shadow-sm overflow-hidden" style="min-width: 1200px;">
+            <thead class="table-light sticky-top">
+                <tr style="height: 56px;">
+                    <th class="text-center" style="width: 50px;">#</th>
+                    <th class="text-center" style="width: 80px;">Avatar</th>
+                    <th style="min-width: 200px;">Thông tin cơ bản</th>
+                    <th class="text-center" style="width: 120px;">Trạng thái</th>
+                    <th class="text-center" style="width: 120px;">Xếp hạng</th>
+                    <th class="text-center" style="width: 150px;">Thống kê</th>
+                    <th class="text-center" style="width: 120px;">Đơn hàng cuối</th>
+                    <th class="text-center" style="width: 150px;">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fas fa-users fa-3x mb-3"></i>
+                                <h6>Không có user nào</h6>
+                                <p class="mb-0">Không tìm thấy user nào phù hợp với bộ lọc</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        var user = Model[i];
+                        <tr style="height: 88px; vertical-align: middle;" class="table-row-hover">
+                            <td class="text-center fw-bold text-secondary">@(i + 1)</td>
+                            <td class="text-center">
+                                <img src="https://nhathuoclongchau.com.vn/estore-images/profile/v2/avatar-profile-large.svg" 
+                                     style="width: 48px; height: 48px;" 
+                                     class="rounded-circle bg-light border shadow-sm" 
+                                     alt="avatar">
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-wrap">@user.UserName</div>
+                                <div class="small text-muted">@user.Email</div>
+                                <div class="small text-muted">@user.PhoneNumber</div>
+                                <div class="small text-muted">Tạo: @user.CreatedDate.ToString("dd/MM/yyyy")</div>
+                            </td>
+                            <td class="text-center">
+                                @if (user.IsLocked)
+                                {
+                                    <span class="badge bg-danger px-3 py-2 fs-6">
+                                        <i class="fas fa-lock me-1"></i>Đã khóa
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success px-3 py-2 fs-6">
+                                        <i class="fas fa-check-circle me-1"></i>Hoạt động
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @{
+                                    var rankClass = user.Rank switch
+                                    {
+                                        "Bạc" => "bg-secondary",
+                                        "Vàng" => "bg-warning",
+                                        "Bạch kim" => "bg-info",
+                                        _ => "bg-light text-dark"
+                                    };
+                                }
+                                <span class="badge @rankClass px-3 py-2 fs-6">@user.Rank</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="small">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>Tổng:</span>
+                                        <span class="fw-semibold text-primary">@user.TotalSpent.ToString("N0")đ</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>6 tháng:</span>
+                                        <span class="fw-semibold text-warning">@user.TotalSpent6Months.ToString("N0")đ</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Đơn hàng:</span>
+                                        <span class="fw-semibold text-info">@user.OrderCount</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                @if (user.LastOrderDate.HasValue)
+                                {
+                                    <span class="small text-muted">@user.LastOrderDate.Value.ToString("dd/MM/yyyy")</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa có đơn</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex gap-1 justify-content-center">
+                                    <a href="@Url.Action("Details", "AdminUser", new { id = user.Id })" 
+                                       class="btn btn-sm btn-info" title="Xem chi tiết">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm @(user.IsLocked ? "btn-success" : "btn-warning") toggle-lock-btn" 
+                                            data-user-id="@user.Id" title="@(user.IsLocked ? "Mở khóa" : "Khóa tài khoản")">
+                                        <i class="fas @(user.IsLocked ? "fa-unlock" : "fa-lock")"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+$(document).ready(function() {
+    // Toggle lock/unlock user
+    $('.toggle-lock-btn').on('click', function() {
+        var userId = $(this).data('user-id');
+        var isLocked = $(this).hasClass('btn-success');
+        var action = isLocked ? 'mở khóa' : 'khóa';
+        
+        if (confirm('Bạn có chắc chắn muốn ' + action + ' tài khoản này?')) {
+            $.post('@Url.Action("ToggleLock", "AdminUser")/' + userId, {
+                __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+            })
+            .done(function(res) {
+                if (res.success) {
+                    showToast('Đã ' + action + ' tài khoản thành công!', 'success');
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showToast(res.message || 'Có lỗi xảy ra!', 'error');
+                }
+            })
+            .fail(function() {
+                showToast('Có lỗi xảy ra khi gửi yêu cầu!', 'error');
+            });
+        }
+    });
+});
+</script>
+} 

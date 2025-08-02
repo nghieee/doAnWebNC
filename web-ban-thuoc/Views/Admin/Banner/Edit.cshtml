@@ -1,0 +1,89 @@
+@model web_ban_thuoc.Models.Banner
+
+@{
+    ViewData["Title"] = "Chỉnh sửa Banner";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+
+<div class="container-fluid py-3">
+    <h2 class="mb-4 text-primary fw-bold"><i class="fa fa-edit"></i> Chỉnh sửa banner</h2>
+    
+    <form asp-action="Edit" method="post" enctype="multipart/form-data" class="row g-4 bg-white shadow-sm rounded-4 p-4">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="BannerId" />
+        <input type="hidden" asp-for="CreatedAt" />
+        
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Tiêu đề banner</label>
+            <input asp-for="Title" class="form-control" placeholder="Nhập tiêu đề banner" required />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+        
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Loại banner</label>
+            <select asp-for="BannerType" class="form-select" required>
+                <option value="">Chọn loại banner</option>
+                <option value="FullWidth">Full Width (Toàn màn hình)</option>
+                <option value="Main">Main (Slider chính)</option>
+                <option value="Side">Side (Banner bên phải)</option>
+            </select>
+            <span asp-validation-for="BannerType" class="text-danger"></span>
+        </div>
+        
+        <div class="col-md-12">
+            <label class="form-label fw-semibold">Mô tả</label>
+            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Nhập mô tả banner (không bắt buộc)"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+        
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Link</label>
+            <input asp-for="LinkUrl" class="form-control" placeholder="https://example.com" />
+            <span asp-validation-for="LinkUrl" class="text-danger"></span>
+            <div class="form-text">Link khi click vào banner (không bắt buộc)</div>
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Thứ tự hiển thị</label>
+            <input asp-for="SortOrder" class="form-control" type="number" min="0" />
+            <span asp-validation-for="SortOrder" class="text-danger"></span>
+            <div class="form-text">Số càng nhỏ hiển thị càng trước</div>
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Trạng thái</label>
+            <select asp-for="IsActive" class="form-select">
+                <option value="true">Hoạt động</option>
+                <option value="false">Không hoạt động</option>
+            </select>
+        </div>
+        
+        <div class="col-md-12">
+            <label class="form-label fw-semibold">Ảnh banner hiện tại</label>
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+                <div class="mb-3">
+                    <img src="@Model.ImageUrl" alt="@Model.Title" class="rounded-3 border shadow-sm" style="max-width: 300px; max-height: 200px; object-fit: cover;" />
+                </div>
+            }
+            <label class="form-label fw-semibold">Thay đổi ảnh (không bắt buộc)</label>
+            <input type="file" name="imageFile" class="form-control" accept="image/*" />
+            <div class="form-text">Chọn ảnh mới nếu muốn thay đổi (JPG, PNG, GIF) - Kích thước tối đa 5MB</div>
+        </div>
+        
+        <div class="col-12">
+            <div class="d-flex gap-3">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-save me-2"></i>Lưu thay đổi
+                </button>
+                <a href="@Url.Action("Index", "AdminBanner")" class="btn btn-secondary btn-lg">
+                    Quay lại
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 

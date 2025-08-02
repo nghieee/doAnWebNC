@@ -138,9 +138,12 @@
                         <i class="fa-solid fa-angles-left"></i>
                     </span>
                 </div>
+                
+                @await Component.InvokeAsync("AdminNotification")
+                
                 <ul class="nav nav-pills flex-column mb-auto">
                     <li class="nav-item">
-                        <a href="/admin" class="nav-link @(Context.Request.Path == "/admin" ? "active" : "")">
+                        <a href="/admin" class="nav-link @(Context.Request.Path == "/admin" || Context.Request.Path == "/admin/index" ? "active" : "")">
                             <i class="fa-solid fa-gauge"></i>
                             <span class="sidebar-text">Dashboard</span>
                         </a>
@@ -158,15 +161,38 @@
                         </a>
                     </li>
                     <li>
-                        <a href="/AdminOrder" class="nav-link @(Context.Request.Path.StartsWithSegments("/Admin/Order") ? "active" : "")">
+                        <a href="/AdminOrder" class="nav-link @(Context.Request.Path.StartsWithSegments("/Admin/Order") ? "active" : "") position-relative">
                             <i class="fa-solid fa-cart-shopping"></i>
                             <span class="sidebar-text">Đơn hàng</span>
+                            <span id="pendingOrdersBadge" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="display: none;">
+                                <span class="visually-hidden">Đơn hàng mới</span>
+                            </span>
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="nav-link">
+                        <a href="/Admin/Voucher" class="nav-link @(Context.Request.Path.StartsWithSegments("/Admin/Voucher") ? "active" : "")">
+                            <i class="fa-solid fa-ticket-alt"></i>
+                            <span class="sidebar-text">Voucher</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/AdminBanner" class="nav-link @(Context.Request.Path.StartsWithSegments("/AdminBanner") ? "active" : "")">
+                            <i class="fa-solid fa-images"></i>
+                            <span class="sidebar-text">Banner</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/AdminUser" class="nav-link @(Context.Request.Path.StartsWithSegments("/AdminUser") ? "active" : "")">
                             <i class="fa-solid fa-users"></i>
                             <span class="sidebar-text">Người dùng</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" style="position:relative;">
+                        <a class="nav-link position-relative" href="/admin/chat">
+                            <i class="fa-regular fa-message me-1"></i> Tin nhắn
+                            <span id="unreadMessagesBadge" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="display: none;">
+                                <span class="visually-hidden">Tin nhắn mới</span>
+                            </span>
                         </a>
                     </li>
                 </ul>
@@ -209,6 +235,10 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
+    
+    <!-- Toast Component -->
+    @await Html.PartialAsync("_ToastPartial")
+    
     <script>
         function toggleSidebar() {
             var sidebar = document.getElementById('adminSidebar');
@@ -222,7 +252,41 @@
                 icon.classList.add('fa-angles-left');
             }
         }
+
+        // Cập nhật notification badges
+        function updateNotificationBadges() {
+            const pendingOrdersBadge = document.getElementById('pendingOrdersBadge');
+            const unreadMessagesBadge = document.getElementById('unreadMessagesBadge');
+
+            if (pendingOrdersBadge) {
+                if (window.pendingOrders > 0) {
+                    pendingOrdersBadge.style.display = 'block';
+                } else {
+                    pendingOrdersBadge.style.display = 'none';
+                }
+            }
+
+            if (unreadMessagesBadge) {
+                if (window.unreadMessages > 0) {
+                    unreadMessagesBadge.style.display = 'block';
+                } else {
+                    unreadMessagesBadge.style.display = 'none';
+                }
+            }
+        }
+
+        // Cập nhật badges khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateNotificationBadges();
+        });
+
+        // Cập nhật badges mỗi 30 giây
+        setInterval(function() {
+            // Có thể thêm AJAX call để lấy dữ liệu mới nhất
+            updateNotificationBadges();
+        }, 30000);
     </script>
     @RenderSection("Scripts", required: false)
+    
 </body>
 </html> 

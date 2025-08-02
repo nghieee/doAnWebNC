@@ -94,6 +94,38 @@ namespace web_ban_thuoc.Controllers.Admin
                     }
                 }
 
+                // Khi chuyển sang 'Đã giao', cập nhật SoldQuantity cho từng sản phẩm
+                if (order.Status == "Đã giao")
+                {
+                    // Lấy lại OrderItems nếu chưa có
+                    var orderItems = await _context.OrderItems.Where(oi => oi.OrderId == order.OrderId).ToListAsync();
+                    foreach (var item in orderItems)
+                    {
+                        var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == item.ProductId);
+                        if (product != null)
+                        {
+                            product.SoldQuantity = (product.SoldQuantity ?? 0) + item.Quantity;
+                        }
+                    }
+                }
+
+                // Nếu chuyển sang 'Đã hủy', giảm UsedCount nếu đơn có sử dụng voucher
+                if (newStatus == "Đã hủy" && !string.IsNullOrEmpty(order.VoucherCode))
+                {
+                    var voucher = await _context.Vouchers.FirstOrDefaultAsync(v => v.Code == order.VoucherCode);
+                    if (voucher != null && voucher.UsedCount > 0)
+                    {
+                        voucher.UsedCount--;
+                    }
+                    // Nếu có UserVoucher thì mở lại IsUsed = false
+                    var userVoucher = await _context.UserVouchers.Include(uv => uv.Voucher)
+                        .FirstOrDefaultAsync(uv => uv.UserId == order.UserId && uv.Voucher.Code == order.VoucherCode && uv.IsUsed);
+                    if (userVoucher != null)
+                    {
+                        userVoucher.IsUsed = false;
+                    }
+                }
+
                 await _context.SaveChangesAsync();
                 return Json(new { success = true, message = "Đã cập nhật trạng thái đơn hàng!" });
             }

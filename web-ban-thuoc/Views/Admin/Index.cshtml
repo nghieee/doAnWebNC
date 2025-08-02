@@ -1,7 +1,106 @@
 @{
     Layout = "~/Views/Admin/_Layout.cshtml";
-    ViewData["Title"] = "Admin Dashboard";
+    ViewData["Title"] = "Dashboard";
 }
-
-<h2>Chào mừng đến trang quản trị Admin!</h2>
-<p>Đây là dashboard quản trị. Bạn có thể quản lý sản phẩm, danh mục, đơn hàng, người dùng, v.v. tại đây.</p> 
+<div class="container py-4">
+    <div class="mb-3">
+        <a href="/admin/exportreport" class="btn btn-success"><i class="fa-solid fa-file-arrow-down me-1"></i> Xuất báo cáo doanh thu</a>
+    </div>
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="fs-2 fw-bold text-primary">@ViewBag.TotalOrders</div>
+                    <div class="text-muted">Tổng số đơn hàng</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="fs-2 fw-bold text-success">@String.Format("{0:N0}", ViewBag.TotalRevenue) đ</div>
+                    <div class="text-muted">Tổng doanh thu</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="fs-2 fw-bold text-warning">@ViewBag.PendingOrders</div>
+                    <div class="text-muted">Đơn chờ xác nhận</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="fs-2 fw-bold text-info">@ViewBag.TotalProducts</div>
+                    <div class="text-muted">Sản phẩm đang kinh doanh</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="fs-2 fw-bold text-secondary">@ViewBag.TotalCustomers</div>
+                    <div class="text-muted">Khách hàng đã đăng ký</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="fs-2 fw-bold text-primary">@ViewBag.TodayOrders</div>
+                    <div class="text-muted">Đơn hàng hôm nay</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="fs-2 fw-bold text-success">@String.Format("{0:N0}", ViewBag.TodayRevenue) đ</div>
+                    <div class="text-muted">Doanh thu hôm nay</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3"><i class="fa-solid fa-chart-column me-2"></i>Biểu đồ doanh thu theo tháng (@ViewBag.ChartYear)</h5>
+            <canvas id="revenueChart" height="80"></canvas>
+        </div>
+    </div>
+</div>
+<style>
+    .card .fs-2 { font-size: 2.2rem !important; }
+</style>
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const monthlyRevenue = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.MonthlyRevenue ?? new List<decimal>()));
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'],
+            datasets: [{
+                label: 'Doanh thu (VNĐ)',
+                data: monthlyRevenue,
+                backgroundColor: 'rgba(25, 118, 210, 0.6)',
+                borderColor: 'rgba(25, 118, 210, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => ctx.parsed.y.toLocaleString() + ' đ' } }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString() + ' đ' } }
+            }
+        }
+    });
+</script>
+} 
