@@ -1,0 +1,268 @@
+@model web_ban_thuoc.Models.UserDetailViewModel
+@{
+    ViewData["Title"] = "Chi tiết User";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+
+<div class="container-fluid py-3">
+    <!-- Header với nút quay lại -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <a href="@Url.Action("Index", "AdminUser")" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </a>
+            <h4 class="mb-0 fw-semibold text-primary">
+                <i class="fas fa-user me-2"></i>Chi tiết User
+            </h4>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Thông tin cơ bản -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-semibold text-primary">
+                        <i class="fas fa-user me-2"></i>Thông tin User
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <img src="https://nhathuoclongchau.com.vn/estore-images/profile/v2/avatar-profile-large.svg" 
+                             style="width: 80px; height: 80px;" 
+                             class="mb-3 rounded-circle bg-light border" 
+                             alt="avatar">
+                        <h5 class="fw-semibold mb-1">@Model.UserName</h5>
+                        <p class="text-muted mb-0">@Model.Email</p>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3">
+                                <span class="fw-semibold">Trạng thái:</span>
+                                @if (Model.IsLocked)
+                                {
+                                    <span class="badge bg-danger px-3 py-2">
+                                        <i class="fas fa-lock me-1"></i>Đã khóa
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success px-3 py-2">
+                                        <i class="fas fa-check-circle me-1"></i>Hoạt động
+                                    </span>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3">
+                                <span class="fw-semibold">Xếp hạng:</span>
+                                @{
+                                    var rankClass = Model.Rank switch
+                                    {
+                                        "Bạc" => "bg-secondary",
+                                        "Vàng" => "bg-warning",
+                                        "Bạch kim" => "bg-info",
+                                        _ => "bg-light text-dark"
+                                    };
+                                }
+                                <span class="badge @rankClass px-3 py-2">@Model.Rank</span>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="p-3 bg-light rounded-3">
+                                <h6 class="fw-semibold mb-3">Thông tin liên hệ</h6>
+                                <div class="row g-2">
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Email:</span>
+                                            <span class="fw-semibold">@Model.Email</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Số điện thoại:</span>
+                                            <span class="fw-semibold">@Model.PhoneNumber</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Ngày tạo:</span>
+                                            <span class="fw-semibold">@Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="p-3 bg-light rounded-3">
+                                <h6 class="fw-semibold mb-3">Thống kê chi tiêu</h6>
+                                <div class="row g-2">
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Tổng chi tiêu:</span>
+                                            <span class="fw-semibold text-primary">@Model.TotalSpent.ToString("N0")đ</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">6 tháng gần đây:</span>
+                                            <span class="fw-semibold text-warning">@Model.TotalSpent6Months.ToString("N0")đ</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Tổng đơn hàng:</span>
+                                            <span class="fw-semibold text-info">@Model.TotalOrders</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Tổng chi tiêu tất cả:</span>
+                                            <span class="fw-semibold text-success">@Model.TotalSpentAllTime.ToString("N0")đ</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (Model.LastRankReset.HasValue)
+                        {
+                            <div class="col-12">
+                                <div class="p-3 bg-light rounded-3">
+                                    <h6 class="fw-semibold mb-3">Thông tin Rank</h6>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">Lần reset cuối:</span>
+                                        <span class="fw-semibold">@Model.LastRankReset.Value.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="button" class="btn @(Model.IsLocked ? "btn-success" : "btn-warning") w-100 toggle-lock-btn" 
+                                data-user-id="@Model.Id">
+                            <i class="fas @(Model.IsLocked ? "fa-unlock" : "fa-lock") me-2"></i>
+                            @(Model.IsLocked ? "Mở khóa" : "Khóa tài khoản")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lịch sử đơn hàng -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-semibold text-primary">
+                        <i class="fas fa-shopping-cart me-2"></i>Lịch sử đơn hàng (@Model.Orders.Count)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (!Model.Orders.Any())
+                    {
+                        <div class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fas fa-shopping-cart fa-3x mb-3"></i>
+                                <h6>Chưa có đơn hàng nào</h6>
+                                <p class="mb-0">User này chưa đặt đơn hàng nào</p>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Mã đơn</th>
+                                        <th>Ngày đặt</th>
+                                        <th>Tổng tiền</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thanh toán</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var order in Model.Orders)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <span class="fw-semibold">#@order.OrderId</span>
+                                            </td>
+                                            <td>
+                                                <span class="small text-muted">@(order.OrderDate?.ToString("dd/MM/yyyy") ?? "N/A")</span>
+                                            </td>
+                                            <td>
+                                                <span class="fw-semibold text-primary">@order.TotalAmount?.ToString("N0")đ</span>
+                                            </td>
+                                            <td>
+                                                @{
+                                                    var statusClass = order.Status switch
+                                                    {
+                                                        "Chờ xác nhận" => "bg-warning text-dark",
+                                                        "Đã xác nhận" => "bg-info text-white",
+                                                        "Đang giao" => "bg-primary text-white",
+                                                        "Đã giao" => "bg-success text-white",
+                                                        "Đã hủy" => "bg-danger text-white",
+                                                        _ => "bg-secondary text-white"
+                                                    };
+                                                }
+                                                <span class="badge @statusClass">@order.Status</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary">@order.PaymentStatus</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        @if (Model.TotalOrders > 10)
+                        {
+                            <div class="text-center mt-3">
+                                <span class="text-muted">Hiển thị 10 đơn hàng gần nhất trong tổng số @Model.TotalOrders đơn hàng</span>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+$(document).ready(function() {
+    // Toggle lock/unlock user
+    $('.toggle-lock-btn').on('click', function() {
+        var userId = $(this).data('user-id');
+        var isLocked = $(this).hasClass('btn-success');
+        var action = isLocked ? 'mở khóa' : 'khóa';
+        
+        if (confirm('Bạn có chắc chắn muốn ' + action + ' tài khoản này?')) {
+            $.post('@Url.Action("ToggleLock", "AdminUser")/' + userId, {
+                __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+            })
+            .done(function(res) {
+                if (res.success) {
+                    showToast('Đã ' + action + ' tài khoản thành công!', 'success');
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showToast(res.message || 'Có lỗi xảy ra!', 'error');
+                }
+            })
+            .fail(function() {
+                showToast('Có lỗi xảy ra khi gửi yêu cầu!', 'error');
+            });
+        }
+    });
+});
+</script>
+} 

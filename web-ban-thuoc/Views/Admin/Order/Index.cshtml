@@ -144,10 +144,16 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    location.reload();
+                    showToast('Cập nhật trạng thái đơn hàng thành công!', 'success');
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
                 } else {
-                    alert(data.message);
+                    showToast(data.message || 'Có lỗi xảy ra khi cập nhật trạng thái!', 'error');
                 }
+            })
+            .catch(error => {
+                showToast('Có lỗi xảy ra khi gửi yêu cầu!', 'error');
             });
         });
     });

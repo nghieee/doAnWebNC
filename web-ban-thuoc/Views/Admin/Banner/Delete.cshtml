@@ -1,0 +1,149 @@
+@model web_ban_thuoc.Models.Banner
+
+@{
+    ViewData["Title"] = "Xóa Banner";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+
+<div class="container-fluid py-3">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="bg-white shadow-sm rounded-4 p-4">
+                <h5 class="text-danger mb-4">Bạn có chắc chắn muốn xóa banner này?</h5>
+                
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Tiêu đề:</label>
+                        <p class="form-control-plaintext">@Model.Title</p>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Loại banner:</label>
+                        <p class="form-control-plaintext">
+                            @if (!string.IsNullOrEmpty(Model.BannerType))
+                            {
+                                @switch (Model.BannerType)
+                                {
+                                    case "FullWidth":
+                                        <span class="badge bg-primary px-3 py-2 fs-6">Full Width</span>
+                                        break;
+                                    case "Main":
+                                        <span class="badge bg-success px-3 py-2 fs-6">Main</span>
+                                        break;
+                                    case "Side":
+                                        <span class="badge bg-info px-3 py-2 fs-6">Side</span>
+                                        break;
+                                    default:
+                                        <span class="badge bg-secondary px-3 py-2 fs-6">@Model.BannerType</span>
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa chọn</span>
+                            }
+                        </p>
+                    </div>
+                    
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold">Mô tả:</label>
+                        <p class="form-control-plaintext">
+                            @if (!string.IsNullOrEmpty(Model.Description))
+                            {
+                                @Model.Description
+                            }
+                            else
+                            {
+                                <span class="text-muted">Không có mô tả</span>
+                            }
+                        </p>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Link:</label>
+                        <p class="form-control-plaintext">
+                            @if (!string.IsNullOrEmpty(Model.LinkUrl))
+                            {
+                                <a href="@Model.LinkUrl" target="_blank" class="text-primary text-decoration-none">
+                                    <i class="fas fa-external-link-alt me-1"></i>@Model.LinkUrl
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Không có link</span>
+                            }
+                        </p>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Thứ tự:</label>
+                        <p class="form-control-plaintext fw-bold">@Model.SortOrder</p>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Trạng thái:</label>
+                        <p class="form-control-plaintext">
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge bg-success-subtle text-success px-3 py-2 fs-6">Hoạt động</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary-subtle text-secondary px-3 py-2 fs-6">Không hoạt động</span>
+                            }
+                        </p>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Ngày tạo:</label>
+                        <p class="form-control-plaintext">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                    </div>
+                    
+                    @if (Model.UpdatedAt.HasValue)
+                    {
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Ngày cập nhật:</label>
+                            <p class="form-control-plaintext">@Model.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
+                    }
+                </div>
+                
+                <div class="alert alert-warning mt-4">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Cảnh báo:</strong> Hành động này không thể hoàn tác. Banner sẽ bị xóa vĩnh viễn.
+                </div>
+                
+                <form asp-action="Delete" method="post" class="mt-4">
+                    <input type="hidden" asp-for="BannerId" />
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="fas fa-trash me-2"></i>Xác nhận xóa
+                        </button>
+                        <a href="@Url.Action("Index", "AdminBanner")" class="btn btn-secondary btn-lg">
+                            Quay lại
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="bg-white shadow-sm rounded-4 p-4">
+                <h6 class="fw-semibold mb-3">Ảnh banner</h6>
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <img src="@Model.ImageUrl" alt="@Model.Title" class="img-fluid rounded-3 border shadow-sm" />
+                }
+                else
+                {
+                    <div class="d-flex align-items-center justify-content-center" style="height: 200px; background: #f4f6fb; border-radius: 0.5rem;">
+                        <div class="text-center">
+                            <i class="fas fa-image fa-3x text-muted mb-2"></i>
+                            <p class="text-muted">Không có ảnh</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div> 
