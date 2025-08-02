@@ -21,12 +21,48 @@ public class AdminBannerController : Controller
     // GET: AdminBanner
     [Route("")]
     [Route("Index")]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? searchTerm, string? typeFilter, string? statusFilter)
     {
-        var banners = await _context.Banners
+        var query = _context.Banners.AsQueryable();
+
+        // Filter theo search term
+        if (!string.IsNullOrEmpty(searchTerm))
+        {
+            query = query.Where(b => 
+                (b.Title != null && b.Title.Contains(searchTerm)) ||
+                (b.Description != null && b.Description.Contains(searchTerm))
+            );
+        }
+
+        // Filter theo loại banner
+        if (!string.IsNullOrEmpty(typeFilter))
+        {
+            query = query.Where(b => b.BannerType == typeFilter);
+        }
+
+        // Filter theo trạng thái
+        if (!string.IsNullOrEmpty(statusFilter))
+        {
+            if (statusFilter == "active")
+            {
+                query = query.Where(b => b.IsActive);
+            }
+            else if (statusFilter == "inactive")
+            {
+                query = query.Where(b => !b.IsActive);
+            }
+        }
+
+        var banners = await query
             .OrderBy(b => b.SortOrder)
             .ThenBy(b => b.CreatedAt)
             .ToListAsync();
+
+        // Pass filter values to view
+        ViewBag.SearchTerm = searchTerm;
+        ViewBag.TypeFilter = typeFilter;
+        ViewBag.StatusFilter = statusFilter;
+
         return View("~/Views/Admin/Banner/Index.cshtml", banners);
     }
 
@@ -294,6 +330,71 @@ public class AdminBannerController : Controller
             {
                 TempData["ErrorMessage"] = "Không tìm thấy banner để xóa!";
             }
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = "Có lỗi xảy ra khi xóa banner: " + ex.Message;
+        }
+        
+        return RedirectToAction(nameof(Index));
+    }
+
+    // GET: AdminBanner/Details/5
+    [Route("Details/{id}")]
+    public async Task<IActionResult> Details(int? id)
+    {
+        if (id == null)
+        {
+            return NotFound();
+        }
+
+        var banner = await _context.Banners
+            .FirstOrDefaultAsync(m => m.BannerId == id);
+        if (banner == null)
+        {
+            return NotFound();
+        }
+
+        return PartialView("~/Views/Admin/Banner/Details.cshtml", banner);
+    }
+
+    // POST: AdminBanner/BulkDelete
+    [HttpPost]
+    [Route("BulkDelete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BulkDelete(int[] selectedIds)
+    {
+        if (selectedIds == null || selectedIds.Length == 0)
+        {
+            TempData["ErrorMessage"] = "Vui lòng chọn banner để xóa!";
+            return RedirectToAction(nameof(Index));
+        }
+
+        try
+        {
+            var bannersToDelete = await _context.Banners
+                .Where(b => selectedIds.Contains(b.BannerId))
+                .ToListAsync();
+
+            foreach (var banner in bannersToDelete)
+            {
+                // Xóa file ảnh nếu không phải default
+                if (!string.IsNullOrEmpty(banner.ImageUrl) && 
+                    !banner.ImageUrl.Contains("default.png") &&
+                    banner.ImageUrl.StartsWith("/images/banners/"))
+                {
+                    var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, banner.ImageUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(imagePath))
+                    {
+                        System.IO.File.Delete(imagePath);
+                    }
+                }
+            }
+
+            _context.Banners.RemoveRange(bannersToDelete);
+            await _context.SaveChangesAsync();
+            
+            TempData["SuccessMessage"] = $"Đã xóa {bannersToDelete.Count} banner thành công!";
         }
         catch (Exception ex)
         {

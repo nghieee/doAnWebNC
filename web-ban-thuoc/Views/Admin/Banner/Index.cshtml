@@ -1,14 +1,46 @@
-@model IEnumerable<web_ban_thuoc.Models.Banner>
-
+@model List<web_ban_thuoc.Models.Banner>
 @{
     ViewData["Title"] = "Quản lý Banner";
     Layout = "~/Views/Admin/_Layout.cshtml";
 }
 
 <div class="container-fluid py-3">
-    <!-- Header với nút thêm banner -->
+    <!-- Thanh lọc banner -->
+    <form method="get" class="row g-3 align-items-end mb-4 bg-white shadow-sm rounded-4 px-4 py-3">
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Tìm kiếm</label>
+            <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" 
+                   class="form-control" placeholder="Tìm kiếm tiêu đề, mô tả...">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Loại Banner</label>
+            <select name="typeFilter" class="form-select">
+                <option value="">Tất cả loại</option>
+                <option value="main" selected="@(ViewBag.TypeFilter == "main")">Banner chính</option>
+                <option value="sub" selected="@(ViewBag.TypeFilter == "sub")">Banner phụ</option>
+                <option value="promotion" selected="@(ViewBag.TypeFilter == "promotion")">Banner khuyến mãi</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Trạng thái</label>
+            <select name="statusFilter" class="form-select">
+                <option value="">Tất cả trạng thái</option>
+                <option value="active" selected="@(ViewBag.StatusFilter == "active")">Hoạt động</option>
+                <option value="inactive" selected="@(ViewBag.StatusFilter == "inactive")">Không hoạt động</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2 align-items-end">
+            <button type="submit" class="btn btn-primary"><i class="fa fa-filter me-1"></i> Lọc</button>
+            <a href="@Url.Action("Index", "AdminBanner")" class="btn btn-outline-secondary">Xóa bộ lọc</a>
+        </div>
+    </form>
+
+    <!-- Header với nút thêm banner và nút xóa nhanh -->
     <div class="d-flex justify-content-end align-items-center mb-4">
         <div class="d-flex gap-2">
+            <button id="bulkDeleteBtn" class="btn btn-danger btn-lg d-none align-items-center gap-2" onclick="return confirm('Bạn có chắc muốn xóa các banner đã chọn?');">
+                <i class="fa fa-trash"></i> Xóa nhanh
+            </button>
             <a href="@Url.Action("Create", "AdminBanner")" class="btn btn-primary btn-lg d-flex align-items-center gap-2">
                 <i class="fa fa-plus"></i> Thêm Banner
             </a>
@@ -17,127 +49,184 @@
 
     <!-- Bảng banner -->
     <div class="table-responsive">
-        <table class="table table-hover align-middle table-bordered bg-white shadow-sm overflow-hidden" style="min-width: 1000px;">
-            <thead class="table-light sticky-top">
-                <tr style="height: 56px;">
-                    <th class="text-center" style="width: 60px;">ID</th>
-                    <th class="text-center" style="width: 120px;">Ảnh</th>
-                    <th style="min-width: 200px;">Tiêu đề</th>
-                    <th class="text-center" style="width: 120px;">Loại</th>
-                    <th style="min-width: 200px;">Mô tả</th>
-                    <th class="text-center" style="width: 150px;">Link</th>
-                    <th class="text-center" style="width: 100px;">Thứ tự</th>
-                    <th class="text-center" style="width: 120px;">Trạng thái</th>
-                    <th class="text-center" style="width: 160px;">Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (!Model.Any())
-                {
-                    <tr>
-                        <td colspan="9" class="text-center py-5">
-                            <div class="d-flex flex-column align-items-center">
-                                <i class="fas fa-images fa-3x text-muted mb-3"></i>
-                                <h5 class="text-muted">Chưa có banner nào</h5>
-                                <p class="text-muted mb-3">Hãy tạo banner đầu tiên để hiển thị trên trang web</p>
-                                <a href="@Url.Action("Create", "AdminBanner")" class="btn btn-primary">
-                                    <i class="fas fa-plus"></i> Tạo Banner đầu tiên
-                                </a>
-                            </div>
-                        </td>
+        <form id="bulkDeleteForm" method="post" action="@Url.Action("BulkDelete", "AdminBanner")">
+            <table class="table table-hover align-middle table-bordered bg-white shadow-sm overflow-hidden" style="min-width: 1100px;">
+                <thead class="table-light sticky-top">
+                    <tr style="height: 60px;">
+                        <th class="text-center" style="width:40px;">
+                            <input type="checkbox" id="checkAll" />
+                        </th>
+                        <th class="text-center" style="width: 48px;">ID</th>
+                        <th class="text-center" style="width: 100px;">Ảnh</th>
+                        <th style="min-width: 320px;">Tiêu đề</th>
+                        <th class="text-center" style="width: 120px;">Loại</th>
+                        <th class="text-center" style="width: 90px;">Thứ tự</th>
+                        <th class="text-center" style="width: 110px;">Trạng thái</th>
+                        <th class="text-center" style="width: 170px;">Hành động</th>
                     </tr>
-                }
-                else
-                {
-                    @foreach (var item in Model)
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
                     {
-                        <tr style="height: 88px; vertical-align: middle;" class="table-row-hover">
-                            <td class="fw-bold text-secondary text-center">@item.BannerId</td>
-                            <td class="text-center">
-                                @if (!string.IsNullOrEmpty(item.ImageUrl))
-                                {
-                                    <img src="@item.ImageUrl" alt="@item.Title" class="rounded-3 border shadow-sm" style="width: 80px; height: 60px; object-fit: cover; background: #f4f6fb;" />
-                                }
-                                else
-                                {
-                                    <div class="d-flex align-items-center justify-content-center" style="width: 80px; height: 60px; background: #f4f6fb; border-radius: 0.5rem;">
-                                        <i class="fas fa-image text-muted"></i>
-                                    </div>
-                                }
-                            </td>
-                            <td class="fw-semibold text-wrap">@item.Title</td>
-                            <td class="text-center">
-                                @if (!string.IsNullOrEmpty(item.BannerType))
-                                {
-                                    @switch (item.BannerType)
-                                    {
-                                        case "FullWidth":
-                                            <span class="badge bg-primary px-3 py-2 fs-6">Full Width</span>
-                                            break;
-                                        case "Main":
-                                            <span class="badge bg-success px-3 py-2 fs-6">Main</span>
-                                            break;
-                                        case "Side":
-                                            <span class="badge bg-info px-3 py-2 fs-6">Side</span>
-                                            break;
-                                        default:
-                                            <span class="badge bg-secondary px-3 py-2 fs-6">@item.BannerType</span>
-                                            break;
-                                    }
-                                }
-                                else
-                                {
-                                    <span class="text-muted">Chưa chọn</span>
-                                }
-                            </td>
-                            <td class="text-wrap">
-                                @if (!string.IsNullOrEmpty(item.Description))
-                                {
-                                    <span title="@item.Description">@(item.Description.Length > 50 ? item.Description.Substring(0, 50) + "..." : item.Description)</span>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">Không có mô tả</span>
-                                }
-                            </td>
-                            <td class="text-center">
-                                @if (!string.IsNullOrEmpty(item.LinkUrl))
-                                {
-                                    <a href="@item.LinkUrl" target="_blank" class="text-primary text-decoration-none" title="@item.LinkUrl">
-                                        <i class="fas fa-external-link-alt me-1"></i>
-                                        @(item.LinkUrl.Length > 30 ? item.LinkUrl.Substring(0, 30) + "..." : item.LinkUrl)
-                                    </a>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">Không có link</span>
-                                }
-                            </td>
-                            <td class="text-center fw-bold">@item.SortOrder</td>
-                            <td class="text-center">
-                                @if (item.IsActive)
-                                {
-                                    <span class="badge bg-success-subtle text-success px-3 py-2 fs-6">Hoạt động</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary-subtle text-secondary px-3 py-2 fs-6">Không hoạt động</span>
-                                }
-                            </td>
-                            <td class="text-center">
-                                <div class="d-flex gap-2 justify-content-center">
-                                    <a href="@Url.Action("Edit", "AdminBanner", new { id = item.BannerId })" class="btn btn-warning btn-sm" title="Chỉnh sửa">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="@Url.Action("Delete", "AdminBanner", new { id = item.BannerId })" class="btn btn-danger btn-sm" title="Xóa">
-                                        <i class="fas fa-trash"></i>
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="fas fa-images fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">Chưa có banner nào</h5>
+                                    <p class="text-muted mb-3">Hãy tạo banner đầu tiên để hiển thị trên trang web</p>
+                                    <a href="@Url.Action("Create", "AdminBanner")" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Tạo Banner đầu tiên
                                     </a>
                                 </div>
                             </td>
                         </tr>
                     }
-                }
-            </tbody>
-        </table>
+                    else
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr style="height: 88px; vertical-align: middle;" class="table-row-hover">
+                                <td class="text-center">
+                                    <input type="checkbox" class="row-checkbox" name="selectedIds" value="@item.BannerId" />
+                                </td>
+                                <td class="fw-bold text-secondary text-center">@item.BannerId</td>
+                                <td class="text-center">
+                                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                    {
+                                        <img src="@item.ImageUrl" alt="@item.Title" class="rounded-3 border shadow-sm" style="width: 68px; height: 68px; object-fit: cover; background: #f4f6fb;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="d-flex align-items-center justify-content-center" style="width: 68px; height: 68px; background: #f4f6fb; border-radius: 0.5rem;">
+                                            <i class="fas fa-image text-muted"></i>
+                                        </div>
+                                    }
+                                </td>
+                                <td class="fw-semibold text-wrap">@item.Title</td>
+                                <td class="text-center">
+                                    @if (!string.IsNullOrEmpty(item.BannerType))
+                                    {
+                                        @switch (item.BannerType)
+                                        {
+                                            case "main":
+                                                <span class="badge bg-primary px-3 py-2 fs-6">Banner chính</span>
+                                                break;
+                                            case "sub":
+                                                <span class="badge bg-info px-3 py-2 fs-6">Banner phụ</span>
+                                                break;
+                                            case "promotion":
+                                                <span class="badge bg-warning px-3 py-2 fs-6">Khuyến mãi</span>
+                                                break;
+                                            default:
+                                                <span class="badge bg-secondary px-3 py-2 fs-6">@item.BannerType</span>
+                                                break;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Chưa chọn</span>
+                                    }
+                                </td>
+                                <td class="text-center fw-bold">@item.SortOrder</td>
+                                <td class="text-center">
+                                    @if (item.IsActive)
+                                    {
+                                        <span class="badge bg-success-subtle text-success px-3 py-2 fs-6">Hoạt động</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary-subtle text-secondary px-3 py-2 fs-6">Không hoạt động</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-info btn-sm px-3 py-2 me-1 view-detail-btn" data-id="@item.BannerId" data-bs-toggle="tooltip" data-bs-placement="top" title="Xem chi tiết">
+                                            <i class="fa fa-eye"></i>
+                                        </button>
+                                        <a href="@Url.Action("Edit", "AdminBanner", new { id = item.BannerId })" class="btn btn-warning btn-sm px-3 py-2 me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Sửa banner">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                        <a href="@Url.Action("Delete", "AdminBanner", new { id = item.BannerId })" class="btn btn-danger btn-sm px-3 py-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Xóa banner">
+                                            <i class="fa fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </form>
     </div>
-</div> 
+
+    <!-- Modal chi tiết banner -->
+    <div class="modal fade" id="bannerDetailModal" tabindex="-1" aria-labelledby="bannerDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="bannerDetailModalLabel"><i class="fa fa-images me-2"></i> Chi tiết Banner</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body p-4" id="bannerDetailContent">
+                    <div class="text-center p-5 text-secondary">
+                        <div class="spinner-border text-primary mb-2"></div>
+                        <div>Đang tải thông tin banner...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Tick chọn tất cả
+        $(document).on('change', '#checkAll', function() {
+            $('.row-checkbox').prop('checked', this.checked);
+            toggleBulkDeleteBtn();
+        });
+        
+        // Tick từng dòng
+        $(document).on('change', '.row-checkbox', function() {
+            var allChecked = $('.row-checkbox').length === $('.row-checkbox:checked').length;
+            $('#checkAll').prop('checked', allChecked);
+            toggleBulkDeleteBtn();
+        });
+        
+        // Hiện/ẩn nút xóa nhanh
+        function toggleBulkDeleteBtn() {
+            if ($('.row-checkbox:checked').length > 0) {
+                $('#bulkDeleteBtn').removeClass('d-none');
+            } else {
+                $('#bulkDeleteBtn').addClass('d-none');
+            }
+        }
+        
+        // Xóa nhanh các banner đã chọn
+        $('#bulkDeleteBtn').on('click', function(e) {
+            e.preventDefault();
+            if (confirm('Bạn có chắc muốn xóa các banner đã chọn?')) {
+                $('#bulkDeleteForm').submit();
+            }
+        });
+
+        // Xem chi tiết banner
+        $(document).on('click', '.view-detail-btn', function() {
+            var id = $(this).data('id');
+            $('#bannerDetailModal').modal('show');
+            
+            // Load chi tiết banner
+            $.get('@Url.Action("Details", "AdminBanner")/' + id, function(data) {
+                $('#bannerDetailContent').html(data);
+            });
+        });
+
+        // Khởi tạo tooltips
+        $(document).ready(function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
+} 

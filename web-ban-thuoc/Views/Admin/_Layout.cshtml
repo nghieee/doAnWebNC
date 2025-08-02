@@ -138,6 +138,9 @@
                         <i class="fa-solid fa-angles-left"></i>
                     </span>
                 </div>
+                
+                @await Component.InvokeAsync("AdminNotification")
+                
                 <ul class="nav nav-pills flex-column mb-auto">
                     <li class="nav-item">
                         <a href="/admin" class="nav-link @(Context.Request.Path == "/admin" || Context.Request.Path == "/admin/index" ? "active" : "")">
@@ -161,12 +164,9 @@
                         <a href="/AdminOrder" class="nav-link @(Context.Request.Path.StartsWithSegments("/Admin/Order") ? "active" : "") position-relative">
                             <i class="fa-solid fa-cart-shopping"></i>
                             <span class="sidebar-text">Đơn hàng</span>
-                            @if (ViewBag.PendingOrders != null && (int)ViewBag.PendingOrders > 0)
-                            {
-                                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
-                                    <span class="visually-hidden">Đơn hàng mới</span>
-                                </span>
-                            }
+                            <span id="pendingOrdersBadge" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="display: none;">
+                                <span class="visually-hidden">Đơn hàng mới</span>
+                            </span>
                         </a>
                     </li>
                     <li>
@@ -182,7 +182,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="nav-link">
+                        <a href="/AdminUser" class="nav-link @(Context.Request.Path.StartsWithSegments("/AdminUser") ? "active" : "")">
                             <i class="fa-solid fa-users"></i>
                             <span class="sidebar-text">Người dùng</span>
                         </a>
@@ -190,12 +190,9 @@
                     <li class="nav-item" style="position:relative;">
                         <a class="nav-link position-relative" href="/admin/chat">
                             <i class="fa-regular fa-message me-1"></i> Tin nhắn
-                            @if (ViewBag.UnreadMessages != null && (int)ViewBag.UnreadMessages > 0)
-                            {
-                                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
-                                    <span class="visually-hidden">Tin nhắn mới</span>
-                                </span>
-                            }
+                            <span id="unreadMessagesBadge" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="display: none;">
+                                <span class="visually-hidden">Tin nhắn mới</span>
+                            </span>
                         </a>
                     </li>
                 </ul>
@@ -255,6 +252,39 @@
                 icon.classList.add('fa-angles-left');
             }
         }
+
+        // Cập nhật notification badges
+        function updateNotificationBadges() {
+            const pendingOrdersBadge = document.getElementById('pendingOrdersBadge');
+            const unreadMessagesBadge = document.getElementById('unreadMessagesBadge');
+
+            if (pendingOrdersBadge) {
+                if (window.pendingOrders > 0) {
+                    pendingOrdersBadge.style.display = 'block';
+                } else {
+                    pendingOrdersBadge.style.display = 'none';
+                }
+            }
+
+            if (unreadMessagesBadge) {
+                if (window.unreadMessages > 0) {
+                    unreadMessagesBadge.style.display = 'block';
+                } else {
+                    unreadMessagesBadge.style.display = 'none';
+                }
+            }
+        }
+
+        // Cập nhật badges khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateNotificationBadges();
+        });
+
+        // Cập nhật badges mỗi 30 giây
+        setInterval(function() {
+            // Có thể thêm AJAX call để lấy dữ liệu mới nhất
+            updateNotificationBadges();
+        }, 30000);
     </script>
     @RenderSection("Scripts", required: false)
     
