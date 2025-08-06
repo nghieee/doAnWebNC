@@ -42,6 +42,11 @@ builder.Services.AddSignalR();
 builder.Services.AddScoped<UserRankService>();
 builder.Services.AddHostedService<MonthlyVoucherHostedService>();
 
+// Đăng ký PayOS Services
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IPayOSService, PayOSService>();
+builder.Services.AddScoped<IOrderEmailService, OrderEmailService>();
+
 var app = builder.Build();
 
 // Seed role và user admin

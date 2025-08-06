@@ -132,7 +132,6 @@ namespace web_ban_thuoc.Services
                 }
             }
             await _context.SaveChangesAsync();
-            // Gửi mail nếu cần
             if (needSendRankMail)
             {
                 string subject = $"Chúc mừng bạn đã lên hạng {newRank}!";

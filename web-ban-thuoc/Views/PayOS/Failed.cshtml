@@ -1,0 +1,28 @@
+@model web_ban_thuoc.Models.Order
+@{
+    ViewData["Title"] = "Thanh toán thất bại";
+}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger shadow-lg">
+                <div class="card-header bg-danger text-white text-center">
+                    <i class="fas fa-times-circle fa-3x mb-2"></i>
+                    <h3 class="mb-0">Thanh toán thất bại!</h3>
+                </div>
+                <div class="card-body text-center">
+                    <h5 class="mb-3">Rất tiếc, giao dịch của bạn chưa được thực hiện thành công.</h5>
+                    <p class="mb-2">Mã đơn hàng: <span class="fw-bold text-danger">#@Model?.OrderId</span></p>
+                    <p class="mb-2">Tổng tiền: <span class="fw-bold">@Model?.TotalAmount?.ToString("N0") VNĐ</span></p>
+                    <p class="mb-2">Trạng thái: <span class="badge bg-danger">Thanh toán thất bại</span></p>
+                    <p class="text-muted">Vui lòng kiểm tra lại thông tin hoặc thử lại sau. Nếu cần hỗ trợ, liên hệ <a href="tel:18006928" class="text-decoration-underline">1800 6928</a>.</p>
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        <a href="/" class="btn btn-outline-primary"><i class="fas fa-home me-2"></i>Về trang chủ</a>
+                        <a href="/Cart/Index" class="btn btn-outline-secondary"><i class="fas fa-shopping-cart me-2"></i>Giỏ hàng</a>
+                        <a href="/PayOS/CreatePayment?orderId=@Model?.OrderId" class="btn btn-danger"><i class="fas fa-redo me-2"></i>Thử lại thanh toán</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

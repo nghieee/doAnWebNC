@@ -212,6 +212,7 @@ public class AuthController : Controller
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
                 .ThenInclude(p => p.ProductImages)
+                .Include(o => o.Payments) // Thêm include cho Payments
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
 
@@ -222,6 +223,7 @@ public class AuthController : Controller
                 TotalAmount = o.TotalAmount ?? 0,
                 Status = o.Status ?? "",
                 PaymentStatus = o.PaymentStatus ?? "",
+                PaymentMethod = o.Payments?.FirstOrDefault()?.PaymentMethod ?? "COD", // Lấy PaymentMethod từ bảng Payment
                 ShippingAddress = o.ShippingAddress ?? "",
                 FullName = o.FullName ?? "",
                 Phone = o.Phone ?? "",

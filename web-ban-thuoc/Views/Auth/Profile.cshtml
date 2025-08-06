@@ -4,6 +4,7 @@
     Layout = "_Layout";
     ViewData["CurrentPage"] = "ProfileDetail";
 }
+@Html.AntiForgeryToken()
 @if (TempData["ShowToast"] != null && TempData["ProfileSuccess"] != null)
 {
     <script>
@@ -262,10 +263,27 @@
                                                             <span class="fw-bold text-primary fs-5">@order.TotalAmount.ToString("N0")đ</span>
                                                         </div>
                                                         <div class="d-flex justify-content-between align-items-center mt-2">
+                                                            <span class="small text-muted">Hình thức thanh toán:</span>
+                                                            <span class="badge @(order.PaymentMethod == "PayOS" ? "bg-primary" : "bg-secondary")">
+                                                                @(order.PaymentMethod == "PayOS" ? "Thanh toán online" : "Thanh toán khi nhận hàng")
+                                                            </span>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between align-items-center mt-2">
                                                             <span class="small text-muted">Trạng thái thanh toán:</span>
                                                             <span class="badge @GetPaymentStatusBadgeClass(order.PaymentStatus)">@GetPaymentStatusText(order.PaymentStatus)</span>
                                                         </div>
                                                     </div>
+                                                    
+                                                    <!-- Nút thanh toán cho đơn hàng online chưa thanh toán -->
+                                                    @if (order.PaymentMethod == "PayOS" && order.PaymentStatus == "Chưa thanh toán")
+                                                    {
+                                                        <div class="border-top pt-3">
+                                                            <button class="btn btn-primary btn-pay-online" data-order-id="@order.OrderId">
+                                                                <i class="fas fa-credit-card me-2"></i>Thanh toán ngay
+                                                            </button>
+                                                        </div>
+                                                    }
+                                                    
                                                     @if (order.Status == "Chờ xác nhận" || order.Status == "Đã xác nhận")
                                                     {
                                                         <button class="btn btn-danger btn-cancel-order mt-3" data-id="@order.OrderId">Hủy đơn</button>
@@ -486,6 +504,18 @@ $(function() {
                 }
             });
         }
+    });
+    
+    // Xử lý nút thanh toán online
+    $('.btn-pay-online').on('click', function() {
+        var orderId = $(this).data('order-id');
+        var button = $(this);
+        
+        // Disable button để tránh click nhiều lần
+        button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...');
+        
+        // Chuyển hướng đến trang thanh toán PayOS
+        window.location.href = '/PayOS/CreatePayment?orderId=' + orderId;
     });
 });
 </script>

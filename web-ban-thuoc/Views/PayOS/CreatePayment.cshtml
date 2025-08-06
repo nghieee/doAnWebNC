@@ -1,0 +1,277 @@
+@model web_ban_thuoc.Models.Order
+
+@{
+    ViewData["Title"] = "Thanh toán PayOS";
+}
+
+@{
+    // Thêm antiforgery token
+    @Html.AntiForgeryToken()
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-credit-card me-2"></i>
+                        Thanh toán qua PayOS
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-spinner fa-spin text-primary" style="font-size: 3rem;"></i>
+                        <h3 class="mt-3 text-primary">Đang tạo thanh toán...</h3>
+                        <p class="text-muted">Vui lòng chờ trong giây lát</p>
+                    </div>
+
+                    @if (Model != null)
+                    {
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Thông tin đơn hàng</h5>
+                                <ul class="list-unstyled">
+                                    <li><strong>Mã đơn hàng:</strong> #@Model.OrderId</li>
+                                    <li><strong>Ngày đặt:</strong> @Model.OrderDate?.ToString("dd/MM/yyyy HH:mm")</li>
+                                    <li><strong>Tổng tiền:</strong> @Model.TotalAmount?.ToString("N0") VNĐ</li>
+                                    @if (Model.VoucherDiscount > 0)
+                                    {
+                                        <li><strong>Giảm giá:</strong> -@Model.VoucherDiscount?.ToString("N0") VNĐ</li>
+                                        <li><strong>Mã voucher:</strong> @Model.VoucherCode</li>
+                                    }
+                                    <li><strong>Trạng thái:</strong> <span class="badge bg-warning">Chờ thanh toán</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Thông tin khách hàng</h5>
+                                <ul class="list-unstyled">
+                                    <li><strong>Họ tên:</strong> @Model.FullName</li>
+                                    <li><strong>Số điện thoại:</strong> @Model.Phone</li>
+                                    <li><strong>Địa chỉ:</strong> @Model.ShippingAddress</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        @if (Model.OrderItems != null && Model.OrderItems.Any())
+                        {
+                            <div class="mt-4">
+                                <h5>Sản phẩm đã đặt</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Sản phẩm</th>
+                                                <th class="text-center">Số lượng</th>
+                                                <th class="text-end">Đơn giá</th>
+                                                <th class="text-end">Thành tiền</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in Model.OrderItems)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            @if (item.Product?.ProductImages?.Any() == true)
+                                                            {
+                                                                <img src="@item.Product.ProductImages.First().ImageUrl"
+                                                                    alt="@item.Product?.ProductName" class="me-3"
+                                                                    style="width: 50px; height: 50px; object-fit: cover;">
+                                                            }
+                                                            <div>
+                                                                <strong>@item.Product?.ProductName</strong>
+                                                                @if (!string.IsNullOrEmpty(item.Product?.Uses))
+                                                                {
+                                                                    <br>
+
+                                                                    <small class="text-muted">@item.Product.Uses</small>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center">@item.Quantity</td>
+                                                    <td class="text-end">@item.Price.ToString("N0") VNĐ</td>
+                                                    <td class="text-end">@((item.Price * item.Quantity).ToString("N0")) VNĐ</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="text-center mt-4">
+                            <div class="btn-group" role="group">
+                                <a href="@Url.Action("Index", "Cart")" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Quay lại giỏ hàng
+                                </a>
+                                <button type="button" class="btn btn-primary" onclick="createPayment()">
+                                    <i class="fas fa-credit-card me-2"></i>
+                                    Tiến hành thanh toán
+                                </button>
+                                <button type="button" class="btn btn-outline-info" onclick="testAPI()">
+                                    <i class="fas fa-bug me-2"></i>
+                                    Test Config
+                                </button>
+                                <button type="button" class="btn btn-outline-success" onclick="testCorrectSignature()">
+                                    <i class="fas fa-check me-2"></i>
+                                    Test Payment
+                                </button>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>Không tìm thấy đơn hàng</h6>
+                            <p class="mb-0">Đơn hàng không tồn tại hoặc đã bị xóa.</p>
+                        </div>
+                        <div class="text-center">
+                            <a href="@Url.Action("Index", "Cart")" class="btn btn-primary">
+                                <i class="fas fa-shopping-cart me-2"></i>
+                                Về giỏ hàng
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function createPayment(btnElement = null) {
+            console.log('createPayment function called');
+
+            // Hiển thị loading
+            const btn = btnElement || event?.target;
+            let originalText = '';
+            if (btn) {
+                originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...';
+                btn.disabled = true;
+            }
+
+            // Lấy antiforgery token nếu có
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+            console.log('Calling PayOS API...');
+            // Gọi API tạo thanh toán
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            // Thêm antiforgery token nếu có
+            if (token) {
+                headers['RequestVerificationToken'] = token;
+            }
+            
+            fetch('/PayOS/ProcessPayment', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ orderId: @(Model?.OrderId ?? 0) })
+            })
+                .then(res => {
+                    console.log('Response status:', res.status);
+                    return res.json();
+                })
+                .then(result => {
+                    console.log('API Response:', result);
+                    if (result.success && result.checkoutUrl) {
+                        console.log('Redirecting to:', result.checkoutUrl);
+                        // Chuyển hướng đến trang thanh toán PayOS
+                        window.location.href = result.checkoutUrl;
+                    } else {
+                        console.error('API Error:', result.message);
+                        console.log('=== PAYMENT ERROR DETAILS ===');
+                        console.log('Error message:', result.message);
+                        console.log('Full response:', result);
+                        console.log('=== END ===');
+                        
+                        alert(result.message || 'Có lỗi xảy ra khi tạo thanh toán!');
+                        if (btn && originalText) {
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch Error:', error);
+                    alert('Có lỗi xảy ra khi tạo thanh toán!');
+                    if (btn && originalText) {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }
+                });
+        }
+
+        // Auto redirect sau 2 giây nếu không có tương tác
+        setTimeout(function () {
+            console.log('Auto redirect triggered');
+            const btn = document.querySelector('.btn-primary');
+            if (btn && !btn.disabled) {
+                console.log('Calling createPayment automatically');
+                createPayment(btn);
+            } else {
+                console.log('Button not found or already disabled');
+            }
+        }, 2000);
+
+        // Thêm debug info
+        console.log('Page loaded, orderId:', @(Model?.OrderId ?? 0));
+        console.log('Auto redirect will trigger in 2 seconds');
+
+        function testAPI() {
+            console.log('Testing PayOS Configuration...');
+            
+            fetch('/PayOS/Test', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(res => res.json())
+                .then(result => {
+                    console.log('Test Configuration Response:', result);
+                    alert('Test Configuration Response: ' + JSON.stringify(result, null, 2));
+                })
+                .catch(error => {
+                    console.error('Test Configuration Error:', error);
+                    alert('Test Configuration Error: ' + error.message);
+                });
+        }
+
+        function testCorrectSignature() {
+            console.log('Testing PayOS Payment...');
+            
+            fetch('/PayOS/TestCorrectSignature', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(res => res.json())
+                .then(result => {
+                    console.log('Test Payment Response:', result);
+                    
+                    // Log chi tiết
+                    console.log('=== PAYMENT TEST ===');
+                    console.log('Data to sign:', result.dataToSign);
+                    console.log('Signature:', result.signature);
+                    console.log('Response Status:', result.responseStatus);
+                    console.log('Response Content:', result.responseContent);
+                    console.log('=== END ===');
+                    
+                    alert('Test Payment Response: ' + JSON.stringify(result, null, 2));
+                })
+                .catch(error => {
+                    console.error('Test Payment Error:', error);
+                    alert('Test Payment Error: ' + error.message);
+                });
+        }
+    </script>
+}

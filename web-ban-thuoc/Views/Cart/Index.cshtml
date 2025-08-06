@@ -406,7 +406,13 @@ document.getElementById('checkoutForm').addEventListener('submit', function(e) {
     .then(res => res.json())
     .then(result => {
         if (result.success) {
-            window.location.href = '/Cart/ThankYou';
+            if (result.checkoutUrl) {
+                // Nếu có checkoutUrl (PayOS), chuyển hướng trực tiếp
+                window.location.href = result.checkoutUrl;
+            } else {
+                // Nếu không có checkoutUrl (COD), chuyển hướng đến trang cảm ơn
+                window.location.href = '/Cart/ThankYou';
+            }
         } else {
             alert(result.message || 'Có lỗi xảy ra!');
         }

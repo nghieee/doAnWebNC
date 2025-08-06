@@ -27,7 +27,7 @@ public class CartController : Controller
     // Hiển thị giỏ hàng
     public IActionResult Index()
     {
-        if (!User.Identity.IsAuthenticated)
+        if (!User.Identity?.IsAuthenticated == true)
         {
             TempData["LoginError"] = "Bạn cần đăng nhập để xem giỏ hàng!";
             return RedirectToAction("Index", "Auth");
@@ -45,7 +45,7 @@ public class CartController : Controller
     [HttpPost]
     public IActionResult AddToCart(int productId, int quantity = 1)
     {
-        if (!User.Identity.IsAuthenticated)
+        if (!User.Identity?.IsAuthenticated == true)
         {
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
@@ -62,7 +62,7 @@ public class CartController : Controller
                 p.ProductId,
                 p.ProductName,
                 p.Price,
-                ImageUrl = p.ProductImages.FirstOrDefault(i => i.IsMain == true) != null ? p.ProductImages.FirstOrDefault(i => i.IsMain == true).ImageUrl : p.ProductImages.FirstOrDefault().ImageUrl
+                ImageUrl = p.ProductImages.FirstOrDefault(i => i.IsMain == true) != null ? p.ProductImages.FirstOrDefault(i => i.IsMain == true)!.ImageUrl : p.ProductImages.FirstOrDefault() != null ? p.ProductImages.FirstOrDefault()!.ImageUrl : null
             })
             .FirstOrDefault();
         if (product == null) return NotFound();
@@ -117,13 +117,13 @@ public class CartController : Controller
             });
         }
         TempData["CartMessage"] = $"Đã thêm {product.ProductName} vào giỏ hàng!";
-        return Redirect(Request.Headers["Referer"].ToString());
+        return Redirect(Request.Headers["Referer"].ToString() ?? "/");
     }
 
     // Xóa sản phẩm khỏi giỏ
     public IActionResult Remove(int productId)
     {
-        if (!User.Identity.IsAuthenticated)
+        if (!User.Identity?.IsAuthenticated == true)
         {
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
@@ -165,7 +165,7 @@ public class CartController : Controller
     [HttpPost]
     public IActionResult UpdateQuantity(int productId, int quantity)
     {
-        if (!User.Identity.IsAuthenticated)
+        if (!User.Identity?.IsAuthenticated == true)
         {
             return Json(new { success = false, message = "Bạn cần đăng nhập để cập nhật số lượng sản phẩm!", requireLogin = true });
         }
@@ -196,7 +196,15 @@ public class CartController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult CheckoutPopup([FromBody] CheckoutPopupViewModel model)
     {
-        if (!ModelState.IsValid)
+        if (!User.Identity?.IsAuthenticated == true)
+        {
+            return Json(new { success = false, message = "Vui lòng đăng nhập để đặt hàng!" });
+        }
+        
+        // Debug logging
+        Console.WriteLine($"PaymentMethod received: {model.PaymentMethod}");
+        
+        if (string.IsNullOrEmpty(model.FullName) || string.IsNullOrEmpty(model.Phone) || string.IsNullOrEmpty(model.ShippingAddress))
         {
             return Json(new { success = false, message = "Vui lòng nhập đầy đủ thông tin!" });
         }
@@ -225,7 +233,10 @@ public class CartController : Controller
             {
                 userVoucher.IsUsed = true;
                 // Tăng UsedCount cho voucher
-                userVoucher.Voucher.UsedCount++;
+                if (userVoucher.Voucher != null)
+                {
+                    userVoucher.Voucher.UsedCount++;
+                }
                 _context.SaveChanges();
             }
             else
@@ -249,8 +260,23 @@ public class CartController : Controller
             PaymentStatus = model.PaymentMethod == "COD" ? "Pending" : "Pending",
             PaymentDate = null
         };
+        
+        // Debug logging
+        Console.WriteLine($"Creating payment with PaymentMethod: {payment.PaymentMethod}");
+        
         _context.Payments.Add(payment);
         _context.SaveChanges();
+        
+        // Nếu thanh toán bằng PayOS, chuyển hướng đến trang thanh toán
+        if (model.PaymentMethod == "PayOS")
+        {
+            return Json(new { 
+                success = true, 
+                checkoutUrl = $"/PayOS/CreatePayment?orderId={dbCart.OrderId}",
+                orderId = dbCart.OrderId
+            });
+        }
+        
         return Json(new { success = true });
     }
 
