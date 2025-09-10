@@ -211,7 +211,7 @@ web-ban-thuoc/
 ![Checkout](docs/screenshots/checkout.png)
 
 ### Admin Dashboard
-[Admin Dashboard](docs/screenshots/admin_dashboard.png)
+![Admin Dashboard](docs/screenshots/admin_dashboard.png)
 
 ### Admin Quản lý sản phẩm
 ![Admin Products](docs/screenshots/admin_product.png)
