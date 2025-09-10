@@ -158,7 +158,7 @@ web-ban-thuoc/
 - **Admin (seed)**: `admin@gmail.com` / `Admin123.`
 - (Bạn có thể đổi trong `Program.cs` phần seeding)
 
-## 🖼️ Ảnh chụp màn hình (đề xuất)
+## 🖼️ Ảnh chụp màn hình
 
 > Thêm ảnh vào thư mục `docs/screenshots/` và chèn vào đây.
 
