@@ -118,11 +118,6 @@
 - SQL Server
 - EF Core Migrations (thư mục `Migrations/`)
 
-### **Triển khai / DevOps**
-- Docker & Docker Compose (local demo DB + app)
-- Azure App Service, Azure SQL Database (tùy chọn)
-- GitHub Actions (tùy chọn CI/CD)
-
 ## 📁 Cấu trúc dự án
 
 ```
@@ -143,12 +138,42 @@ web-ban-thuoc/
 
 ## 🚀 Hướng dẫn chạy dự án
 
-### **Yêu cầu hệ thống**
+### **Phương pháp 1: Docker Compose (Khuyến nghị)**
+
+#### Yêu cầu
+- Docker Desktop
+- Git
+
+#### Các bước thực hiện
+1. **Clone repository:**
+   ```bash
+   git clone https://github.com/nghieee/doAnWebNC
+   cd doAnWebNC
+   ```
+
+2. **Chạy với Docker Compose:**
+   ```bash
+   docker-compose up --build
+   ```
+
+3. **Truy cập ứng dụng:**
+   - Website: http://localhost:5000
+   - SQL Server: localhost:14330 (SA_PASSWORD: YourStrong@Passw0rd)
+
+4. **Kết nối SSMS (tùy chọn):**
+   - Server: `localhost,14330`
+   - Authentication: SQL Server Authentication
+   - Login: `sa`
+   - Password: `YourStrong@Passw0rd`
+
+### **Phương pháp 2: Chạy thủ công**
+
+#### Yêu cầu hệ thống
 - .NET 8.0 SDK
 - SQL Server
 - Visual Studio 2022 hoặc VS Code
 
-### **Cài đặt**
+#### Cài đặt
 1. Clone repository
 2. Cập nhật connection string trong `appsettings.json`
 3. Chạy migrations: `dotnet ef database update`
@@ -160,9 +185,13 @@ web-ban-thuoc/
 
 ## 🖼️ Ảnh chụp màn hình
 
-> Thêm ảnh vào thư mục `docs/screenshots/` và chèn vào đây.
+### Trang chủ
+![Home](docs/screenshots/home.png)
 
-- Trang chủ: `![Home](docs/screenshots/home.png)`
+### Sơ đồ cơ sở dữ liệu (ERD)
+![ERD](docs/screenshots/ERD.jpg)
+
+### Các ảnh khác (đang cập nhật)
 - Danh mục sản phẩm: `![Categories](docs/screenshots/categories.png)`
 - Chi tiết sản phẩm: `![Product Detail](docs/screenshots/product-detail.png)`
 - Giỏ hàng/Thanh toán: `![Checkout](docs/screenshots/checkout.png)`
@@ -221,7 +250,7 @@ web-ban-thuoc/
 
 **Version**: 1.0.0  
 **Ngày cập nhật**: 2024  
-**Tác giả**: [Tên của bạn]
+**Tác giả**: Hieu Nguyen
 
 ---
 
