@@ -187,20 +187,37 @@ web-ban-thuoc/
 
 ### Trang chủ
 ![Home](docs/screenshots/home.png)
+![Home](docs/screenshots/home2.png)
 
-### Sơ đồ cơ sở dữ liệu (ERD)
-![ERD](docs/screenshots/ERD.jpg)
+### Danh mục sản phẩm
+![Categories](docs/screenshots/categories.png)
 
-### Các ảnh khác (đang cập nhật)
-- Danh mục sản phẩm: `![Categories](docs/screenshots/categories.png)`
-- Chi tiết sản phẩm: `![Product Detail](docs/screenshots/product-detail.png)`
-- Giỏ hàng/Thanh toán: `![Checkout](docs/screenshots/checkout.png)`
-- Đăng nhập/Đăng ký: `![Auth](docs/screenshots/auth.png)`
-- Chat realtime: `![Chat](docs/screenshots/chat.png)`
-- Admin Dashboard: `![Admin Dashboard](docs/screenshots/admin-dashboard.png)`
-- Quản lý sản phẩm: `![Admin Products](docs/screenshots/admin-products.png)`
-- Quản lý đơn hàng: `![Admin Orders](docs/screenshots/admin-orders.png)`
-- Quản lý voucher: `![Admin Vouchers](docs/screenshots/admin-vouchers.png)`
+### Chi tiết sản phẩm
+![Product Detail](docs/screenshots/product_detail.png)
+
+### Đăng nhập/Đăng ký
+![Auth](docs/screenshots/auth.png)
+
+### Giỏ hàng
+![Cart](docs/screenshots/cart.png)
+
+### Thanh toán Online
+![Online Payment](docs/screenshots/online_payment.png)
+
+### Profile
+![Profile](docs/screenshots/profile.png)
+
+### Checkout
+![Checkout](docs/screenshots/checkout.png)
+
+### Admin Dashboard
+[Admin Dashboard](docs/screenshots/admin_dashboard.png)
+
+### Admin Quản lý sản phẩm
+![Admin Products](docs/screenshots/admin_product.png)
+
+### Admin Thêm sản phẩm
+![Admin Products](docs/screenshots/admin_product_add.png)
 
 ## 📈 Tính năng nổi bật
 
