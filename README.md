@@ -12,7 +12,7 @@
 
 ## 🚀 Các chức năng chính
 
-### 👥 **Phía khách hàng (Frontend)**
+### 👥 **Phía khách hàng**
 
 #### 🔐 **Quản lý tài khoản**
 - Đăng ký, đăng nhập, đăng xuất
@@ -100,7 +100,7 @@
 
 ## 🛠️ Công nghệ sử dụng
 
-### **Backend (đã kiểm chứng trong code)**
+### **Backend**
 - **.NET**: ASP.NET Core 8.0 (`TargetFramework: net8.0`)
 - **EF Core**: Microsoft.EntityFrameworkCore.SqlServer 9.x, Tools 9.x, Design 9.x
 - **Identity**: Microsoft.AspNetCore.Identity.EntityFrameworkCore 8.0, Identity UI 8.0
@@ -138,7 +138,7 @@ web-ban-thuoc/
 
 ## 🚀 Hướng dẫn chạy dự án
 
-### **Phương pháp 1: Docker Compose (Khuyến nghị)**
+### **Phương pháp 1: Docker Compose**
 
 #### Yêu cầu
 - Docker Desktop
@@ -180,8 +180,8 @@ web-ban-thuoc/
 4. Chạy dự án: `dotnet run`
 
 ### **Tài khoản mặc định**
-- **Admin (seed)**: `admin@gmail.com` / `Admin123.`
-- (Bạn có thể đổi trong `Program.cs` phần seeding)
+- **Admin**: `admin@gmail.com` / `Admin123.`
+- (Bạn có thể đổi trong `Program.cs`)
 
 ## 🖼️ Ảnh chụp màn hình
 
