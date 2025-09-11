@@ -266,7 +266,7 @@ web-ban-thuoc/
 ## 🔄 Phiên bản
 
 **Version**: 1.0.0  
-**Ngày cập nhật**: 2024  
+**Ngày cập nhật**: 2025 
 **Tác giả**: Hieu Nguyen
 
 ---
