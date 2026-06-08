@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace web_ban_thuoc.Models;
@@ -30,6 +30,9 @@ public partial class Order
 
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 
-    // Navigation property tới IdentityUser
+    public virtual ICollection<OrderStatusHistory> StatusHistories { get; set; } = new List<OrderStatusHistory>();
+
     public virtual Microsoft.AspNetCore.Identity.IdentityUser? User { get; set; }
+
+    public virtual Shipment? Shipment { get; set; }
 }

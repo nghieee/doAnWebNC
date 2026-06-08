@@ -1,0 +1,170 @@
+@model List<web_ban_thuoc.Models.LoyaltyReward>
+@{
+    ViewData["Title"] = "Cửa hàng đổi quà";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0"><i class="fa fa-gift text-primary me-2"></i>Cửa hàng đổi quà</h4>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#rewardModal" id="btnAddReward"><i class="fa fa-plus me-1"></i> Thêm quà</button>
+    </div>
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Quà</th>
+                        <th>Điểm</th>
+                        <th>Ưu đãi</th>
+                        <th>Điều kiện</th>
+                        <th>Tồn</th>
+                        <th>TT</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@r.Title</strong>
+                                @if (!string.IsNullOrEmpty(r.Description)) { <div class="small text-muted">@r.Description</div> }
+                            </td>
+                            <td><span class="badge bg-warning text-dark">@r.PointsCost.ToString("N0")</span></td>
+                            <td class="small">
+                                @if (r.RewardType == web_ban_thuoc.Models.LoyaltyRewardTypes.VoucherPercent)
+                                { <span>Giảm @r.PercentValue%</span> }
+                                else
+                                { <span>Giảm @r.DiscountAmount?.ToString("N0")đ</span> }
+                                <div class="text-muted">HSD @r.ExpiryDays ngày</div>
+                            </td>
+                            <td class="small">
+                                @if (r.MinOrderAmount.HasValue) { <div>Đơn ≥ @r.MinOrderAmount.Value.ToString("N0")đ</div> }
+                                @if (!string.IsNullOrEmpty(r.RequiredRank)) { <div>Hạng ≥ @r.RequiredRank</div> }
+                                @if (r.MaxPerUser.HasValue) { <div>Tối đa @r.MaxPerUser lần/KH</div> }
+                            </td>
+                            <td>@(r.StockRemaining?.ToString("N0") ?? "∞")</td>
+                            <td>
+                                @if (r.IsActive) { <span class="badge bg-success">Bật</span> }
+                                else { <span class="badge bg-secondary">Tắt</span> }
+                            </td>
+                            <td class="text-nowrap">
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-edit-reward" data-id="@r.LoyaltyRewardId"
+                                    data-title="@r.Title" data-desc="@r.Description" data-points="@r.PointsCost" data-type="@r.RewardType"
+                                    data-percent="@r.PercentValue" data-amount="@r.DiscountAmount" data-expiry="@r.ExpiryDays"
+                                    data-minorder="@r.MinOrderAmount" data-rank="@r.RequiredRank" data-stock="@r.StockRemaining"
+                                    data-maxuser="@r.MaxPerUser" data-active="@r.IsActive.ToString().ToLower()" data-sort="@r.SortOrder"><i class="fa fa-pen"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-warning btn-toggle-reward" data-id="@r.LoyaltyRewardId"><i class="fa fa-power-off"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-reward" data-id="@r.LoyaltyRewardId"><i class="fa fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="rewardModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="rewardForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rewardModalTitle">Thêm quà đổi điểm</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="LoyaltyRewardId" id="rewardId" value="0" />
+                    <div class="row g-3">
+                        <div class="col-md-8"><label class="form-label">Tên quà</label><input class="form-control" name="Title" id="rewardTitle" required /></div>
+                        <div class="col-md-4"><label class="form-label">Điểm đổi</label><input type="number" class="form-control" name="PointsCost" id="rewardPoints" min="1" required /></div>
+                        <div class="col-12"><label class="form-label">Mô tả</label><input class="form-control" name="Description" id="rewardDesc" /></div>
+                        <div class="col-md-4"><label class="form-label">Loại</label>
+                            <select class="form-select" name="RewardType" id="rewardType">
+                                <option value="VoucherFixed">Giảm cố định (VNĐ)</option>
+                                <option value="VoucherPercent">Giảm %</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4" id="wrapPercent"><label class="form-label">% giảm</label><input type="number" class="form-control" name="PercentValue" id="rewardPercent" min="1" max="100" /></div>
+                        <div class="col-md-4" id="wrapAmount"><label class="form-label">Số tiền giảm</label><input type="number" class="form-control" name="DiscountAmount" id="rewardAmount" min="1000" step="1000" /></div>
+                        <div class="col-md-4"><label class="form-label">HSD voucher (ngày)</label><input type="number" class="form-control" name="ExpiryDays" id="rewardExpiry" value="30" min="1" /></div>
+                        <div class="col-md-4"><label class="form-label">Đơn tối thiểu</label><input type="number" class="form-control" name="MinOrderAmount" id="rewardMinOrder" step="1000" /></div>
+                        <div class="col-md-4"><label class="form-label">Hạng tối thiểu</label>
+                            <select class="form-select" name="RequiredRank" id="rewardRank"><option value="">Không</option><option value="Bạc">Bạc</option><option value="Vàng">Vàng</option><option value="Bạch kim">Bạch kim</option></select>
+                        </div>
+                        <div class="col-md-4"><label class="form-label">Tồn quà</label><input type="number" class="form-control" name="StockRemaining" id="rewardStock" placeholder="Không giới hạn" /></div>
+                        <div class="col-md-4"><label class="form-label">Max / khách</label><input type="number" class="form-control" name="MaxPerUser" id="rewardMaxUser" placeholder="Không giới hạn" /></div>
+                        <div class="col-md-4"><label class="form-label">Thứ tự</label><input type="number" class="form-control" name="SortOrder" id="rewardSort" value="0" /></div>
+                        <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" name="IsActive" id="rewardActive" value="true" checked /><label class="form-check-label" for="rewardActive">Đang phát hành</label></div></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function toggleRewardFields() {
+    const t = $('#rewardType').val();
+    $('#wrapPercent').toggle(t === 'VoucherPercent');
+    $('#wrapAmount').toggle(t === 'VoucherFixed');
+}
+$('#rewardType').on('change', toggleRewardFields);
+$('#btnAddReward').on('click', function() {
+    $('#rewardModalTitle').text('Thêm quà đổi điểm');
+    $('#rewardForm')[0].reset();
+    $('#rewardId').val(0);
+    $('#rewardActive').prop('checked', true);
+    toggleRewardFields();
+});
+$('.btn-edit-reward').on('click', function() {
+    const b = $(this);
+    $('#rewardModalTitle').text('Sửa quà');
+    $('#rewardId').val(b.data('id'));
+    $('#rewardTitle').val(b.data('title'));
+    $('#rewardDesc').val(b.data('desc'));
+    $('#rewardPoints').val(b.data('points'));
+    $('#rewardType').val(b.data('type'));
+    $('#rewardPercent').val(b.data('percent'));
+    $('#rewardAmount').val(b.data('amount'));
+    $('#rewardExpiry').val(b.data('expiry'));
+    $('#rewardMinOrder').val(b.data('minorder'));
+    $('#rewardRank').val(b.data('rank') || '');
+    $('#rewardStock').val(b.data('stock'));
+    $('#rewardMaxUser').val(b.data('maxuser'));
+    $('#rewardSort').val(b.data('sort'));
+    $('#rewardActive').prop('checked', b.data('active') === true || b.data('active') === 'true');
+    toggleRewardFields();
+    new bootstrap.Modal('#rewardModal').show();
+});
+$('#rewardForm').on('submit', function(e) {
+    e.preventDefault();
+    const fd = new FormData(this);
+    fd.set('IsActive', $('#rewardActive').is(':checked') ? 'true' : 'false');
+    $.ajax({ url: '/AdminLoyalty/SaveReward', type: 'POST', data: fd, processData: false, contentType: false,
+        success: function(res) {
+            if (res.success) { showToast('Đã lưu quà!', 'success'); setTimeout(() => location.reload(), 1000); }
+            else showToast(res.message || 'Lỗi', 'error');
+        }
+    });
+});
+$('.btn-toggle-reward').on('click', function() {
+    $.post('/AdminLoyalty/ToggleReward', { id: $(this).data('id') }, function(res) {
+        if (res.success) location.reload();
+    });
+});
+$('.btn-delete-reward').on('click', function() {
+    if (!confirm('Xóa quà này?')) return;
+    $.post('/AdminLoyalty/DeleteReward', { id: $(this).data('id') }, function(res) {
+        showToast(res.message || (res.success ? 'Đã xóa' : 'Lỗi'), res.success ? 'success' : 'error');
+        if (res.success) setTimeout(() => location.reload(), 1000);
+    });
+});
+toggleRewardFields();
+</script>
+}

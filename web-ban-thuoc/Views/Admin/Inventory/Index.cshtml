@@ -1,0 +1,313 @@
+@model web_ban_thuoc.Models.InventoryIndexViewModel
+@using web_ban_thuoc.Models
+@{
+    ViewData["Title"] = "Quản lý kho";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+    var products = (IEnumerable<Product>)ViewBag.Products;
+    var warehouses = (IEnumerable<Warehouse>)ViewBag.Warehouses;
+    var suppliers = (IEnumerable<Supplier>)ViewBag.Suppliers;
+    var showHub = ViewBag.ShowHub == true;
+}
+
+@if (showHub)
+{
+    <div class="alert alert-primary border-0 shadow-sm rounded-4 mb-4">
+        <h5 class="fw-bold mb-2"><i class="fa fa-warehouse me-2"></i>Trung tâm vận hành kho</h5>
+        <p class="mb-3 small">Luồng chuẩn: <strong>NCC → Đặt hàng → Nhập kho (lô/HSD) → Bán hàng → Xuất FEFO khi xác nhận đơn</strong></p>
+        <div class="row g-2">
+            <div class="col-md-3">
+                <a href="/AdminSupplier" class="btn btn-outline-primary w-100 text-start">
+                    <i class="fa fa-truck me-2"></i>1. Nhà cung cấp
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="/AdminPurchase/Create" class="btn btn-outline-primary w-100 text-start">
+                    <i class="fa fa-file-invoice me-2"></i>2. Tạo đơn đặt hàng
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="/AdminPurchase" class="btn btn-outline-success w-100 text-start">
+                    <i class="fa fa-arrow-down me-2"></i>3. Nhập kho từ đơn
+                    @if (Model.PendingPurchaseOrders > 0)
+                    {
+                        <span class="badge bg-danger ms-1">@Model.PendingPurchaseOrders</span>
+                    }
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="/AdminOrder" class="btn btn-outline-warning w-100 text-start">
+                    <i class="fa fa-cart-shopping me-2"></i>4. Xử lý đơn bán
+                    @if (Model.PendingOrderConfirmations > 0)
+                    {
+                        <span class="badge bg-danger ms-1">@Model.PendingOrderConfirmations</span>
+                    }
+                </a>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted small">Tổng dòng tồn kho</div>
+                <div class="fs-4 fw-bold text-primary">@Model.WarehouseStocks.Count</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted small">Lô đang còn hàng</div>
+                <div class="fs-4 fw-bold text-success">@Model.Batches.Count</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted small">Cảnh báo tồn thấp</div>
+                <div class="fs-4 fw-bold text-danger">@Model.LowStockAlerts.Count</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted small">Đơn NCC chờ nhập</div>
+                <div class="fs-4 fw-bold text-warning">@Model.PendingPurchaseOrders</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabImport">Nhập kho nhanh</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabStock">Tồn theo kho</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabBatch">Lô & HSD (FEFO)</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabHistory">Lịch sử phiếu</button></li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="tabImport">
+        <div class="row g-3 mb-4">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white fw-semibold">Nhập kho trực tiếp (tạo lô + cập nhật WarehouseStock)</div>
+                    <div class="card-body">
+                        <p class="small text-muted">Dùng khi nhập gấp. Khuyến nghị: tạo <a href="/AdminPurchase/Create">đơn đặt hàng NCC</a> để theo dõi đầy đủ.</p>
+                        <form id="importForm" class="row g-3">
+                            @Html.AntiForgeryToken()
+                            <div class="col-md-4">
+                                <label class="form-label">Sản phẩm</label>
+                                <select name="ProductId" class="form-select" required>
+                                    <option value="">-- Chọn --</option>
+                                    @foreach (var p in products)
+                                    {
+                                        <option value="@p.ProductId">@p.ProductName @(p.Sku != null ? $"({p.Sku})" : "")</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Số lượng</label>
+                                <input type="number" name="Quantity" class="form-control" min="1" required />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Nhà cung cấp</label>
+                                <select name="SupplierId" class="form-select">
+                                    <option value="">-- Khác --</option>
+                                    @foreach (var s in suppliers)
+                                    {
+                                        <option value="@s.SupplierId">@s.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Giá nhập/SP</label>
+                                <input type="number" name="UnitCost" class="form-control" min="0" step="1000" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Mã lô <span class="text-danger">*</span></label>
+                                <input type="text" name="BatchNo" class="form-control" placeholder="LOT-2026-001" required />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Hạn dùng</label>
+                                <input type="date" name="ExpiryDate" class="form-control" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Kho</label>
+                                <select name="WarehouseId" class="form-select">
+                                    @foreach (var w in warehouses)
+                                    {
+                                        <option value="@w.WarehouseId">@w.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Ghi chú</label>
+                                <input type="text" name="Note" class="form-control" />
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-success"><i class="fa fa-arrow-down me-1"></i> Nhập kho</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white fw-semibold text-danger">Cảnh báo tồn thấp (≤ 10)</div>
+                    <div class="card-body">
+                        @if (Model.LowStockAlerts.Any())
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var p in Model.LowStockAlerts)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span>@p.ProductName</span>
+                                        <span class="badge bg-danger">@p.Available</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="text-muted mb-0">Không có sản phẩm sắp hết hàng.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="tabStock">
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered bg-white shadow-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th>SKU</th>
+                        <th>Kho</th>
+                        <th>Tồn thực</th>
+                        <th>Đang giữ</th>
+                        <th>Khả dụng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var ws in Model.WarehouseStocks)
+                    {
+                        <tr>
+                            <td>@ws.ProductName</td>
+                            <td>@(ws.Sku ?? "—")</td>
+                            <td>@ws.WarehouseName</td>
+                            <td>@ws.QuantityOnHand</td>
+                            <td>@ws.QuantityReserved</td>
+                            <td><span class="badge @(ws.Available <= 10 ? "bg-danger" : "bg-success")">@ws.Available</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="tabBatch">
+        <p class="small text-muted">Khi admin <strong>xác nhận đơn bán</strong>, hệ thống tự xuất theo FEFO — lô hết hạn sớm nhất trước.</p>
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered bg-white shadow-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th>Mã lô</th>
+                        <th>HSD</th>
+                        <th>Kho</th>
+                        <th>Tồn lô</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var b in Model.Batches)
+                    {
+                        var expiringSoon = b.ExpiryDate.HasValue && b.ExpiryDate.Value <= DateTime.Today.AddDays(90);
+                        <tr class="@(expiringSoon ? "table-warning" : "")">
+                            <td>@b.ProductName</td>
+                            <td>@b.BatchNo</td>
+                            <td>@(b.ExpiryDate?.ToString("dd/MM/yyyy") ?? "—")</td>
+                            <td>@b.WarehouseName</td>
+                            <td>@b.QuantityOnHand</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="tabHistory">
+        <form method="get" class="row g-3 align-items-end mb-3 bg-white shadow-sm rounded-4 px-4 py-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="search" value="@Model.Search" placeholder="Tên SP, ghi chú..." />
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="type">
+                    @{
+                        var types = new[] { "Tất cả", "Import", "Sale", "BatchSale", "Return", "Adjustment" };
+                    }
+                    @foreach (var t in types)
+                    {
+                        <option value="@t" selected="@(Model.Type == t)">@t</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Lọc</button>
+            </div>
+        </form>
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered bg-white shadow-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Thời gian</th>
+                        <th>SP</th>
+                        <th>Kho</th>
+                        <th>Loại</th>
+                        <th>SL</th>
+                        <th>Lô</th>
+                        <th>Đơn</th>
+                        <th>NCC</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Transactions)
+                    {
+                        <tr>
+                            <td>#@item.TransactionId</td>
+                            <td>@item.TransactionDate.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@item.ProductName</td>
+                            <td>@item.WarehouseName</td>
+                            <td><span class="badge bg-secondary">@item.TransactionType</span></td>
+                            <td>@item.Quantity</td>
+                            <td>@(item.BatchNo ?? "—")</td>
+                            <td>@(item.OrderId.HasValue ? $"#{item.OrderId}" : "—")</td>
+                            <td>@(item.SupplierName ?? "—")</td>
+                            <td>@(item.Note ?? "—")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+document.getElementById('importForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const res = await fetch('/AdminInventory/Import', { method: 'POST', body: formData });
+    const result = await res.json();
+    alert(result.message);
+    if (result.success) location.reload();
+});
+</script>
+}

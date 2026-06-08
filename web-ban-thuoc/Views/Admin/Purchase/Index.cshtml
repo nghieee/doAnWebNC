@@ -1,0 +1,99 @@
+@model List<web_ban_thuoc.Models.PurchaseOrderListViewModel>
+@using web_ban_thuoc.Models
+@{
+    ViewData["Title"] = "Đơn đặt hàng NCC";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+    var status = ViewBag.Status as string ?? "Tất cả";
+    var pendingReceive = Model.Count(p => p.Status == PurchaseOrderStatuses.Confirmed || p.Status == PurchaseOrderStatuses.PartiallyReceived);
+
+    string StatusBadge(string s) => s switch
+    {
+        PurchaseOrderStatuses.Draft => "bg-secondary",
+        PurchaseOrderStatuses.Confirmed => "bg-warning text-dark",
+        PurchaseOrderStatuses.PartiallyReceived => "bg-info text-dark",
+        PurchaseOrderStatuses.Received => "bg-success",
+        PurchaseOrderStatuses.Cancelled => "bg-danger",
+        _ => "bg-light text-dark"
+    };
+}
+
+<div class="alert alert-light border shadow-sm rounded-4 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <strong>Luồng nhập hàng:</strong>
+            <span class="text-muted">Tạo đơn (Nháp) → Xác nhận → Nhập kho (nhập mã lô + HSD) → Cập nhật tồn WarehouseStock</span>
+        </div>
+        @if (pendingReceive > 0)
+        {
+            <span class="badge bg-danger">@pendingReceive đơn chờ nhập kho</span>
+        }
+    </div>
+</div>
+
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <form method="get" class="d-flex gap-2">
+            <select name="status" class="form-select" style="width:220px">
+                @{
+                    var statuses = new[] { "Tất cả", PurchaseOrderStatuses.Draft, PurchaseOrderStatuses.Confirmed, PurchaseOrderStatuses.PartiallyReceived, PurchaseOrderStatuses.Received, PurchaseOrderStatuses.Cancelled };
+                }
+                @foreach (var s in statuses)
+                {
+                    <option value="@s" selected="@(status == s)">@s</option>
+                }
+            </select>
+            <button type="submit" class="btn btn-primary">Lọc</button>
+        </form>
+        <a href="/AdminPurchase/Create" class="btn btn-success"><i class="fa fa-plus me-1"></i> Tạo đơn đặt hàng</a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 bg-white rounded-4 shadow-sm">
+            <i class="fa fa-file-invoice fa-3x text-muted mb-3"></i>
+            <p class="text-muted mb-3">Chưa có đơn đặt hàng nào.</p>
+            <a href="/AdminPurchase/Create" class="btn btn-primary">Tạo đơn đầu tiên</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-bordered bg-white shadow-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>NCC</th>
+                        <th>Kho nhận</th>
+                        <th>Ngày</th>
+                        <th>SL đặt</th>
+                        <th>SL đã nhận</th>
+                        <th>Trạng thái</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var po in Model)
+                    {
+                        var canReceive = po.Status == PurchaseOrderStatuses.Confirmed || po.Status == PurchaseOrderStatuses.PartiallyReceived;
+                        <tr>
+                            <td class="fw-semibold">@po.OrderCode</td>
+                            <td>@po.SupplierName</td>
+                            <td>@po.WarehouseName</td>
+                            <td>@po.OrderDate.ToString("dd/MM/yyyy")</td>
+                            <td>@po.TotalOrdered</td>
+                            <td>@po.TotalReceived</td>
+                            <td><span class="badge @StatusBadge(po.Status)">@po.Status</span></td>
+                            <td class="text-nowrap">
+                                <a href="/AdminPurchase/Details/@po.PurchaseOrderId" class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                                @if (canReceive)
+                                {
+                                    <a href="/AdminPurchase/Receive/@po.PurchaseOrderId" class="btn btn-sm btn-success"><i class="fa fa-arrow-down"></i></a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

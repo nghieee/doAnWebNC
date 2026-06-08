@@ -25,7 +25,16 @@ public class AdminUserController : Controller
     [Route("Index")]
     public async Task<IActionResult> Index(string? searchTerm, string? statusFilter, string? rankFilter)
     {
-        var query = _userManager.Users.AsQueryable();
+        var staffRoleIds = await _context.Roles
+            .Where(r => StaffRoles.All.Contains(r.Name!))
+            .Select(r => r.Id)
+            .ToListAsync();
+        var staffUserIds = await _context.UserRoles
+            .Where(ur => staffRoleIds.Contains(ur.RoleId))
+            .Select(ur => ur.UserId)
+            .ToListAsync();
+
+        var query = _userManager.Users.Where(u => !staffUserIds.Contains(u.Id));
 
         // Filter theo search term
         if (!string.IsNullOrEmpty(searchTerm))
@@ -135,7 +144,7 @@ public class AdminUserController : Controller
             Orders = orders,
             TotalOrders = await _context.Orders.CountAsync(o => o.UserId == id),
             TotalSpentAllTime = await _context.Orders
-                .Where(o => o.UserId == id && o.Status == "Đã giao")
+                .Where(o => o.UserId == id && o.Status == OrderStatuses.Delivered)
                 .SumAsync(o => o.TotalAmount ?? 0)
         };
 

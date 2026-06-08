@@ -1,0 +1,61 @@
+@model web_ban_thuoc.Models.EditStaffViewModel
+@using web_ban_thuoc.Models
+@{
+    ViewData["Title"] = "Sửa nhân viên";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+
+<div class="container-fluid py-3">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4">Cập nhật nhân viên</h5>
+                    <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label fw-semibold"></label>
+                            <input asp-for="Email" class="form-control" readonly />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="PhoneNumber" class="form-label fw-semibold"></label>
+                            <input asp-for="PhoneNumber" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Role" class="form-label fw-semibold"></label>
+                            <select asp-for="Role" class="form-select">
+                                @foreach (var role in StaffRoles.All)
+                                {
+                                    <option value="@role">@StaffRoles.GetDisplayName(role)</option>
+                                }
+                            </select>
+                        </div>
+                        <hr />
+                        <p class="small text-muted mb-3">Để trống nếu không đổi mật khẩu</p>
+                        <div class="mb-3">
+                            <label asp-for="NewPassword" class="form-label fw-semibold"></label>
+                            <input asp-for="NewPassword" class="form-control" />
+                        </div>
+                        <div class="mb-4">
+                            <label asp-for="ConfirmNewPassword" class="form-label fw-semibold"></label>
+                            <input asp-for="ConfirmNewPassword" class="form-control" />
+                            <span asp-validation-for="ConfirmNewPassword" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                            <a href="/AdminStaff" class="btn btn-outline-secondary">Hủy</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

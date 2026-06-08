@@ -1,0 +1,45 @@
+@model List<web_ban_thuoc.Models.VoucherRedemption>
+@{
+    var voucher = ViewBag.Voucher as web_ban_thuoc.Models.Voucher;
+    var users = ViewBag.Users as Dictionary<string, string> ?? new();
+    ViewData["Title"] = $"Lịch sử dùng mã {voucher?.Code}";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+<div class="container-fluid py-4">
+    <div class="mb-3">
+        <a href="/admin/Voucher" class="btn btn-outline-secondary btn-sm"><i class="fa fa-arrow-left me-1"></i> Quay lại</a>
+    </div>
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body">
+            <h5 class="mb-1">Mã <span class="badge bg-primary">@voucher?.Code</span></h5>
+            <p class="text-muted mb-4">@voucher?.Description — Đã dùng @Model.Count lượt (chưa hoàn)</p>
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Thời gian</th>
+                            <th>Khách hàng</th>
+                            <th>Đơn hàng</th>
+                            <th>Giảm</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Count == 0)
+                        {
+                            <tr><td colspan="4" class="text-center text-muted py-4">Chưa có lượt sử dụng nào.</td></tr>
+                        }
+                        @foreach (var r in Model)
+                        {
+                            <tr>
+                                <td>@r.RedeemedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@(users.GetValueOrDefault(r.UserId, r.UserId))</td>
+                                <td><a href="/AdminOrder?search=@r.OrderId">#@r.OrderId</a></td>
+                                <td class="text-danger fw-semibold">-@r.DiscountAmount.ToString("N0")đ</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

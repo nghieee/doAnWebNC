@@ -2,5 +2,7 @@
     "dotnet.defaultSolution": "web-ban-thuoc.sln",
     "[csharp]": {
         "editor.formatOnSave": true
-    }
+    },
+    "appService.preDeployTask": "publish-release",
+    "appService.deploySubpath": "web-ban-thuoc/bin/Release/net8.0/publish"
 }

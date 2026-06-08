@@ -1,0 +1,83 @@
+@model web_ban_thuoc.Models.ProductImportResult
+@{
+    ViewData["Title"] = "Kết quả nhập Excel";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="admin-stat-card">
+            <div class="stat-value text-primary">@Model.TotalRows</div>
+            <div class="stat-label">Tổng dòng</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="admin-stat-card">
+            <div class="stat-value text-success">@Model.SuccessCount</div>
+            <div class="stat-label">Thành công</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="admin-stat-card">
+            <div class="stat-value text-warning">@Model.SkippedCount</div>
+            <div class="stat-label">Bỏ qua</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="admin-stat-card">
+            <div class="stat-value text-danger">@Model.ErrorCount</div>
+            <div class="stat-label">Lỗi</div>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-header d-flex justify-content-between align-items-center">
+        <span>Chi tiết từng dòng</span>
+        <div class="d-flex gap-2">
+            <a href="/AdminProduct/Import" class="btn btn-sm btn-outline-primary">Nhập thêm</a>
+            <a href="/AdminProduct" class="btn btn-sm btn-primary">Danh sách SP</a>
+        </div>
+    </div>
+    <div class="admin-card-body p-0">
+        @if (!Model.Rows.Any())
+        {
+            <p class="p-4 text-muted mb-0">Không có dòng dữ liệu nào trong file.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Dòng</th>
+                            <th>Tên SP</th>
+                            <th>Trạng thái</th>
+                            <th>Chi tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.Rows)
+                        {
+                            <tr class="@(row.Success ? "" : "table-danger")">
+                                <td>@row.RowNumber</td>
+                                <td>@row.ProductName</td>
+                                <td>
+                                    @if (row.Success)
+                                    {
+                                        <span class="badge bg-success">OK #@row.ProductId</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Lỗi</span>
+                                    }
+                                </td>
+                                <td class="small">@row.Message</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

@@ -10,6 +10,7 @@ public class ProductController : Controller
     private readonly ILogger<ProductController> _logger;
     private readonly UserManager<IdentityUser> _userManager;
 
+
     public ProductController(LongChauDbContext context, ILogger<ProductController> logger, UserManager<IdentityUser> userManager)
     {
         _context = context;
@@ -24,6 +25,7 @@ public class ProductController : Controller
         var product = _context.Products
             .Include(p => p.ProductImages)
             .Include(p => p.Category)
+            .Include(p => p.Supplier)
             .Include(p => p.Reviews)
             .ThenInclude(r => r.User)
             .FirstOrDefault(p => p.ProductId == id);
@@ -45,7 +47,7 @@ public class ProductController : Controller
             {
                 // Kiểm tra user đã mua sản phẩm này với đơn hàng đã giao/thanh toán
                 bool canReview = _context.Orders
-                    .Where(o => o.UserId == userId && (o.Status == "Đã giao" || o.PaymentStatus == "Đã thanh toán"))
+                    .Where(o => o.UserId == userId && (o.Status == OrderStatuses.Delivered || o.PaymentStatus == PaymentStatuses.Paid))
                     .SelectMany(o => o.OrderItems)
                     .Any(oi => oi.ProductId == id);
                 ViewBag.CanReview = canReview;
@@ -66,7 +68,7 @@ public class ProductController : Controller
         var userId = _userManager.GetUserId(User);
         // Kiểm tra đã mua hàng
         bool hasPurchased = _context.Orders
-            .Where(o => o.UserId == userId && (o.Status == "Đã giao" || o.PaymentStatus == "Đã thanh toán"))
+            .Where(o => o.UserId == userId && (o.Status == OrderStatuses.Delivered || o.PaymentStatus == PaymentStatuses.Paid))
             .SelectMany(o => o.OrderItems)
             .Any(oi => oi.ProductId == productId);
         if (!hasPurchased)

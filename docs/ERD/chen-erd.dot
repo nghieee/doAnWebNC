@@ -1,0 +1,340 @@
+digraph ERD {
+  rankdir=LR;
+  splines=true;
+  fontname="Arial"; fontsize=10;
+  node [fontname="Arial", fontsize=10];
+  edge [fontname="Arial", fontsize=9];
+
+  // ENTITIES (rectangle)
+  Users [shape=box, label="Users (AspNetUsers)"];
+  Category [shape=box, label="Categories"];
+  Product [shape=box, label="Products"];
+  ProductImage [shape=box, label="ProductImages"];
+  Order [shape=box, label="Orders"];
+  OrderItem [shape=box, label="OrderItems"];
+  Payment [shape=box, label="Payments"];
+  Voucher [shape=box, label="Vouchers"];
+  UserVoucher [shape=box, label="UserVouchers"];
+  UserRankInfo [shape=box, label="UserRankInfos"];
+  Review [shape=box, label="Reviews"];
+  ChatMessage [shape=box, label="ChatMessages"];
+  InventoryTransaction [shape=box, label="InventoryTransactions"];
+  Banner [shape=box, label="Banners"];
+
+  // ATTRIBUTES (oval) - full columns from EF snapshot
+  Users_Id [shape=ellipse, label="Id (PK)"];
+  Users -> Users_Id [style=dotted, dir=none];
+  Users_AccessFailedCount [shape=ellipse, label="AccessFailedCount"];
+  Users -> Users_AccessFailedCount [style=dotted, dir=none];
+  Users_ConcurrencyStamp [shape=ellipse, label="ConcurrencyStamp"];
+  Users -> Users_ConcurrencyStamp [style=dotted, dir=none];
+  Users_Email [shape=ellipse, label="Email"];
+  Users -> Users_Email [style=dotted, dir=none];
+  Users_EmailConfirmed [shape=ellipse, label="EmailConfirmed"];
+  Users -> Users_EmailConfirmed [style=dotted, dir=none];
+  Users_LockoutEnabled [shape=ellipse, label="LockoutEnabled"];
+  Users -> Users_LockoutEnabled [style=dotted, dir=none];
+  Users_LockoutEnd [shape=ellipse, label="LockoutEnd"];
+  Users -> Users_LockoutEnd [style=dotted, dir=none];
+  Users_NormalizedEmail [shape=ellipse, label="NormalizedEmail"];
+  Users -> Users_NormalizedEmail [style=dotted, dir=none];
+  Users_NormalizedUserName [shape=ellipse, label="NormalizedUserName"];
+  Users -> Users_NormalizedUserName [style=dotted, dir=none];
+  Users_PasswordHash [shape=ellipse, label="PasswordHash"];
+  Users -> Users_PasswordHash [style=dotted, dir=none];
+  Users_PhoneNumber [shape=ellipse, label="PhoneNumber"];
+  Users -> Users_PhoneNumber [style=dotted, dir=none];
+  Users_PhoneNumberConfirmed [shape=ellipse, label="PhoneNumberConfirmed"];
+  Users -> Users_PhoneNumberConfirmed [style=dotted, dir=none];
+  Users_SecurityStamp [shape=ellipse, label="SecurityStamp"];
+  Users -> Users_SecurityStamp [style=dotted, dir=none];
+  Users_TwoFactorEnabled [shape=ellipse, label="TwoFactorEnabled"];
+  Users -> Users_TwoFactorEnabled [style=dotted, dir=none];
+  Users_UserName [shape=ellipse, label="UserName"];
+  Users -> Users_UserName [style=dotted, dir=none];
+
+  Banner_BannerId [shape=ellipse, label="BannerId (PK)"];
+  Banner -> Banner_BannerId [style=dotted, dir=none];
+  Banner_BannerType [shape=ellipse, label="BannerType"];
+  Banner -> Banner_BannerType [style=dotted, dir=none];
+  Banner_CreatedAt [shape=ellipse, label="CreatedAt"];
+  Banner -> Banner_CreatedAt [style=dotted, dir=none];
+  Banner_Description [shape=ellipse, label="Description"];
+  Banner -> Banner_Description [style=dotted, dir=none];
+  Banner_ImageUrl [shape=ellipse, label="ImageUrl"];
+  Banner -> Banner_ImageUrl [style=dotted, dir=none];
+  Banner_IsActive [shape=ellipse, label="IsActive"];
+  Banner -> Banner_IsActive [style=dotted, dir=none];
+  Banner_LinkUrl [shape=ellipse, label="LinkUrl"];
+  Banner -> Banner_LinkUrl [style=dotted, dir=none];
+  Banner_SortOrder [shape=ellipse, label="SortOrder"];
+  Banner -> Banner_SortOrder [style=dotted, dir=none];
+  Banner_Title [shape=ellipse, label="Title"];
+  Banner -> Banner_Title [style=dotted, dir=none];
+  Banner_UpdatedAt [shape=ellipse, label="UpdatedAt"];
+  Banner -> Banner_UpdatedAt [style=dotted, dir=none];
+
+  Category_CategoryId [shape=ellipse, label="CategoryId (PK)"];
+  Category -> Category_CategoryId [style=dotted, dir=none];
+  Category_CategoryLevel [shape=ellipse, label="CategoryLevel"];
+  Category -> Category_CategoryLevel [style=dotted, dir=none];
+  Category_CategoryName [shape=ellipse, label="CategoryName"];
+  Category -> Category_CategoryName [style=dotted, dir=none];
+  Category_Description [shape=ellipse, label="Description"];
+  Category -> Category_Description [style=dotted, dir=none];
+  Category_ImageUrl [shape=ellipse, label="ImageUrl"];
+  Category -> Category_ImageUrl [style=dotted, dir=none];
+  Category_IsFeature [shape=ellipse, label="IsFeature"];
+  Category -> Category_IsFeature [style=dotted, dir=none];
+  Category_ParentCategoryId [shape=ellipse, label="ParentCategoryId"];
+  Category -> Category_ParentCategoryId [style=dotted, dir=none];
+  Category_ProductCount [shape=ellipse, label="ProductCount"];
+  Category -> Category_ProductCount [style=dotted, dir=none];
+
+  ChatMessage_Id [shape=ellipse, label="Id (PK)"];
+  ChatMessage -> ChatMessage_Id [style=dotted, dir=none];
+  ChatMessage_IsRead [shape=ellipse, label="IsRead"];
+  ChatMessage -> ChatMessage_IsRead [style=dotted, dir=none];
+  ChatMessage_Message [shape=ellipse, label="Message"];
+  ChatMessage -> ChatMessage_Message [style=dotted, dir=none];
+  ChatMessage_ReceiverId [shape=ellipse, label="ReceiverId"];
+  ChatMessage -> ChatMessage_ReceiverId [style=dotted, dir=none];
+  ChatMessage_SenderId [shape=ellipse, label="SenderId"];
+  ChatMessage -> ChatMessage_SenderId [style=dotted, dir=none];
+  ChatMessage_SentAt [shape=ellipse, label="SentAt"];
+  ChatMessage -> ChatMessage_SentAt [style=dotted, dir=none];
+
+  InventoryTransaction_TransactionId [shape=ellipse, label="TransactionId (PK)"];
+  InventoryTransaction -> InventoryTransaction_TransactionId [style=dotted, dir=none];
+  InventoryTransaction_ProductId [shape=ellipse, label="ProductId"];
+  InventoryTransaction -> InventoryTransaction_ProductId [style=dotted, dir=none];
+  InventoryTransaction_QuantityChange [shape=ellipse, label="QuantityChange"];
+  InventoryTransaction -> InventoryTransaction_QuantityChange [style=dotted, dir=none];
+  InventoryTransaction_TransactionDate [shape=ellipse, label="TransactionDate"];
+  InventoryTransaction -> InventoryTransaction_TransactionDate [style=dotted, dir=none];
+  InventoryTransaction_TransactionType [shape=ellipse, label="TransactionType"];
+  InventoryTransaction -> InventoryTransaction_TransactionType [style=dotted, dir=none];
+
+  Order_OrderId [shape=ellipse, label="OrderId (PK)"];
+  Order -> Order_OrderId [style=dotted, dir=none];
+  Order_FullName [shape=ellipse, label="FullName"];
+  Order -> Order_FullName [style=dotted, dir=none];
+  Order_OrderDate [shape=ellipse, label="OrderDate"];
+  Order -> Order_OrderDate [style=dotted, dir=none];
+  Order_PaymentStatus [shape=ellipse, label="PaymentStatus"];
+  Order -> Order_PaymentStatus [style=dotted, dir=none];
+  Order_Phone [shape=ellipse, label="Phone"];
+  Order -> Order_Phone [style=dotted, dir=none];
+  Order_ShippingAddress [shape=ellipse, label="ShippingAddress"];
+  Order -> Order_ShippingAddress [style=dotted, dir=none];
+  Order_Status [shape=ellipse, label="Status"];
+  Order -> Order_Status [style=dotted, dir=none];
+  Order_TotalAmount [shape=ellipse, label="TotalAmount"];
+  Order -> Order_TotalAmount [style=dotted, dir=none];
+  Order_UserId [shape=ellipse, label="UserId"];
+  Order -> Order_UserId [style=dotted, dir=none];
+  Order_VoucherCode [shape=ellipse, label="VoucherCode"];
+  Order -> Order_VoucherCode [style=dotted, dir=none];
+  Order_VoucherDiscount [shape=ellipse, label="VoucherDiscount"];
+  Order -> Order_VoucherDiscount [style=dotted, dir=none];
+
+  OrderItem_OrderItemId [shape=ellipse, label="OrderItemId (PK)"];
+  OrderItem -> OrderItem_OrderItemId [style=dotted, dir=none];
+  OrderItem_OrderId [shape=ellipse, label="OrderId"];
+  OrderItem -> OrderItem_OrderId [style=dotted, dir=none];
+  OrderItem_Price [shape=ellipse, label="Price"];
+  OrderItem -> OrderItem_Price [style=dotted, dir=none];
+  OrderItem_ProductId [shape=ellipse, label="ProductId"];
+  OrderItem -> OrderItem_ProductId [style=dotted, dir=none];
+  OrderItem_Quantity [shape=ellipse, label="Quantity"];
+  OrderItem -> OrderItem_Quantity [style=dotted, dir=none];
+
+  Payment_PaymentId [shape=ellipse, label="PaymentId (PK)"];
+  Payment -> Payment_PaymentId [style=dotted, dir=none];
+  Payment_Amount [shape=ellipse, label="Amount"];
+  Payment -> Payment_Amount [style=dotted, dir=none];
+  Payment_OrderId [shape=ellipse, label="OrderId"];
+  Payment -> Payment_OrderId [style=dotted, dir=none];
+  Payment_PaymentDate [shape=ellipse, label="PaymentDate"];
+  Payment -> Payment_PaymentDate [style=dotted, dir=none];
+  Payment_PaymentMethod [shape=ellipse, label="PaymentMethod"];
+  Payment -> Payment_PaymentMethod [style=dotted, dir=none];
+  Payment_PaymentStatus [shape=ellipse, label="PaymentStatus"];
+  Payment -> Payment_PaymentStatus [style=dotted, dir=none];
+  Payment_TransactionId [shape=ellipse, label="TransactionId"];
+  Payment -> Payment_TransactionId [style=dotted, dir=none];
+
+  Product_ProductId [shape=ellipse, label="ProductId (PK)"];
+  Product -> Product_ProductId [style=dotted, dir=none];
+  Product_Brand [shape=ellipse, label="Brand"];
+  Product -> Product_Brand [style=dotted, dir=none];
+  Product_CategoryId [shape=ellipse, label="CategoryId"];
+  Product -> Product_CategoryId [style=dotted, dir=none];
+  Product_Contraindications [shape=ellipse, label="Contraindications"];
+  Product -> Product_Contraindications [style=dotted, dir=none];
+  Product_Dosage [shape=ellipse, label="Dosage"];
+  Product -> Product_Dosage [style=dotted, dir=none];
+  Product_IngredientUnit [shape=ellipse, label="IngredientUnit"];
+  Product -> Product_IngredientUnit [style=dotted, dir=none];
+  Product_Ingredients [shape=ellipse, label="Ingredients"];
+  Product -> Product_Ingredients [style=dotted, dir=none];
+  Product_IsActive [shape=ellipse, label="IsActive"];
+  Product -> Product_IsActive [style=dotted, dir=none];
+  Product_IsFeature [shape=ellipse, label="IsFeature"];
+  Product -> Product_IsFeature [style=dotted, dir=none];
+  Product_Origin [shape=ellipse, label="Origin"];
+  Product -> Product_Origin [style=dotted, dir=none];
+  Product_Package [shape=ellipse, label="Package"];
+  Product -> Product_Package [style=dotted, dir=none];
+  Product_Price [shape=ellipse, label="Price"];
+  Product -> Product_Price [style=dotted, dir=none];
+  Product_ProductName [shape=ellipse, label="ProductName"];
+  Product -> Product_ProductName [style=dotted, dir=none];
+  Product_Slug [shape=ellipse, label="Slug"];
+  Product -> Product_Slug [style=dotted, dir=none];
+  Product_SoldQuantity [shape=ellipse, label="SoldQuantity"];
+  Product -> Product_SoldQuantity [style=dotted, dir=none];
+  Product_StockQuantity [shape=ellipse, label="StockQuantity"];
+  Product -> Product_StockQuantity [style=dotted, dir=none];
+  Product_TargetUsers [shape=ellipse, label="TargetUsers"];
+  Product -> Product_TargetUsers [style=dotted, dir=none];
+  Product_Uses [shape=ellipse, label="Uses"];
+  Product -> Product_Uses [style=dotted, dir=none];
+
+  ProductImage_ProductImageId [shape=ellipse, label="ProductImageId (PK)"];
+  ProductImage -> ProductImage_ProductImageId [style=dotted, dir=none];
+  ProductImage_ImageUrl [shape=ellipse, label="ImageUrl"];
+  ProductImage -> ProductImage_ImageUrl [style=dotted, dir=none];
+  ProductImage_IsMain [shape=ellipse, label="IsMain"];
+  ProductImage -> ProductImage_IsMain [style=dotted, dir=none];
+  ProductImage_ProductId [shape=ellipse, label="ProductId"];
+  ProductImage -> ProductImage_ProductId [style=dotted, dir=none];
+  ProductImage_SortOrder [shape=ellipse, label="SortOrder"];
+  ProductImage -> ProductImage_SortOrder [style=dotted, dir=none];
+
+  Review_ReviewId [shape=ellipse, label="ReviewId (PK)"];
+  Review -> Review_ReviewId [style=dotted, dir=none];
+  Review_Comment [shape=ellipse, label="Comment"];
+  Review -> Review_Comment [style=dotted, dir=none];
+  Review_ProductId [shape=ellipse, label="ProductId"];
+  Review -> Review_ProductId [style=dotted, dir=none];
+  Review_Rating [shape=ellipse, label="Rating"];
+  Review -> Review_Rating [style=dotted, dir=none];
+  Review_ReviewDate [shape=ellipse, label="ReviewDate"];
+  Review -> Review_ReviewDate [style=dotted, dir=none];
+  Review_UserId [shape=ellipse, label="UserId"];
+  Review -> Review_UserId [style=dotted, dir=none];
+
+  UserRankInfo_UserId [shape=ellipse, label="UserId (PK)"];
+  UserRankInfo -> UserRankInfo_UserId [style=dotted, dir=none];
+  UserRankInfo_LastNotiMailSent [shape=ellipse, label="LastNotiMailSent"];
+  UserRankInfo -> UserRankInfo_LastNotiMailSent [style=dotted, dir=none];
+  UserRankInfo_LastRankMailSent [shape=ellipse, label="LastRankMailSent"];
+  UserRankInfo -> UserRankInfo_LastRankMailSent [style=dotted, dir=none];
+  UserRankInfo_LastRankReset [shape=ellipse, label="LastRankReset"];
+  UserRankInfo -> UserRankInfo_LastRankReset [style=dotted, dir=none];
+  UserRankInfo_Rank [shape=ellipse, label="Rank"];
+  UserRankInfo -> UserRankInfo_Rank [style=dotted, dir=none];
+  UserRankInfo_TotalSpent [shape=ellipse, label="TotalSpent"];
+  UserRankInfo -> UserRankInfo_TotalSpent [style=dotted, dir=none];
+  UserRankInfo_TotalSpent6Months [shape=ellipse, label="TotalSpent6Months"];
+  UserRankInfo -> UserRankInfo_TotalSpent6Months [style=dotted, dir=none];
+
+  UserVoucher_UserVoucherId [shape=ellipse, label="UserVoucherId (PK)"];
+  UserVoucher -> UserVoucher_UserVoucherId [style=dotted, dir=none];
+  UserVoucher_IsNew [shape=ellipse, label="IsNew"];
+  UserVoucher -> UserVoucher_IsNew [style=dotted, dir=none];
+  UserVoucher_IsUsed [shape=ellipse, label="IsUsed"];
+  UserVoucher -> UserVoucher_IsUsed [style=dotted, dir=none];
+  UserVoucher_UsedDate [shape=ellipse, label="UsedDate"];
+  UserVoucher -> UserVoucher_UsedDate [style=dotted, dir=none];
+  UserVoucher_UserId [shape=ellipse, label="UserId"];
+  UserVoucher -> UserVoucher_UserId [style=dotted, dir=none];
+  UserVoucher_VoucherId [shape=ellipse, label="VoucherId"];
+  UserVoucher -> UserVoucher_VoucherId [style=dotted, dir=none];
+
+  Voucher_VoucherId [shape=ellipse, label="VoucherId (PK)"];
+  Voucher -> Voucher_VoucherId [style=dotted, dir=none];
+  Voucher_CategoryId [shape=ellipse, label="CategoryId"];
+  Voucher -> Voucher_CategoryId [style=dotted, dir=none];
+  Voucher_CategoryName [shape=ellipse, label="CategoryName"];
+  Voucher -> Voucher_CategoryName [style=dotted, dir=none];
+  Voucher_Code [shape=ellipse, label="Code"];
+  Voucher -> Voucher_Code [style=dotted, dir=none];
+  Voucher_Description [shape=ellipse, label="Description"];
+  Voucher -> Voucher_Description [style=dotted, dir=none];
+  Voucher_Detail [shape=ellipse, label="Detail"];
+  Voucher -> Voucher_Detail [style=dotted, dir=none];
+  Voucher_DiscountAmount [shape=ellipse, label="DiscountAmount"];
+  Voucher -> Voucher_DiscountAmount [style=dotted, dir=none];
+  Voucher_DiscountType [shape=ellipse, label="DiscountType"];
+  Voucher -> Voucher_DiscountType [style=dotted, dir=none];
+  Voucher_ExpiryDate [shape=ellipse, label="ExpiryDate"];
+  Voucher -> Voucher_ExpiryDate [style=dotted, dir=none];
+  Voucher_IsActive [shape=ellipse, label="IsActive"];
+  Voucher -> Voucher_IsActive [style=dotted, dir=none];
+  Voucher_MaxUsage [shape=ellipse, label="MaxUsage"];
+  Voucher -> Voucher_MaxUsage [style=dotted, dir=none];
+  Voucher_PercentValue [shape=ellipse, label="PercentValue"];
+  Voucher -> Voucher_PercentValue [style=dotted, dir=none];
+  Voucher_UsedCount [shape=ellipse, label="UsedCount"];
+  Voucher -> Voucher_UsedCount [style=dotted, dir=none];
+
+  // RELATIONSHIPS (diamond)
+  R_User_Order [shape=diamond, label="Dat hang"];
+  R_User_Order -> Users [label="1"];
+  R_User_Order -> Order [label="0..N"];
+
+  R_Order_Items [shape=diamond, label="Chua dong don"];
+  R_Order_Items -> Order [label="1"];
+  R_Order_Items -> OrderItem [label="N"];
+
+  R_Prod_OrderItems [shape=diamond, label="Duoc mua trong dong"];
+  R_Prod_OrderItems -> Product [label="1"];
+  R_Prod_OrderItems -> OrderItem [label="N"];
+
+  R_Order_Pay [shape=diamond, label="Thanh toan cho"];
+  R_Order_Pay -> Order [label="1"];
+  R_Order_Pay -> Payment [label="0..N"];
+
+  R_Cat_Prod [shape=diamond, label="Thuoc ve"];
+  R_Cat_Prod -> Category [label="1"];
+  R_Cat_Prod -> Product [label="N"];
+
+  R_Cat_Parent [shape=diamond, label="Phan cap cha-con"];
+  R_Cat_Parent -> Category [label="0..1 (parent)"];
+  R_Cat_Parent -> Category [label="0..N (child)"];
+
+  R_Prod_Img [shape=diamond, label="Co anh"];
+  R_Prod_Img -> Product [label="1"];
+  R_Prod_Img -> ProductImage [label="N"];
+
+  R_User_Review [shape=diamond, label="Viet danh gia"];
+  R_User_Review -> Users [label="1"];
+  R_User_Review -> Review [label="0..N"];
+
+  R_Prod_Review [shape=diamond, label="San pham nhan danh gia"];
+  R_Prod_Review -> Product [label="1"];
+  R_Prod_Review -> Review [label="0..N"];
+
+  R_User_UV [shape=diamond, label="Duoc cap voucher"];
+  R_User_UV -> Users [label="1"];
+  R_User_UV -> UserVoucher [label="0..N"];
+
+  R_UV_Vc [shape=diamond, label="Thuoc voucher"];
+  R_UV_Vc -> UserVoucher [label="N"];
+  R_UV_Vc -> Voucher [label="1"];
+
+  R_User_Rank [shape=diamond, label="Co hang"];
+  R_User_Rank -> Users [label="1"];
+  R_User_Rank -> UserRankInfo [label="0..1"];
+
+  R_User_Send [shape=diamond, label="Gui tin nhan"];
+  R_User_Send -> Users [label="1"];
+  R_User_Send -> ChatMessage [label="0..N"];
+
+  R_Prod_Inv [shape=diamond, label="Bien dong ton kho"];
+  R_Prod_Inv -> Product [label="1"];
+  R_Prod_Inv -> InventoryTransaction [label="0..N"];
+
+}

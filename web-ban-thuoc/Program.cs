@@ -21,8 +21,17 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 
 // Đăng ký cấu hình EmailSettings
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
-// Đăng ký service gửi mail
-builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
+// Đăng ký service gửi mail: hoán đổi Strategy theo môi trường tại DI Container (Dev = Null, Prod = SMTP) + Decorator (LoggingEmailSender)
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddTransient<IEmailSender>(sp =>
+        new LoggingEmailSender(new NullEmailSender(), sp.GetRequiredService<ILogger<LoggingEmailSender>>()));
+}
+else
+{
+    builder.Services.AddTransient<IEmailSender>(sp =>
+        new LoggingEmailSender(new SmtpEmailSender(sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<EmailSettings>>()), sp.GetRequiredService<ILogger<LoggingEmailSender>>()));
+}
 
 // Thêm cấu hình LoginPath cho cookie authentication
 builder.Services.ConfigureApplicationCookie(options =>
@@ -40,6 +49,13 @@ builder.Services.AddControllersWithViews(options =>
 builder.Services.AddSession();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<UserRankService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<ILoyaltyService, LoyaltyService>();
+builder.Services.AddScoped<IOrderNotificationService, OrderNotificationService>();
+builder.Services.AddScoped<IPayOSWebhookProcessor, PayOSWebhookProcessor>();
+builder.Services.AddScoped<IProductExcelImportService, ProductExcelImportService>();
 builder.Services.AddHostedService<MonthlyVoucherHostedService>();
 
 // Đăng ký PayOS Services
@@ -49,17 +65,21 @@ builder.Services.AddScoped<IOrderEmailService, OrderEmailService>();
 
 var app = builder.Build();
 
-// Seed role và user admin
+// Dev: tự apply migration + seed
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    var db = services.GetRequiredService<LongChauDbContext>();
+    if (app.Environment.IsDevelopment())
+        await db.Database.MigrateAsync();
+
     var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-    // Tạo role Admin nếu chưa có
-    if (!await roleManager.RoleExistsAsync("Admin"))
+    foreach (var roleName in new[] { "Admin", "WarehouseStaff", "CustomerSupport" })
     {
-        await roleManager.CreateAsync(new IdentityRole("Admin"));
+        if (!await roleManager.RoleExistsAsync(roleName))
+            await roleManager.CreateAsync(new IdentityRole(roleName));
     }
 
     // Tạo tài khoản admin nếu chưa có
@@ -81,6 +101,85 @@ using (var scope = app.Services.CreateScope())
     {
         await userManager.AddToRoleAsync(adminUser, "Admin");
     }
+
+    await SeedStaffAccountAsync(userManager, "warehouse@longchau.local", "Kho123456.", StaffRoles.WarehouseStaff);
+    await SeedStaffAccountAsync(userManager, "support@longchau.local", "Support123.", StaffRoles.CustomerSupport);
+
+    if (!await db.Suppliers.AnyAsync())
+    {
+        db.Suppliers.Add(new Supplier
+        {
+            Code = "NCC-MAC-DINH",
+            Name = "Nhà cung cấp mặc định",
+            IsActive = true
+        });
+        await db.SaveChangesAsync();
+    }
+
+    if (!await db.LoyaltyRewards.AnyAsync())
+    {
+        db.LoyaltyRewards.AddRange(
+            new LoyaltyReward
+            {
+                Title = "Voucher giảm 30.000đ",
+                Description = "Áp dụng cho đơn từ 200.000đ",
+                PointsCost = 300,
+                RewardType = LoyaltyRewardTypes.VoucherFixed,
+                DiscountAmount = 30_000,
+                MinOrderAmount = 200_000,
+                ExpiryDays = 30,
+                StockRemaining = 500,
+                MaxPerUser = 3,
+                SortOrder = 1,
+                IsActive = true
+            },
+            new LoyaltyReward
+            {
+                Title = "Voucher giảm 5%",
+                Description = "Giảm 5% tổng đơn, tối đa không giới hạn đơn tối thiểu",
+                PointsCost = 500,
+                RewardType = LoyaltyRewardTypes.VoucherPercent,
+                PercentValue = 5,
+                ExpiryDays = 14,
+                MaxPerUser = 2,
+                SortOrder = 2,
+                IsActive = true
+            },
+            new LoyaltyReward
+            {
+                Title = "Voucher 100.000đ (Vàng+)",
+                Description = "Dành thành viên Vàng trở lên",
+                PointsCost = 1000,
+                RewardType = LoyaltyRewardTypes.VoucherFixed,
+                DiscountAmount = 100_000,
+                MinOrderAmount = 500_000,
+                RequiredRank = LoyaltyTiers.Gold,
+                ExpiryDays = 30,
+                StockRemaining = 100,
+                MaxPerUser = 1,
+                SortOrder = 3,
+                IsActive = true
+            });
+        await db.SaveChangesAsync();
+    }
+}
+
+static async Task SeedStaffAccountAsync(UserManager<IdentityUser> userManager, string email, string password, string role)
+{
+    var user = await userManager.FindByEmailAsync(email);
+    if (user == null)
+    {
+        user = new IdentityUser
+        {
+            UserName = email,
+            Email = email,
+            EmailConfirmed = true
+        };
+        await userManager.CreateAsync(user, password);
+    }
+
+    if (!await userManager.IsInRoleAsync(user, role))
+        await userManager.AddToRoleAsync(user, role);
 }
 
 // Configure the HTTP request pipeline.

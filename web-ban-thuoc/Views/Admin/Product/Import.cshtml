@@ -1,0 +1,85 @@
+@{
+    ViewData["Title"] = "Nhập sản phẩm từ Excel";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+    var categoryCount = (int)(ViewBag.CategoryCount ?? 0);
+}
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="admin-card h-100">
+            <div class="admin-card-header">
+                <i class="fa-solid fa-file-excel text-success me-2"></i>
+                Tải file mẫu
+            </div>
+            <div class="admin-card-body">
+                <p class="text-muted">File Excel gồm sheet <strong>SanPham</strong> (dữ liệu) và <strong>HuongDan</strong> (hướng dẫn).</p>
+                <a href="/AdminProduct/DownloadTemplate" class="btn btn-success w-100 mb-3">
+                    <i class="fa fa-download me-2"></i>Tải MauSanPham_LongChau.xlsx
+                </a>
+                <div class="small text-muted">
+                    <strong>Cột bắt buộc:</strong> TenSanPham, GiaBan<br />
+                    <strong>Tùy chọn:</strong> SKU, MaVach, ThuongHieu, TenDanhMuc, SoLuongTon, TenAnh...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <i class="fa-solid fa-upload text-primary me-2"></i>
+                Upload file Excel
+            </div>
+            <div class="admin-card-body">
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger">@TempData["Error"]</div>
+                }
+
+                @if (categoryCount == 0)
+                {
+                    <div class="alert alert-warning">
+                        <i class="fa fa-triangle-exclamation me-1"></i>
+                        Chưa có danh mục cấp 3. Hãy tạo danh mục trước tại
+                        <a href="/AdminCategory">Quản lý danh mục</a> để gán TenDanhMuc chính xác.
+                    </div>
+                }
+
+                <form method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Chọn file .xlsx</label>
+                        <input type="file" name="excelFile" class="form-control form-control-lg" accept=".xlsx" required />
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-file-import me-1"></i> Nhập sản phẩm
+                        </button>
+                        <a href="/AdminProduct" class="btn btn-outline-secondary">Quay lại</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card mt-4">
+    <div class="admin-card-header">Cấu trúc cột Excel</div>
+    <div class="admin-card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-striped mb-0">
+                <thead><tr><th>Cột</th><th>Mô tả</th><th>Bắt buộc</th></tr></thead>
+                <tbody>
+                    <tr><td>TenSanPham</td><td>Tên sản phẩm</td><td><span class="badge bg-danger">Có</span></td></tr>
+                    <tr><td>GiaBan</td><td>Giá bán (VNĐ)</td><td><span class="badge bg-danger">Có</span></td></tr>
+                    <tr><td>SKU</td><td>Mã SKU (trùng sẽ bỏ qua dòng)</td><td></td></tr>
+                    <tr><td>TenDanhMuc</td><td>Tên danh mục cấp 3 đã có</td><td></td></tr>
+                    <tr><td>TenNCC / MaNCC</td><td>Gán nhà cung cấp (ưu tiên mã NCC)</td><td></td></tr>
+                    <tr><td>SoLuongTon</td><td>Tồn ban đầu → tự nhập kho + tạo lô</td><td></td></tr>
+                    <tr><td>TenAnh</td><td>Tên file ảnh trong /images/products/</td><td></td></tr>
+                    <tr><td>CanDonThuoc / NoiBat</td><td>Co hoặc Khong</td><td></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

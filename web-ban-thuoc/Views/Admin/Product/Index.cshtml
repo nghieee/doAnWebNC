@@ -44,15 +44,18 @@
         </div>
     </form>
     <!-- Header với nút thêm sản phẩm và nút xóa nhanh -->
-    <div class="d-flex justify-content-end align-items-center mb-4">
-        <div class="d-flex gap-2">
-            <button id="bulkDeleteBtn" class="btn btn-danger btn-lg d-none align-items-center gap-2" onclick="return confirm('Bạn có chắc muốn xóa các sản phẩm đã chọn?');">
+    <div class="d-flex justify-content-end align-items-center mb-4 flex-wrap gap-2">
+        <div class="d-flex gap-2 flex-wrap">
+            <button id="bulkDeleteBtn" class="btn btn-danger d-none align-items-center gap-2" onclick="return confirm('Bạn có chắc muốn xóa các sản phẩm đã chọn?');">
                 <i class="fa fa-trash"></i> Xóa nhanh
             </button>
-            <a href="@Url.Action("Create", "AdminProduct")" class="btn btn-primary btn-lg d-flex align-items-center gap-2">
-        <i class="fa fa-plus"></i> Thêm sản phẩm
-    </a>
-</div>
+            <a href="@Url.Action("Import", "AdminProduct")" class="btn btn-success d-flex align-items-center gap-2">
+                <i class="fa fa-file-excel"></i> Nhập Excel
+            </a>
+            <a href="@Url.Action("Create", "AdminProduct")" class="btn btn-primary d-flex align-items-center gap-2">
+                <i class="fa fa-plus"></i> Thêm sản phẩm
+            </a>
+        </div>
     </div>
     <!-- Bảng sản phẩm -->
 <div class="table-responsive">
@@ -65,9 +68,10 @@
                     </th>
                     <th class="text-center" style="width: 48px;">ID</th>
                     <th class="text-center" style="width: 100px;">Ảnh</th>
-                    <th style="min-width: 320px;">Tên sản phẩm</th>
+                    <th style="min-width: 280px;">Tên sản phẩm</th>
+                    <th class="text-center" style="width: 140px;">NCC</th>
                     <th class="text-center" style="width: 120px;">Giá</th>
-                    <th class="text-center" style="width: 180px;">Danh mục</th>
+                    <th class="text-center" style="width: 160px;">Danh mục</th>
                     <th class="text-center" style="width: 90px;">Đã bán</th>
                     <th class="text-center" style="width: 110px;">Nổi bật</th>
                     <th class="text-center" style="width: 170px;">Hành động</th>
@@ -89,6 +93,7 @@
                             <img src="@mainImgPath" alt="Ảnh sản phẩm" class="rounded-3 border shadow-sm" style="width: 68px; height: 68px; object-fit: cover; background: #f4f6fb;" />
                         </td>
                         <td class="fw-semibold text-wrap">@item.ProductName</td>
+                        <td class="text-center small">@(item.Supplier?.Name ?? "—")</td>
                         <td class="text-primary fw-bold text-center">@item.Price.ToString("N0") đ</td>
                         <td class="text-center">@item.Category?.CategoryName</td>
                         <td class="text-center">@((item.SoldQuantity ?? 0).ToString("N0"))</td>

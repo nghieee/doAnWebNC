@@ -3,290 +3,105 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Admin</title>
-    <!-- Bootstrap 5 CDN -->
+    <title>@ViewData["Title"] - Long Châu Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="/css/site.css" />
-    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="/css/admin.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
-    <style>
-        body { background: #f4f6fb; }
-        .admin-sidebar {
-            min-height: 100vh;
-            height: 100px;
-            background: linear-gradient(180deg, #1976d2 80%, #1565c0 100%);
-            color: #fff;
-            padding: 0;
-            box-shadow: 2px 0 10px rgba(25, 118, 210, 0.08);
-            transition: width 0.3s cubic-bezier(.4,2,.6,1), left 0.3s;
-            width: 240px;
-            z-index: 1000;
-        }
-        .admin-sidebar.collapsed {
-            width: 70px;
-        }
-        .admin-sidebar .sidebar-header {
-            padding: 2rem 1rem 1.5rem 1rem;
-            text-align: center;
-            border-bottom: 1px solid #1565c0;
-        }
-        .admin-sidebar .sidebar-logo {
-            max-width: 120px;
-            max-height: 48px;
-            transition: max-width 0.3s;
-        }
-        .admin-sidebar.collapsed .sidebar-logo {
-            max-width: 40px;
-        }
-        .admin-sidebar .toggle-btn {
-            position: absolute;
-            top: 1.2rem;
-            right: -18px;
-            background: #1976d2;
-            border-radius: 50%;
-            border: 2px solid #fff;
-            color: #fff;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.15);
-            z-index: 1100;
-            transition: right 0.3s;
-        }
-        .admin-sidebar.collapsed .toggle-btn {
-            right: -18px;
-        }
-        .admin-sidebar .nav-link {
-            color: #fff;
-            font-size: 1.1rem;
-            font-weight: 500;
-            border-radius: 0.5rem;
-            margin: 0.25rem 1rem;
-            padding: 0.85rem 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-            white-space: nowrap;
-        }
-        .admin-sidebar .nav-link.active, .admin-sidebar .nav-link:hover {
-            background: #fff;
-            color: #1976d2;
-            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
-        }
-        .admin-sidebar .nav-link .sidebar-text {
-            transition: opacity 0.3s, width 0.3s;
-            opacity: 1;
-            width: auto;
-        }
-        .admin-sidebar.collapsed .nav-link .sidebar-text {
-            opacity: 0;
-            width: 0;
-            overflow: hidden;
-        }
-        .admin-sidebar .logout {
-            margin-top: auto;
-            margin-bottom: 2rem;
-        }
-        .admin-sidebar .logout .nav-link {
-            background: #fff;
-            color: #d32f2f;
-            font-weight: bold;
-            justify-content: center;
-        }
-        .admin-sidebar .logout .nav-link:hover {
-            background: #d32f2f;
-            color: #fff;
-        }
-        .admin-header {
-            background: #fff;
-            border-bottom: 1px solid #e3e6f0;
-            padding: 1.5rem 2rem 1rem 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 2rem;
-            border-radius: 0 0 1rem 1rem;
-            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.04);
-        }
-        .admin-header .title {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: #1976d2;
-            letter-spacing: 1px;
-        }
-        @@media (max-width: 991.98px) {
-            .admin-sidebar { min-height: auto; }
-            .admin-header { padding: 1rem; }
-        }
-        @@media (max-width: 767.98px) {
-            .admin-sidebar { position: static; width: 100%; border-radius: 0 0 1rem 1rem; }
-            .admin-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-        }
-    </style>
 </head>
-<body>
-    <div class="container-fluid">
-        <div class="row flex-nowrap">
-            <nav id="adminSidebar" class="col-auto col-md-3 col-xl-2 px-0 admin-sidebar d-flex flex-column position-sticky top-0">
-                <div class="sidebar-header mb-4">
-                    <img src="/images/default/header_logo_brand.png" alt="Logo" class="sidebar-logo mb-2" />
-                    <span class="toggle-btn" onclick="toggleSidebar()">
-                        <i class="fa-solid fa-angles-left"></i>
-                    </span>
-                </div>
-                
+<body class="admin-body">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
+    <div class="admin-wrapper">
+        <aside id="adminSidebar" class="admin-sidebar">
+            <div class="sidebar-brand">
+                <img src="/images/default/header_logo_brand.png" alt="Long Châu" class="sidebar-logo" />
+                <button type="button" class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Thu gọn menu">
+                    <i class="fa-solid fa-angles-left" id="sidebarToggleIcon"></i>
+                </button>
+            </div>
+
+            <div class="sidebar-scroll">
                 @await Component.InvokeAsync("AdminNotification")
-                
-                <ul class="nav nav-pills flex-column mb-auto">
-                    <li class="nav-item">
-                        <a href="/admin" class="nav-link @(Context.Request.Path == "/admin" || Context.Request.Path == "/admin/index" ? "active" : "")">
-                            <i class="fa-solid fa-gauge"></i>
-                            <span class="sidebar-text">Dashboard</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/AdminProduct" class="nav-link @(Context.Request.Path.StartsWithSegments("/AdminProduct") ? "active" : "")">
-                            <i class="fa-solid fa-box"></i>
-                            <span class="sidebar-text">Sản phẩm</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/AdminCategory" class="nav-link @(Context.Request.Path.StartsWithSegments("/AdminCategory") ? "active" : "")">
-                            <i class="fa-solid fa-tags"></i>
-                            <span class="sidebar-text">Danh mục</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/AdminOrder" class="nav-link @(Context.Request.Path.StartsWithSegments("/Admin/Order") ? "active" : "") position-relative">
-                            <i class="fa-solid fa-cart-shopping"></i>
-                            <span class="sidebar-text">Đơn hàng</span>
-                            <span id="pendingOrdersBadge" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="display: none;">
-                                <span class="visually-hidden">Đơn hàng mới</span>
-                            </span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/Admin/Voucher" class="nav-link @(Context.Request.Path.StartsWithSegments("/Admin/Voucher") ? "active" : "")">
-                            <i class="fa-solid fa-ticket-alt"></i>
-                            <span class="sidebar-text">Voucher</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/AdminBanner" class="nav-link @(Context.Request.Path.StartsWithSegments("/AdminBanner") ? "active" : "")">
-                            <i class="fa-solid fa-images"></i>
-                            <span class="sidebar-text">Banner</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/AdminUser" class="nav-link @(Context.Request.Path.StartsWithSegments("/AdminUser") ? "active" : "")">
-                            <i class="fa-solid fa-users"></i>
-                            <span class="sidebar-text">Người dùng</span>
-                        </a>
-                    </li>
-                    <li class="nav-item" style="position:relative;">
-                        <a class="nav-link position-relative" href="/admin/chat">
-                            <i class="fa-regular fa-message me-1"></i> Tin nhắn
-                            <span id="unreadMessagesBadge" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="display: none;">
-                                <span class="visually-hidden">Tin nhắn mới</span>
-                            </span>
-                        </a>
-                    </li>
-                </ul>
-                <div class="mt-auto px-3 pb-3">
-                    <form id="logoutForm" method="post" action="/Auth/Logout">
-                        <button type="submit" class="btn btn-danger w-100 d-flex align-items-center gap-2 justify-content-center" style="font-size: 1.1rem; font-weight: 500; border-radius: 0.5rem;">
-                            <i class="fa-solid fa-right-from-bracket"></i>
-                            <span class="sidebar-text">Đăng xuất</span>
-                        </button>
-                    </form>
-                </div>
-                <style>
-                    .nav .nav-link {
-                        color: #fff;
-                        background: transparent;
-                        transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-                    }
-                    .nav .nav-link.active, .nav .nav-link:hover, .nav .nav-link:focus {
-                        background: #fff !important;
-                        color: #1976d2 !important;
-                        box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
-                        outline: none;
-                    }
-                    .nav .fa-right-from-bracket {
-                        font-size: 1.1em;
-                    }
-                </style>
-            </nav>
-            <main class="col py-3">
-                <div class="admin-header">
-                    <div class="title">@ViewData["Title"]</div>
-                    <div class="d-none d-md-block">
-                        <span class="text-secondary">Xin chào, <b>Admin</b></span>
+                @await Component.InvokeAsync("AdminSidebar")
+            </div>
+
+            <div class="sidebar-footer">
+                <form method="post" action="/Auth/Logout">
+                    <button type="submit" class="btn-logout" title="Đăng xuất">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span class="sidebar-text">Đăng xuất</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <div class="admin-main">
+            <header class="admin-topbar">
+                <div class="d-flex align-items-center gap-3">
+                    <button type="button" class="mobile-menu-btn" onclick="openMobileSidebar()" aria-label="Mở menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div>
+                        <h1 class="admin-topbar-title">@ViewData["Title"]</h1>
+                        <div class="admin-topbar-sub d-none d-md-block">
+                            Xin chào, <strong>@(User.Identity?.Name ?? "Nhân viên")</strong>
+                        </div>
                     </div>
                 </div>
+                <a href="/" class="btn btn-sm btn-outline-primary d-none d-md-inline-flex align-items-center gap-1" target="_blank">
+                    <i class="fa-solid fa-external-link-alt"></i> Xem website
+                </a>
+            </header>
+            <div class="admin-content">
                 @RenderBody()
-            </main>
+            </div>
         </div>
     </div>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
-    
-    <!-- Toast Component -->
     @await Html.PartialAsync("_ToastPartial")
-    
+
     <script>
         function toggleSidebar() {
             var sidebar = document.getElementById('adminSidebar');
             sidebar.classList.toggle('collapsed');
-            var icon = sidebar.querySelector('.toggle-btn i');
-            if (sidebar.classList.contains('collapsed')) {
-                icon.classList.remove('fa-angles-left');
-                icon.classList.add('fa-angles-right');
-            } else {
-                icon.classList.remove('fa-angles-right');
-                icon.classList.add('fa-angles-left');
-            }
+            var icon = document.getElementById('sidebarToggleIcon');
+            icon.classList.toggle('fa-angles-left');
+            icon.classList.toggle('fa-angles-right');
+            localStorage.setItem('adminSidebarCollapsed', sidebar.classList.contains('collapsed'));
         }
 
-        // Cập nhật notification badges
+        function openMobileSidebar() {
+            document.getElementById('adminSidebar').classList.add('mobile-open');
+            document.getElementById('sidebarOverlay').classList.add('show');
+        }
+
+        function closeMobileSidebar() {
+            document.getElementById('adminSidebar').classList.remove('mobile-open');
+            document.getElementById('sidebarOverlay').classList.remove('show');
+        }
+
         function updateNotificationBadges() {
-            const pendingOrdersBadge = document.getElementById('pendingOrdersBadge');
-            const unreadMessagesBadge = document.getElementById('unreadMessagesBadge');
-
-            if (pendingOrdersBadge) {
-                if (window.pendingOrders > 0) {
-                    pendingOrdersBadge.style.display = 'block';
-                } else {
-                    pendingOrdersBadge.style.display = 'none';
-                }
-            }
-
-            if (unreadMessagesBadge) {
-                if (window.unreadMessages > 0) {
-                    unreadMessagesBadge.style.display = 'block';
-                } else {
-                    unreadMessagesBadge.style.display = 'none';
-                }
-            }
+            var po = document.getElementById('pendingOrdersBadge');
+            var msg = document.getElementById('unreadMessagesBadge');
+            if (po) po.style.display = (window.pendingOrders > 0) ? 'block' : 'none';
+            if (msg) msg.style.display = (window.unreadMessages > 0) ? 'block' : 'none';
         }
 
-        // Cập nhật badges khi trang load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
+            if (localStorage.getItem('adminSidebarCollapsed') === 'true') {
+                toggleSidebar();
+            }
             updateNotificationBadges();
+            document.querySelectorAll('.sidebar-nav .nav-link').forEach(function (link) {
+                link.addEventListener('click', closeMobileSidebar);
+            });
         });
 
-        // Cập nhật badges mỗi 30 giây
-        setInterval(function() {
-            // Có thể thêm AJAX call để lấy dữ liệu mới nhất
-            updateNotificationBadges();
-        }, 30000);
+        setInterval(updateNotificationBadges, 30000);
     </script>
     @RenderSection("Scripts", required: false)
-    
 </body>
-</html> 
+</html>

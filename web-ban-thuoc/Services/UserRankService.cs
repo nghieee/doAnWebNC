@@ -45,18 +45,15 @@ namespace web_ban_thuoc.Services
             // Tính tổng chi tiêu 6 tháng gần nhất
             var sixMonthsAgo = now.AddMonths(-6);
             var total6Months = await _context.Orders
-                .Where(o => o.UserId == userId && o.Status == "Đã giao" && o.OrderDate >= sixMonthsAgo)
+                .Where(o => o.UserId == userId && o.Status == OrderStatuses.Delivered && o.OrderDate >= sixMonthsAgo)
                 .SumAsync(o => o.TotalAmount ?? 0);
             info.TotalSpent6Months = total6Months;
             // Tính tổng chi tiêu toàn thời gian
             var total = await _context.Orders
-                .Where(o => o.UserId == userId && o.Status == "Đã giao")
+                .Where(o => o.UserId == userId && o.Status == OrderStatuses.Delivered)
                 .SumAsync(o => o.TotalAmount ?? 0);
             info.TotalSpent = total;
-            // Xác định hạng dựa trên 6 tháng gần nhất
-            string newRank = "Bạc";
-            if (total6Months >= 10000000) newRank = "Bạch kim";
-            else if (total6Months >= 5000000) newRank = "Vàng";
+            string newRank = LoyaltyTiers.ResolveRank(total6Months);
             bool needSendRankMail = false;
             bool needSendNotiMail = false;
             // Nếu lên hạng mới
@@ -80,17 +77,18 @@ namespace web_ban_thuoc.Services
                         DiscountAmount = null,
                         Detail = "Áp dụng cho toàn bộ đơn hàng. Không giới hạn giá trị đơn hàng.",
                         ExpiryDate = DateTime.Now.AddMonths(1),
-                        IsActive = true
+                        IsActive = true,
+                        IsPublic = false
                     };
                     _context.Vouchers.Add(voucher);
                     await _context.SaveChangesAsync();
-                    var userVoucher = new UserVoucher
+                    _context.UserVouchers.Add(new UserVoucher
                     {
                         UserId = user.Id,
                         VoucherId = voucher.VoucherId,
-                        IsUsed = false
-                    };
-                    _context.UserVouchers.Add(userVoucher);
+                        IsUsed = false,
+                        IsNew = true
+                    });
                     await _context.SaveChangesAsync();
                 }
             }
@@ -98,12 +96,12 @@ namespace web_ban_thuoc.Services
             if (info.Rank == "Bạc")
             {
                 // Đếm số đơn đã giao
-                var countOrder = await _context.Orders.CountAsync(o => o.UserId == userId && o.Status == "Đã giao");
+                var countOrder = await _context.Orders.CountAsync(o => o.UserId == userId && o.Status == OrderStatuses.Delivered);
                 if (countOrder == 1)
                 {
                     // Kiểm tra đã tặng voucher chưa
                     var exist = await _context.UserVouchers.Include(uv => uv.Voucher)
-                        .AnyAsync(uv => uv.UserId == userId && uv.Voucher.DiscountType == "Percent" && uv.Voucher.PercentValue == 5);
+                        .AnyAsync(uv => uv.UserId == userId && uv.Voucher.DiscountType == "FullOrder" && uv.Voucher.PercentValue == 5);
                     if (!exist)
                 {
                         string code = await GenerateUniqueVoucherCodeAsync("BAC", 6);
@@ -116,17 +114,18 @@ namespace web_ban_thuoc.Services
                             DiscountAmount = null,
                             Detail = "Áp dụng cho toàn bộ đơn hàng. Không giới hạn giá trị đơn hàng. Chỉ tặng khi phát sinh đơn hàng đầu tiên.",
                             ExpiryDate = DateTime.Now.AddMonths(1),
-                            IsActive = true
+                            IsActive = true,
+                            IsPublic = false
                         };
                         _context.Vouchers.Add(voucher);
                         await _context.SaveChangesAsync();
-                        var userVoucher = new UserVoucher
+                        _context.UserVouchers.Add(new UserVoucher
                         {
                             UserId = user.Id,
                             VoucherId = voucher.VoucherId,
-                            IsUsed = false
-                        };
-                        _context.UserVouchers.Add(userVoucher);
+                            IsUsed = false,
+                            IsNew = true
+                        });
                         await _context.SaveChangesAsync();
                     }
                 }
@@ -207,17 +206,18 @@ namespace web_ban_thuoc.Services
                     Description = desc,
                     DiscountAmount = amount,
                     ExpiryDate = new DateTime(year, month, 1).AddMonths(1).AddDays(-1),
-                    IsActive = true
+                    IsActive = true,
+                    IsPublic = false
                 };
                 _context.Vouchers.Add(voucher);
                 await _context.SaveChangesAsync();
-                var userVoucher = new UserVoucher
+                _context.UserVouchers.Add(new UserVoucher
                 {
                     UserId = user.Id,
                     VoucherId = voucher.VoucherId,
-                    IsUsed = false
-                };
-                _context.UserVouchers.Add(userVoucher);
+                    IsUsed = false,
+                    IsNew = true
+                });
                 await _context.SaveChangesAsync();
                 // Gửi email
                 string subject = $"Tặng bạn voucher ưu đãi tháng {month}!";

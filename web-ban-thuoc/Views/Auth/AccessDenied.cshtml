@@ -1,0 +1,47 @@
+@using System.Security.Claims
+@using web_ban_thuoc.Models
+@{
+    ViewData["Title"] = "Không có quyền truy cập";
+    Layout = "_Layout";
+    var roles = StaffRoles.All.Where(r => User.IsInRole(r)).ToList();
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow rounded-4 text-center p-4">
+                <div class="mb-3">
+                    <i class="fa-solid fa-shield-halved text-danger" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="fw-bold mb-2">Bạn không có quyền truy cập trang này</h4>
+                <p class="text-muted mb-4">
+                    Tài khoản của bạn không được phép mở chức năng này.
+                    @if (roles.Any())
+                    {
+                        <span>Vai trò hiện tại: <strong>@string.Join(", ", roles.Select(StaffRoles.GetDisplayName))</strong></span>
+                    }
+                </p>
+                <div class="d-flex flex-wrap gap-2 justify-content-center">
+                    @if (User.IsInRole(StaffRoles.Admin))
+                    {
+                        <a href="/admin" class="btn btn-primary">Về Dashboard</a>
+                    }
+                    @if (User.IsInRole(StaffRoles.WarehouseStaff))
+                    {
+                        <a href="/AdminInventory" class="btn btn-primary">Quản lý kho</a>
+                        <a href="/AdminOrder" class="btn btn-outline-primary">Đơn hàng</a>
+                    }
+                    @if (User.IsInRole(StaffRoles.CustomerSupport))
+                    {
+                        <a href="/admin/chat" class="btn btn-primary">Tin nhắn</a>
+                        <a href="/AdminOrder" class="btn btn-outline-primary">Đơn hàng</a>
+                    }
+                    @if (!roles.Any())
+                    {
+                        <a href="/" class="btn btn-primary">Về trang chủ</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

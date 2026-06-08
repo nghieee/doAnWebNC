@@ -23,20 +23,7 @@ namespace web_ban_thuoc.Migrations
                 name: "UserRank",
                 table: "AspNetUsers");
 
-            migrationBuilder.CreateTable(
-                name: "UserRankInfos",
-                columns: table => new
-                {
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    TotalSpent = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    Rank = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LastRankMailSent = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastNotiMailSent = table.Column<DateTime>(type: "datetime2", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_UserRankInfos", x => x.UserId);
-                });
+            // UserRankInfos đã được tạo ở migration AddChatMessageTable
         }
 
         /// <inheritdoc />

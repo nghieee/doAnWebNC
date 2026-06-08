@@ -64,9 +64,17 @@
             fab.style.display = 'block';
         };
         // Kết nối SignalR
-        connection = new signalR.HubConnectionBuilder().withUrl('/chathub').build();
+        connection = new signalR.HubConnectionBuilder()
+            .withUrl('/chathub?userId=' + encodeURIComponent(userId))
+            .build();
         connection.start().then(() => {
-            // Có thể load lịch sử chat ở đây (AJAX)
+            if (userId && userId !== 'guest') {
+                fetch('/api/chat/history')
+                    .then(r => r.json())
+                    .then(msgs => {
+                        msgs.forEach(m => addMessage(m.senderId === userId ? 'user' : 'admin', m.message));
+                    });
+            }
         });
         // Nhận tin nhắn
         connection.on('ReceiveMessage', function (senderId, message) {

@@ -1,0 +1,62 @@
+@model web_ban_thuoc.Models.PurchaseOrder
+@using web_ban_thuoc.Models
+@{
+    ViewData["Title"] = "Chi tiết đơn đặt hàng";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+
+<div class="container-fluid py-3">
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+                <h5 class="fw-bold mb-1">@Model.OrderCode</h5>
+                <p class="text-muted mb-0">NCC: <strong>@Model.Supplier.Name</strong> · Kho: @Model.Warehouse.Name · @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+            </div>
+            <span class="badge bg-info text-dark fs-6">@Model.Status</span>
+        </div>
+        @if (!string.IsNullOrEmpty(Model.Note))
+        {
+            <p class="small"><strong>Ghi chú:</strong> @Model.Note</p>
+        }
+        <div class="d-flex flex-wrap gap-2">
+            @if (Model.Status == PurchaseOrderStatuses.Draft)
+            {
+                <form method="post" action="/AdminPurchase/Confirm/@Model.PurchaseOrderId" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-primary">Xác nhận đơn</button>
+                </form>
+            }
+            @if (Model.Status == PurchaseOrderStatuses.Confirmed || Model.Status == PurchaseOrderStatuses.PartiallyReceived)
+            {
+                <a href="/AdminPurchase/Receive/@Model.PurchaseOrderId" class="btn btn-success"><i class="fa fa-arrow-down me-1"></i> Nhập kho từ đơn</a>
+            }
+            <a href="/AdminPurchase" class="btn btn-outline-secondary">Quay lại</a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered bg-white shadow-sm">
+            <thead class="table-light">
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th>SL đặt</th>
+                    <th>SL đã nhận</th>
+                    <th>Còn lại</th>
+                    <th>Giá nhập</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var line in Model.Lines)
+                {
+                    <tr>
+                        <td>@line.Product.ProductName</td>
+                        <td>@line.QuantityOrdered</td>
+                        <td>@line.QuantityReceived</td>
+                        <td>@line.RemainingQuantity</td>
+                        <td>@line.UnitCost.ToString("N0")đ</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -19,8 +19,16 @@ public class AuthController : Controller
         private readonly IEmailSender _emailSender;
         private readonly LongChauDbContext _context;
         private readonly UserRankService _userRankService;
+        private readonly ILoyaltyService _loyaltyService;
 
-        public AuthController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, ILogger<AuthController> logger, IEmailSender emailSender, LongChauDbContext context, UserRankService userRankService)
+        public AuthController(
+            UserManager<IdentityUser> userManager,
+            SignInManager<IdentityUser> signInManager,
+            ILogger<AuthController> logger,
+            IEmailSender emailSender,
+            LongChauDbContext context,
+            UserRankService userRankService,
+            ILoyaltyService loyaltyService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -28,6 +36,7 @@ public class AuthController : Controller
             _emailSender = emailSender;
             _context = context;
             _userRankService = userRankService;
+            _loyaltyService = loyaltyService;
         }
 
         [HttpGet]
@@ -62,10 +71,8 @@ public class AuthController : Controller
             {
                 _logger.LogInformation("Login successful for email: {Email}", model.Email);
                 var loggedInUser = await _userManager.FindByEmailAsync(model.Email);
-                if (await _userManager.IsInRoleAsync(loggedInUser, "Admin"))
-                {
-                    return RedirectToAction("Index", "AdminHome");
-                }
+                if (loggedInUser != null)
+                    return await RedirectAfterLoginAsync(loggedInUser);
                 return RedirectToAction("Index", "Home");
             }
             else
@@ -208,11 +215,12 @@ public class AuthController : Controller
 
             // Lấy lịch sử đơn hàng của user (loại trừ giỏ hàng - Status = "Cart")
             var orders = await _context.Orders
-                .Where(o => o.UserId == user.Id && o.Status != "Cart")
+                .Where(o => o.UserId == user.Id)
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
                 .ThenInclude(p => p.ProductImages)
-                .Include(o => o.Payments) // Thêm include cho Payments
+                .Include(o => o.Payments)
+                .Include(o => o.Shipment)
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
 
@@ -227,6 +235,11 @@ public class AuthController : Controller
                 ShippingAddress = o.ShippingAddress ?? "",
                 FullName = o.FullName ?? "",
                 Phone = o.Phone ?? "",
+                TrackingCode = o.Shipment?.TrackingCode,
+                Carrier = o.Shipment?.Carrier,
+                TrackingUrl = o.Shipment != null
+                    ? ShippingCarriers.GetTrackingUrl(o.Shipment.Carrier, o.Shipment.TrackingCode)
+                    : null,
                 Items = o.OrderItems.Select(oi => new OrderItemViewModel
                 {
                     ProductId = oi.ProductId ?? 0,
@@ -258,6 +271,9 @@ public class AuthController : Controller
                     Detail = uv.Voucher.Detail
                 }).ToListAsync();
 
+            var rank = rankInfo?.Rank ?? "Bạc";
+            var points = rankInfo?.LoyaltyPoints ?? 0;
+
             var model = new ProfileViewModel
             {
                 UserName = user.UserName ?? "",
@@ -266,8 +282,11 @@ public class AuthController : Controller
                 Orders = orderViewModels,
                 TotalSpent = rankInfo?.TotalSpent ?? 0,
                 TotalSpent6Months = rankInfo?.TotalSpent6Months ?? 0,
-                Rank = rankInfo?.Rank ?? "Bạc",
-                Vouchers = vouchers
+                Rank = rank,
+                LoyaltyPoints = points,
+                Vouchers = vouchers,
+                LoyaltyRewards = await _loyaltyService.GetRewardsForUserAsync(user.Id, rank, points),
+                RedeemHistory = await _loyaltyService.GetRedeemHistoryAsync(user.Id)
             };
             return View("~/Views/Auth/Profile.cshtml", model);
         }
@@ -499,6 +518,27 @@ public class AuthController : Controller
                 ViewBag.Error = string.Join("<br>", result.Errors.Select(e => e.Description));
                 return View("VerifyResetCode");
             }
+        }
+
+        [HttpGet]
+        public IActionResult AccessDenied(string? returnUrl)
+        {
+            ViewBag.ReturnUrl = returnUrl;
+            return View("~/Views/Auth/AccessDenied.cshtml");
+        }
+
+        private async Task<IActionResult> RedirectAfterLoginAsync(IdentityUser user)
+        {
+            if (await _userManager.IsInRoleAsync(user, StaffRoles.Admin))
+                return RedirectToAction("Index", "AdminHome");
+
+            if (await _userManager.IsInRoleAsync(user, StaffRoles.WarehouseStaff))
+                return Redirect(StaffRoles.GetLandingUrl(StaffRoles.WarehouseStaff));
+
+            if (await _userManager.IsInRoleAsync(user, StaffRoles.CustomerSupport))
+                return Redirect(StaffRoles.GetLandingUrl(StaffRoles.CustomerSupport));
+
+            return RedirectToAction("Index", "Home");
         }
     }
 }

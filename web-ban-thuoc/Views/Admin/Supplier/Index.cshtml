@@ -1,0 +1,50 @@
+@model List<web_ban_thuoc.Models.Supplier>
+@{
+    ViewData["Title"] = "Nhà cung cấp";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+
+<div class="container-fluid py-3">
+    <form method="get" class="row g-3 mb-4 bg-white shadow-sm rounded-4 px-4 py-3">
+        <div class="col-md-8">
+            <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Tên, mã, SĐT..." />
+        </div>
+        <div class="col-md-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Lọc</button>
+            <a href="/AdminSupplier/Create" class="btn btn-success ms-auto"><i class="fa fa-plus me-1"></i> Thêm NCC</a>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-bordered bg-white shadow-sm">
+            <thead class="table-light">
+                <tr>
+                    <th>Mã</th>
+                    <th>Tên</th>
+                    <th>SĐT</th>
+                    <th>Email</th>
+                    <th>MST</th>
+                    <th>Trạng thái</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in Model)
+                {
+                    <tr>
+                        <td class="fw-semibold">@s.Code</td>
+                        <td>@s.Name</td>
+                        <td>@(s.Phone ?? "—")</td>
+                        <td>@(s.Email ?? "—")</td>
+                        <td>@(s.TaxCode ?? "—")</td>
+                        <td>
+                            @if (s.IsActive) { <span class="badge bg-success">Hoạt động</span> }
+                            else { <span class="badge bg-secondary">Ngưng</span> }
+                        </td>
+                        <td><a href="/AdminSupplier/Edit/@s.SupplierId" class="btn btn-sm btn-outline-primary">Sửa</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,93 @@
+@using web_ban_thuoc.Controllers.Admin
+@{
+    ViewData["Title"] = "Báo cáo vận hành";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+    var ordersByStatus = ViewBag.OrdersByStatus as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var topProducts = ViewBag.TopProducts as List<TopProductReportRow> ?? new();
+    var lowStock = ViewBag.LowStock as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var monthly = ViewBag.MonthlyRevenue as List<decimal> ?? new();
+}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0"><i class="fa fa-chart-line text-primary me-2"></i>Báo cáo vận hành</h4>
+        <a href="/admin/ExportReport" class="btn btn-outline-primary btn-sm"><i class="fa fa-download me-1"></i> Xuất CSV doanh thu</a>
+    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3">
+                <div class="text-muted small">Doanh thu hôm nay</div>
+                <div class="fs-4 fw-bold text-primary">@(((decimal)ViewBag.RevenueToday).ToString("N0"))đ</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3">
+                <div class="text-muted small">Tháng này</div>
+                <div class="fs-4 fw-bold text-success">@(((decimal)ViewBag.RevenueMonth).ToString("N0"))đ</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3">
+                <div class="text-muted small">Năm @ViewBag.ChartYear</div>
+                <div class="fs-4 fw-bold text-info">@(((decimal)ViewBag.RevenueYear).ToString("N0"))đ</div>
+            </div>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <h6 class="fw-bold mb-3">Doanh thu theo tháng (@ViewBag.ChartYear)</h6>
+                <canvas id="revenueChart" height="100"></canvas>
+            </div>
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h6 class="fw-bold mb-3">Top sản phẩm bán chạy</h6>
+                <table class="table table-sm">
+                    <thead><tr><th>Sản phẩm</th><th>SL</th><th>Doanh thu</th></tr></thead>
+                    <tbody>
+                        @foreach (var p in topProducts)
+                        {
+                            <tr><td>@p.ProductName</td><td>@p.Quantity</td><td>@p.Revenue.ToString("N0")đ</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <h6 class="fw-bold mb-3">Đơn theo trạng thái</h6>
+                @foreach (var row in ordersByStatus)
+                {
+                    <div class="d-flex justify-content-between py-1 border-bottom small">
+                        <span>@row.Status</span><strong>@row.Count</strong>
+                    </div>
+                }
+            </div>
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <h6 class="fw-bold mb-3">Marketing tháng này</h6>
+                <div class="small">Voucher đã dùng: <strong>@ViewBag.VoucherRedemptionsMonth</strong></div>
+                <div class="small">Đổi quà điểm: <strong>@ViewBag.LoyaltyRedeemsMonth</strong></div>
+            </div>
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h6 class="fw-bold mb-3">Cảnh báo tồn kho</h6>
+                <div class="small text-danger mb-2">Hết hàng: @ViewBag.OutOfStock SP</div>
+                @foreach (var p in lowStock)
+                {
+                    <div class="small py-1">@p.ProductName <span class="badge bg-warning text-dark">@p.StockQuantity</span></div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const monthly = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(monthly));
+new Chart(document.getElementById('revenueChart'), {
+    type: 'bar',
+    data: {
+        labels: ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'],
+        datasets: [{ label: 'Doanh thu (đ)', data: monthly, backgroundColor: 'rgba(25,118,210,0.7)' }]
+    },
+    options: { scales: { y: { ticks: { callback: v => v.toLocaleString('vi-VN') } } } }
+});
+</script>
+}

@@ -19,10 +19,12 @@ namespace web_ban_thuoc.Controllers
         private readonly ILogger<PayOSController> _logger;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly IOrderService _orderService;
+        private readonly IPayOSWebhookProcessor _webhookProcessor;
 
         public PayOSController(IPayOSService payOSService, IOrderEmailService orderEmailService, 
             LongChauDbContext context, ILogger<PayOSController> logger, UserManager<IdentityUser> userManager,
-            IConfiguration configuration)
+            IConfiguration configuration, IOrderService orderService, IPayOSWebhookProcessor webhookProcessor)
         {
             _payOSService = payOSService;
             _orderEmailService = orderEmailService;
@@ -30,6 +32,8 @@ namespace web_ban_thuoc.Controllers
             _logger = logger;
             _userManager = userManager;
             _configuration = configuration;
+            _orderService = orderService;
+            _webhookProcessor = webhookProcessor;
         }
 
         // Hiển thị trang tạo thanh toán PayOS
@@ -281,16 +285,15 @@ namespace web_ban_thuoc.Controllers
                         // Thanh toán thành công
                         if (payment != null)
                         {
-                            payment.PaymentStatus = "Completed";
+                            payment.PaymentStatus = PaymentStatuses.Paid;
                             payment.PaymentDate = DateTime.Now;
                         }
 
-                        order.PaymentStatus = "Đã thanh toán";
-                        order.Status = "Đã xác nhận";
-
+                        order.PaymentStatus = PaymentStatuses.Paid;
+                        if (order.Status == OrderStatuses.PendingPayment)
+                            await _orderService.ChangeStatusAsync(order.OrderId, OrderStatuses.Confirmed, order.UserId, "Thanh toán PayOS thành công (return URL)");
                         await _context.SaveChangesAsync();
 
-                        // Gửi email thành công
                         var orderEmailData = new OrderConfirmationEmail
                         {
                             OrderCode = orderCode.ToString(),
@@ -316,10 +319,10 @@ namespace web_ban_thuoc.Controllers
                         // Thanh toán thất bại
                         if (payment != null)
                         {
-                            payment.PaymentStatus = "Failed";
+                            payment.PaymentStatus = PaymentStatuses.Failed;
                         }
 
-                        order.PaymentStatus = "Thanh toán thất bại";
+                        order.PaymentStatus = PaymentStatuses.Failed;
 
                         await _context.SaveChangesAsync();
 
@@ -364,9 +367,10 @@ namespace web_ban_thuoc.Controllers
         public async Task<IActionResult> Cancel(int orderId)
         {
             var order = await _context.Orders.FindAsync(orderId);
-            if (order != null)
+            if (order != null && order.Status == OrderStatuses.PendingPayment)
             {
-                order.PaymentStatus = "Đã hủy";
+                await _orderService.ChangeStatusAsync(orderId, OrderStatuses.Cancelled, order.UserId, "Khách hủy thanh toán PayOS");
+                order.PaymentStatus = PaymentStatuses.Cancelled;
                 await _context.SaveChangesAsync();
             }
 
@@ -446,55 +450,11 @@ namespace web_ban_thuoc.Controllers
                     return BadRequest("Invalid webhook data");
                 }
 
-                var orderCode = webhook.Data.OrderCode;
-                var orderId = int.Parse(orderCode.Split('_')[1]);
-
-                var order = await _context.Orders.FindAsync(orderId);
-                var payment = await _context.Payments.FirstOrDefaultAsync(p => p.OrderId == orderId);
-
-                if (order != null && payment != null)
-                {
-                    if (webhook.Success && webhook.Data.Code == "00")
-                    {
-                        // Thanh toán thành công
-                        payment.PaymentStatus = "Completed";
-                        payment.PaymentDate = DateTime.Now;
-                        order.PaymentStatus = "Đã thanh toán";
-                        order.Status = "Đã xác nhận";
-
-                        await _context.SaveChangesAsync();
-
-                        // Gửi email thành công
-                        var orderEmailData = new OrderConfirmationEmail
-                        {
-                            OrderCode = orderCode.ToString(),
-                            CustomerName = order.FullName ?? "",
-                            CustomerEmail = order.UserId ?? "",
-                            CustomerPhone = order.Phone ?? "",
-                            ShippingAddress = order.ShippingAddress ?? "",
-                            TotalAmount = order.TotalAmount ?? 0,
-                            VoucherDiscount = order.VoucherDiscount ?? 0,
-                            VoucherCode = order.VoucherCode ?? "",
-                            OrderDate = order.OrderDate ?? DateTime.Now,
-                            PaymentMethod = "PayOS",
-                            OrderItems = new List<OrderItem>() // Sẽ load từ database nếu cần
-                        };
-
-                        await _orderEmailService.SendPaymentSuccessEmailAsync(orderEmailData);
-
-                        _logger.LogInformation($"Payment completed for order {orderId}");
-                    }
-                    else
-                    {
-                        // Thanh toán thất bại
-                        payment.PaymentStatus = "Failed";
-                        order.PaymentStatus = "Thanh toán thất bại";
-
-                        await _context.SaveChangesAsync();
-
-                        _logger.LogInformation($"Payment failed for order {orderId}");
-                    }
-                }
+                var (processed, duplicate, error) = await _webhookProcessor.ProcessAsync(body, webhook);
+                if (duplicate)
+                    return Ok("Already processed");
+                if (!processed)
+                    return BadRequest(error ?? "Processing failed");
 
                 return Ok("Webhook processed successfully");
             }

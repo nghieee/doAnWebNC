@@ -89,8 +89,11 @@
                                         <span class="badge bg-danger">Hết hạn</span>
                                     }
                                 </td>
-                                <td>
-                                    <button class="btn btn-sm btn-danger btn-delete-voucher" data-code="@v.Code"><i class="fa fa-trash"></i></button>
+                                <td class="text-nowrap">
+                                    <button class="btn btn-sm btn-outline-primary btn-edit-voucher" data-code="@v.Code" title="Sửa"><i class="fa fa-pen"></i></button>
+                                    <button class="btn btn-sm @(v.IsActive ? "btn-outline-warning" : "btn-outline-success") btn-toggle-voucher" data-code="@v.Code" title="@(v.IsActive ? "Tắt" : "Bật")"><i class="fa @(v.IsActive ? "fa-pause" : "fa-play")"></i></button>
+                                    <a class="btn btn-sm btn-outline-info" href="/admin/VoucherRedemptions?code=@v.Code" title="Lịch sử dùng"><i class="fa fa-list"></i></a>
+                                    <button class="btn btn-sm btn-danger btn-delete-voucher" data-code="@v.Code" title="Xóa"><i class="fa fa-trash"></i></button>
                                 </td>
                             </tr>
                         }
@@ -139,9 +142,38 @@
               <label class="form-label">Số tiền giảm (VNĐ)</label>
               <input type="number" class="form-control" name="DiscountAmount" min="0" step="1000">
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
               <label class="form-label">Số lượt sử dụng tối đa</label>
-              <input type="number" class="form-control" name="MaxUsage" min="1" placeholder="Để trống nếu không giới hạn">
+              <input type="number" class="form-control" name="MaxUsage" min="1" placeholder="Không giới hạn">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Đơn tối thiểu (VNĐ)</label>
+              <input type="number" class="form-control" name="MinOrderAmount" min="0" step="1000" placeholder="Không yêu cầu">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Hạng tối thiểu</label>
+              <select class="form-select" name="RequiredRank">
+                <option value="">Không yêu cầu</option>
+                <option value="Bạc">Bạc</option>
+                <option value="Vàng">Vàng</option>
+                <option value="Bạch kim">Bạch kim</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Danh mục (nếu giảm theo danh mục)</label>
+              <select class="form-select" name="CategoryId">
+                <option value="">— Không chọn —</option>
+                @foreach (var cat in ViewBag.Categories as List<web_ban_thuoc.Models.Category> ?? new())
+                {
+                    <option value="@cat.CategoryId">@cat.CategoryName</option>
+                }
+              </select>
+            </div>
+            <div class="col-md-6">
+              <div class="form-check mt-4">
+                <input class="form-check-input" type="checkbox" id="isPublicCode" name="IsPublicCode" value="true">
+                <label class="form-check-label" for="isPublicCode">Mã dùng chung (mọi user nhập được)</label>
+              </div>
             </div>
             <div class="col-md-12">
               <label class="form-label">Chi tiết (tuỳ chọn)</label>
@@ -173,6 +205,48 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
           <button type="submit" class="btn btn-primary">Tạo voucher</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal sửa voucher -->
+<div class="modal fade" id="editVoucherModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form id="editVoucherForm">
+        <div class="modal-header">
+          <h5 class="modal-title">Sửa voucher</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="Code" id="editCode" />
+          <div class="row g-3">
+            <div class="col-md-8"><label class="form-label">Mô tả</label><input class="form-control" name="Description" id="editDescription" required /></div>
+            <div class="col-md-4"><label class="form-label">Hạn dùng</label><input type="date" class="form-control" name="ExpiryDate" id="editExpiryDate" required /></div>
+            <div class="col-md-4"><label class="form-label">Loại</label>
+              <select class="form-select" name="DiscountType" id="editDiscountType"><option value="FullOrder">Giảm tổng đơn</option><option value="Category">Giảm theo danh mục</option></select>
+            </div>
+            <div class="col-md-4"><label class="form-label">% giảm</label><input type="number" class="form-control" name="PercentValue" id="editPercentValue" /></div>
+            <div class="col-md-4"><label class="form-label">Số tiền giảm</label><input type="number" class="form-control" name="DiscountAmount" id="editDiscountAmount" /></div>
+            <div class="col-md-4"><label class="form-label">Max usage</label><input type="number" class="form-control" name="MaxUsage" id="editMaxUsage" /></div>
+            <div class="col-md-4"><label class="form-label">Đơn tối thiểu</label><input type="number" class="form-control" name="MinOrderAmount" id="editMinOrderAmount" /></div>
+            <div class="col-md-4"><label class="form-label">Hạng tối thiểu</label>
+              <select class="form-select" name="RequiredRank" id="editRequiredRank"><option value="">Không</option><option value="Bạc">Bạc</option><option value="Vàng">Vàng</option><option value="Bạch kim">Bạch kim</option></select>
+            </div>
+            <div class="col-md-6"><label class="form-label">Danh mục</label>
+              <select class="form-select" name="CategoryId" id="editCategoryId"><option value="">—</option>
+                @foreach (var cat in ViewBag.Categories as List<web_ban_thuoc.Models.Category> ?? new()) { <option value="@cat.CategoryId">@cat.CategoryName</option> }
+              </select>
+            </div>
+            <div class="col-md-6"><div class="form-check mt-4"><input class="form-check-input" type="checkbox" name="IsActive" id="editIsActive" value="true" /><label class="form-check-label" for="editIsActive">Đang hoạt động</label></div></div>
+            <div class="col-12"><label class="form-label">Chi tiết</label><input class="form-control" name="Detail" id="editDetail" /></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+          <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
         </div>
       </form>
     </div>
@@ -238,6 +312,44 @@ $('#addVoucherForm').on('submit', function(e) {
     error: function() {
       showToast('Có lỗi xảy ra khi gửi dữ liệu!', 'error');
     }
+  });
+});
+$(document).on('click', '.btn-edit-voucher', function() {
+  var code = $(this).data('code');
+  $.get('/admin/GetVoucher', { code: code }, function(res) {
+    if (!res.success) { showToast(res.message, 'error'); return; }
+    var d = res.data;
+    $('#editCode').val(d.code);
+    $('#editDescription').val(d.description);
+    $('#editExpiryDate').val(d.expiryDate);
+    $('#editDiscountType').val(d.discountType);
+    $('#editPercentValue').val(d.percentValue);
+    $('#editDiscountAmount').val(d.discountAmount);
+    $('#editMaxUsage').val(d.maxUsage);
+    $('#editMinOrderAmount').val(d.minOrderAmount);
+    $('#editRequiredRank').val(d.requiredRank || '');
+    $('#editCategoryId').val(d.categoryId || '');
+    $('#editDetail').val(d.detail);
+    $('#editIsActive').prop('checked', d.isActive);
+    new bootstrap.Modal('#editVoucherModal').show();
+  });
+});
+$('#editVoucherForm').on('submit', function(e) {
+  e.preventDefault();
+  var fd = new FormData(this);
+  fd.set('IsActive', $('#editIsActive').is(':checked') ? 'true' : 'false');
+  $.ajax({ url: '/admin/UpdateVoucher', type: 'POST', data: fd, processData: false, contentType: false,
+    success: function(res) {
+      if (res.success) { showToast('Đã cập nhật voucher!', 'success'); setTimeout(() => location.reload(), 1200); }
+      else showToast(res.message || 'Lỗi!', 'error');
+    }
+  });
+});
+$(document).on('click', '.btn-toggle-voucher', function() {
+  var code = $(this).data('code');
+  $.post('/admin/ToggleVoucherActive', { code: code }, function(res) {
+    if (res.success) { showToast(res.isActive ? 'Đã bật voucher' : 'Đã tắt voucher', 'success'); setTimeout(() => location.reload(), 1000); }
+    else showToast(res.message, 'error');
   });
 });
 $(document).on('click', '.btn-delete-voucher', function() {

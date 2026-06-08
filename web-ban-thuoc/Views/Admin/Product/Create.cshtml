@@ -3,6 +3,7 @@
     ViewData["Title"] = "Thêm sản phẩm";
     Layout = "~/Views/Admin/_Layout.cshtml";
     var categories = ViewBag.Categories as IEnumerable<dynamic>;
+    var suppliers = ViewBag.Suppliers as IEnumerable<web_ban_thuoc.Models.Supplier> ?? Enumerable.Empty<web_ban_thuoc.Models.Supplier>();
 }
 <h2 class="mb-4 text-primary fw-bold"><i class="fa fa-plus"></i> Thêm sản phẩm mới</h2>
 <form asp-action="Create" method="post" enctype="multipart/form-data" class="row g-4 bg-white shadow-sm rounded-4 p-4">
@@ -26,6 +27,17 @@
             }
         </select>
         <span asp-validation-for="CategoryId" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label fw-semibold">Nhà cung cấp</label>
+        <select asp-for="SupplierId" class="form-select">
+            <option value="">-- Chưa gán NCC --</option>
+            @foreach (var s in suppliers)
+            {
+                <option value="@s.SupplierId">@s.Name (@s.Code)</option>
+            }
+        </select>
+        <div class="form-text">Gán NCC để sản phẩm hiện khi tạo đơn đặt hàng theo NCC.</div>
     </div>
     <div class="col-md-4">
         <label class="form-label fw-semibold">Nguồn gốc</label>
@@ -66,25 +78,54 @@
         <input type="hidden" asp-for="Ingredients" id="IngredientsJson" />
         <span asp-validation-for="Ingredients" class="text-danger"></span>
     </div>
+    <div class="col-12"><hr class="my-1" /><h6 class="text-primary fw-semibold mb-0"><i class="fa fa-file-medical me-1"></i> Mô tả & hướng dẫn sử dụng</h6></div>
     <div class="col-md-12">
         <label class="form-label fw-semibold">Công dụng</label>
-        <textarea asp-for="Uses" class="form-control" rows="2"></textarea>
+        <textarea asp-for="Uses" class="form-control" rows="3" placeholder="Mô tả công dụng của sản phẩm..."></textarea>
         <span asp-validation-for="Uses" class="text-danger"></span>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-12">
+        <label class="form-label fw-semibold">Liều dùng / Cách dùng</label>
+        <textarea asp-for="Dosage" class="form-control" rows="3" placeholder="Ví dụ: Uống 1 viên/lần, 2 lần/ngày sau ăn..."></textarea>
+        <span asp-validation-for="Dosage" class="text-danger"></span>
+    </div>
+    <div class="col-md-12">
         <label class="form-label fw-semibold">Đối tượng sử dụng</label>
-        <input asp-for="TargetUsers" class="form-control" />
+        <textarea asp-for="TargetUsers" class="form-control" rows="4" placeholder="Ai nên / không nên dùng sản phẩm..."></textarea>
         <span asp-validation-for="TargetUsers" class="text-danger"></span>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-12">
         <label class="form-label fw-semibold">Chống chỉ định</label>
-        <input asp-for="Contraindications" class="form-control" />
+        <textarea asp-for="Contraindications" class="form-control" rows="4" placeholder="Các trường hợp không được sử dụng..."></textarea>
         <span asp-validation-for="Contraindications" class="text-danger"></span>
     </div>
     <div class="col-md-3">
-        <label class="form-label fw-semibold">Tồn kho</label>
-        <input asp-for="StockQuantity" class="form-control" type="number" min="0" required />
-        <span asp-validation-for="StockQuantity" class="text-danger"></span>
+        <label class="form-label fw-semibold">SKU</label>
+        <input asp-for="Sku" class="form-control" placeholder="Tự sinh nếu để trống" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label fw-semibold">Barcode</label>
+        <input asp-for="Barcode" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label fw-semibold">Số ĐK BYT</label>
+        <input asp-for="RegistrationNumber" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label fw-semibold">Giá vốn (VNĐ)</label>
+        <input asp-for="CostPrice" class="form-control" type="number" min="0" step="1000" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label fw-semibold">Thuốc kê đơn</label>
+        <select asp-for="RequiresPrescription" class="form-select">
+            <option value="false">Không (OTC)</option>
+            <option value="true">Có — cần toa</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label fw-semibold">Tồn kho ban đầu</label>
+        <input type="text" class="form-control" value="0 — nhập qua Quản lý kho" readonly disabled />
+        <input type="hidden" asp-for="StockQuantity" value="0" />
     </div>
     <div class="col-md-3">
         <label class="form-label fw-semibold">Trạng thái</label>

@@ -1,0 +1,97 @@
+@model List<web_ban_thuoc.Models.UserRankInfo>
+@{
+    ViewData["Title"] = "Loyalty & Điểm thưởng";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+    var users = ViewBag.Users as Dictionary<string, string> ?? new();
+    var tiers = ViewBag.Tiers as (string Rank, decimal MinSpend6Months)[];
+    var transactions = ViewBag.RecentTransactions as List<web_ban_thuoc.Models.LoyaltyPointTransaction> ?? new();
+}
+<div class="container-fluid py-4">
+    <div class="mb-3">
+        <a href="/AdminLoyalty/Rewards" class="btn btn-outline-primary btn-sm"><i class="fa fa-gift me-1"></i> Quản lý cửa hàng đổi quà</a>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="mb-0"><i class="fa fa-medal text-warning me-2"></i>Cấp hạng thành viên</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    @if (tiers != null)
+                    {
+                        foreach (var t in tiers)
+                        {
+                            <div class="py-2 border-bottom">
+                                <strong>@t.Rank</strong>
+                                <div class="small text-muted">≥ @t.MinSpend6Months.ToString("N0")đ chi tiêu / 6 tháng</div>
+                            </div>
+                        }
+                    }
+                    <p class="small text-muted mt-3 mb-0">Mọi hạng tích <strong>@web_ban_thuoc.Models.LoyaltyTiers.PointsPerThousandVnd điểm / 1.000đ</strong> khi đơn <strong>Đã giao</strong>. Hạng cao mở quà đổi điểm & voucher riêng.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="mb-0">Top thành viên theo điểm</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Email</th>
+                                <th>Hạng</th>
+                                <th>Điểm</th>
+                                <th>Chi tiêu 6T</th>
+                                <th>Tổng chi tiêu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var m in Model)
+                            {
+                                <tr>
+                                    <td>@(users.GetValueOrDefault(m.UserId, m.UserId))</td>
+                                    <td><span class="badge bg-info">@m.Rank</span></td>
+                                    <td class="fw-bold text-primary">@m.LoyaltyPoints.ToString("N0")</td>
+                                    <td>@m.TotalSpent6Months.ToString("N0")đ</td>
+                                    <td>@m.TotalSpent.ToString("N0")đ</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="mb-0">Giao dịch điểm gần đây</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Thời gian</th>
+                                <th>User</th>
+                                <th>Loại</th>
+                                <th>Điểm</th>
+                                <th>Mô tả</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in transactions)
+                            {
+                                <tr>
+                                    <td class="small">@t.CreatedAt.ToString("dd/MM HH:mm")</td>
+                                    <td class="small">@(users.GetValueOrDefault(t.UserId, t.UserId))</td>
+                                    <td><span class="badge bg-secondary">@t.TransactionType</span></td>
+                                    <td class="fw-semibold text-success">+@t.Points</td>
+                                    <td class="small text-muted">@t.Description</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

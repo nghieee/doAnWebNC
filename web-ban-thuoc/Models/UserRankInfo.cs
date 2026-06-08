@@ -10,6 +10,8 @@ namespace web_ban_thuoc.Models
         public decimal TotalSpent { get; set; } = 0;
         public decimal TotalSpent6Months { get; set; } = 0;
         public string Rank { get; set; } = "Bạc"; // Bạc, Vàng, Bạch kim
+
+        public int LoyaltyPoints { get; set; }
         public DateTime? LastRankMailSent { get; set; }
         public DateTime? LastNotiMailSent { get; set; }
         public DateTime? LastRankReset { get; set; }

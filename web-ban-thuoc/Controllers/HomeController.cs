@@ -61,9 +61,7 @@ public class HomeController : Controller
             {
                 var newVouchers = _context.UserVouchers.Where(uv => uv.UserId == userId && uv.IsNew).ToList();
                 foreach (var uv in newVouchers)
-                {
                     uv.IsNew = false;
-                }
                 _context.SaveChanges();
             }
         }

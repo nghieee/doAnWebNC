@@ -1,0 +1,67 @@
+@model web_ban_thuoc.ViewComponents.AdminSidebarViewModel
+@{
+    var path = Context.Request.Path.Value ?? "";
+
+    bool IsActive(AdminNavItem item)
+    {
+        if (item.ExactMatch)
+            return path.Equals(item.Url, StringComparison.OrdinalIgnoreCase)
+                || (item.PathPrefix == "/admin" && (path == "/admin" || path == "/admin/index"));
+
+        if (item.IsSubItem)
+            return path.StartsWith(item.PathPrefix, StringComparison.OrdinalIgnoreCase);
+
+        if (item.ExcludePaths.Length > 0
+            && item.ExcludePaths.Any(ex => path.StartsWith(ex, StringComparison.OrdinalIgnoreCase)))
+            return false;
+
+        return path.Equals(item.Url, StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith(item.PathPrefix + "/", StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+<div class="sidebar-user">
+    <div class="sidebar-user-avatar">
+        <i class="fa-solid fa-user"></i>
+    </div>
+    <div class="sidebar-user-info sidebar-text">
+        <div class="sidebar-user-name text-truncate" title="@Model.UserName">@Model.UserName</div>
+        @if (!string.IsNullOrEmpty(Model.RoleDisplayName))
+        {
+            <span class="sidebar-user-role">@Model.RoleDisplayName</span>
+        }
+    </div>
+</div>
+
+<nav class="sidebar-nav">
+    @foreach (var group in Model.MenuGroups)
+    {
+        <div class="sidebar-group">
+            <div class="sidebar-group-label sidebar-text">
+                <i class="@group.IconClass me-2"></i>@group.Title
+            </div>
+            <ul class="nav flex-column">
+                @foreach (var item in group.Items)
+                {
+                    var active = IsActive(item);
+                    var badgeId = item.Title switch
+                    {
+                        "Đơn hàng" => "pendingOrdersBadge",
+                        "Tin nhắn" => "unreadMessagesBadge",
+                        _ => null
+                    };
+                    <li class="nav-item @(item.IsSubItem ? "sub-item" : "")">
+                        <a href="@item.Url" class="nav-link @(active ? "active" : "") @(item.IsSubItem ? "nav-link-sub" : "")" title="@item.Title">
+                            <i class="@item.IconClass nav-icon"></i>
+                            <span class="sidebar-text">@item.Title</span>
+                            @if (badgeId != null)
+                            {
+                                <span id="@badgeId" class="nav-badge" style="display:none;"></span>
+                            }
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+</nav>

@@ -203,11 +203,13 @@
                                                 @{
                                                     var statusClass = order.Status switch
                                                     {
-                                                        "Chờ xác nhận" => "bg-warning text-dark",
-                                                        "Đã xác nhận" => "bg-info text-white",
-                                                        "Đang giao" => "bg-primary text-white",
-                                                        "Đã giao" => "bg-success text-white",
-                                                        "Đã hủy" => "bg-danger text-white",
+                                                        web_ban_thuoc.Models.OrderStatuses.PendingPayment => "bg-secondary text-white",
+                                                        web_ban_thuoc.Models.OrderStatuses.PendingConfirmation => "bg-warning text-dark",
+                                                        web_ban_thuoc.Models.OrderStatuses.Confirmed => "bg-info text-white",
+                                                        web_ban_thuoc.Models.OrderStatuses.Packing => "bg-primary text-white",
+                                                        web_ban_thuoc.Models.OrderStatuses.Shipped => "bg-primary text-white",
+                                                        web_ban_thuoc.Models.OrderStatuses.Delivered => "bg-success text-white",
+                                                        web_ban_thuoc.Models.OrderStatuses.Cancelled => "bg-danger text-white",
                                                         _ => "bg-secondary text-white"
                                                     };
                                                 }

@@ -1,0 +1,60 @@
+@model web_ban_thuoc.Models.CreateGoodsReceiptViewModel
+@using web_ban_thuoc.Models
+@{
+    ViewData["Title"] = "Nhập kho từ đơn đặt hàng";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+    var po = (PurchaseOrder)ViewBag.PurchaseOrder;
+}
+
+<div class="container-fluid py-3">
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <h5 class="fw-bold mb-1">Phiếu nhập kho — @po.OrderCode</h5>
+        <p class="text-muted mb-2">NCC: @po.Supplier.Name · Kho: @po.Warehouse.Name</p>
+        <p class="small text-primary mb-4"><i class="fa fa-info-circle me-1"></i>Mỗi dòng nhập cần <strong>mã lô</strong> và <strong>HSD</strong> — hệ thống dùng để xuất FEFO khi bán hàng.</p>
+
+        <form method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="PurchaseOrderId" />
+            <input type="hidden" asp-for="SupplierId" />
+            <input type="hidden" asp-for="WarehouseId" />
+
+            <div class="mb-3">
+                <label class="form-label">Ghi chú phiếu nhập</label>
+                <input asp-for="Note" class="form-control" />
+            </div>
+
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th>Mã lô</th>
+                        <th>HSD</th>
+                        <th>SL nhập</th>
+                        <th>Giá nhập</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Lines.Count; i++)
+                    {
+                        var line = Model.Lines[i];
+                        var product = po.Lines.First(l => l.PurchaseOrderLineId == line.PurchaseOrderLineId).Product;
+                        <tr>
+                            <td>
+                                @product.ProductName
+                                <input type="hidden" name="Lines[@i].ProductId" value="@line.ProductId" />
+                                <input type="hidden" name="Lines[@i].PurchaseOrderLineId" value="@line.PurchaseOrderLineId" />
+                            </td>
+                            <td><input name="Lines[@i].BatchNo" class="form-control" value="@line.BatchNo" required /></td>
+                            <td><input name="Lines[@i].ExpiryDate" type="date" class="form-control" value="@(line.ExpiryDate?.ToString("yyyy-MM-dd"))" /></td>
+                            <td><input name="Lines[@i].Quantity" type="number" min="1" class="form-control" value="@line.Quantity" required /></td>
+                            <td><input name="Lines[@i].UnitCost" type="number" min="0" step="1000" class="form-control" value="@line.UnitCost" required /></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <button type="submit" class="btn btn-success"><i class="fa fa-check me-1"></i> Xác nhận nhập kho</button>
+            <a href="/AdminPurchase/Details/@po.PurchaseOrderId" class="btn btn-outline-secondary">Hủy</a>
+        </form>
+    </div>
+</div>

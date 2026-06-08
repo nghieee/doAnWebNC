@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using System.IO;
 using Microsoft.EntityFrameworkCore;
 using web_ban_thuoc.Models;
+using web_ban_thuoc.Services;
 
 namespace web_ban_thuoc.Controllers.Admin
 {
@@ -11,9 +12,12 @@ namespace web_ban_thuoc.Controllers.Admin
     public class AdminProductController : Controller
     {
         private readonly LongChauDbContext _context;
-        public AdminProductController(LongChauDbContext context)
+        private readonly IProductExcelImportService _excelImport;
+
+        public AdminProductController(LongChauDbContext context, IProductExcelImportService excelImport)
         {
             _context = context;
+            _excelImport = excelImport;
         }
 
         public IActionResult Index(int? categoryId = null, string? origin = null, int page = 1, string? searchName = null)
@@ -21,6 +25,7 @@ namespace web_ban_thuoc.Controllers.Admin
             int pageSize = 12;
             var products = _context.Products
                 .Include(p => p.Category)
+                .Include(p => p.Supplier)
                 .Include(p => p.ProductImages)
                 .OrderByDescending(p => p.ProductId)
                 .AsQueryable();
@@ -49,9 +54,54 @@ namespace web_ban_thuoc.Controllers.Admin
             return View("~/Views/Admin/Product/Index.cshtml", pagedProducts);
         }
 
+        public IActionResult Import()
+        {
+            ViewBag.CategoryCount = _context.Categories.Count(c => c.CategoryLevel == "3");
+            return View("~/Views/Admin/Product/Import.cshtml");
+        }
+
+        [HttpGet]
+        public IActionResult DownloadTemplate()
+        {
+            var bytes = _excelImport.BuildTemplate();
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "MauSanPham_LongChau.xlsx");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Import(IFormFile excelFile, CancellationToken ct)
+        {
+            if (excelFile == null || excelFile.Length == 0)
+            {
+                TempData["Error"] = "Vui lòng chọn file Excel (.xlsx).";
+                return RedirectToAction(nameof(Import));
+            }
+
+            var ext = Path.GetExtension(excelFile.FileName).ToLowerInvariant();
+            if (ext != ".xlsx")
+            {
+                TempData["Error"] = "Chỉ hỗ trợ file .xlsx";
+                return RedirectToAction(nameof(Import));
+            }
+
+            try
+            {
+                await using var stream = excelFile.OpenReadStream();
+                var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                var result = await _excelImport.ImportAsync(stream, userId, ct);
+                return View("~/Views/Admin/Product/ImportResult.cshtml", result);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction(nameof(Import));
+            }
+        }
+
         public IActionResult Create()
         {
-            ViewBag.Categories = _context.Categories.Where(c => c.CategoryLevel == "3").OrderBy(c => c.CategoryName).ToList();
+            LoadFormViewBag();
             return View("~/Views/Admin/Product/Create.cshtml");
         }
 
@@ -62,9 +112,11 @@ namespace web_ban_thuoc.Controllers.Admin
             if (ModelState.IsValid)
             {
                 product.SoldQuantity = 0;
+                product.StockQuantity = 0;
+                if (string.IsNullOrWhiteSpace(product.Sku))
+                    product.Sku = $"SKU-{DateTime.Now:yyyyMMddHHmmss}";
                 _context.Products.Add(product);
                 _context.SaveChanges();
-                // Xử lý upload ảnh
                 if (images != null && images.Count > 0)
                 {
                     int sort = 1;
@@ -93,7 +145,7 @@ namespace web_ban_thuoc.Controllers.Admin
                 }
                 return RedirectToAction("Index");
             }
-            ViewBag.Categories = _context.Categories.Where(c => c.CategoryLevel == "2" || c.CategoryLevel == "3").OrderBy(c => c.CategoryName).ToList();
+            LoadFormViewBag();
             return View("~/Views/Admin/Product/Create.cshtml", product);
         }
 
@@ -103,7 +155,7 @@ namespace web_ban_thuoc.Controllers.Admin
                 .Include(p => p.ProductImages)
                 .FirstOrDefault(p => p.ProductId == id);
             if (product == null) return NotFound();
-            ViewBag.Categories = _context.Categories.Where(c => c.CategoryLevel == "3").OrderBy(c => c.CategoryName).ToList();
+            LoadFormViewBag();
             return View("~/Views/Admin/Product/Edit.cshtml", product);
         }
 
@@ -113,15 +165,14 @@ namespace web_ban_thuoc.Controllers.Admin
         {
             if (ModelState.IsValid)
             {
-                // Lấy lại giá trị SoldQuantity cũ từ DB để không bị null hoặc bị sửa
                 var oldProduct = _context.Products.AsNoTracking().FirstOrDefault(p => p.ProductId == product.ProductId);
                 if (oldProduct != null)
                 {
                     product.SoldQuantity = oldProduct.SoldQuantity ?? 0;
+                    product.StockQuantity = oldProduct.StockQuantity;
                 }
                 _context.Products.Update(product);
                 _context.SaveChanges();
-                // Xóa ảnh cũ nếu chọn
                 if (deleteImageIds != null && deleteImageIds.Length > 0)
                 {
                     var imgs = _context.ProductImages.Where(i => deleteImageIds.Contains(i.ProductImageId)).ToList();
@@ -134,7 +185,6 @@ namespace web_ban_thuoc.Controllers.Admin
                     }
                     _context.SaveChanges();
                 }
-                // Upload ảnh mới
                 if (images != null && images.Count > 0)
                 {
                     int sort = _context.ProductImages.Count(i => i.ProductId == product.ProductId) + 1;
@@ -161,7 +211,6 @@ namespace web_ban_thuoc.Controllers.Admin
                     }
                     _context.SaveChanges();
                 }
-                // Cập nhật ảnh đại diện
                 var allImgs = _context.ProductImages.Where(i => i.ProductId == product.ProductId).ToList();
                 foreach (var img in allImgs)
                 {
@@ -170,7 +219,7 @@ namespace web_ban_thuoc.Controllers.Admin
                 _context.SaveChanges();
                 return RedirectToAction("Index");
             }
-            ViewBag.Categories = _context.Categories.Where(c => c.CategoryLevel == "2" || c.CategoryLevel == "3").OrderBy(c => c.CategoryName).ToList();
+            LoadFormViewBag();
             return View("~/Views/Admin/Product/Edit.cshtml", product);
         }
 
@@ -192,7 +241,6 @@ namespace web_ban_thuoc.Controllers.Admin
                 .FirstOrDefault(p => p.ProductId == id);
             if (product != null)
             {
-                // Xóa ảnh vật lý
                 foreach (var img in product.ProductImages)
                 {
                     var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/products", img.ImageUrl);
@@ -206,15 +254,21 @@ namespace web_ban_thuoc.Controllers.Admin
             return RedirectToAction("Index");
         }
 
-        // Action trả về partial view chi tiết sản phẩm cho modal Quick View
         public IActionResult GetProductDetail(int id)
         {
             var product = _context.Products
                 .Include(p => p.ProductImages)
                 .Include(p => p.Category)
+                .Include(p => p.Supplier)
                 .FirstOrDefault(p => p.ProductId == id);
             if (product == null) return NotFound();
             return PartialView("~/Views/Admin/Product/_ProductDetailPartial.cshtml", product);
         }
+
+        private void LoadFormViewBag()
+        {
+            ViewBag.Categories = _context.Categories.Where(c => c.CategoryLevel == "3").OrderBy(c => c.CategoryName).ToList();
+            ViewBag.Suppliers = _context.Suppliers.Where(s => s.IsActive).OrderBy(s => s.Name).ToList();
+        }
     }
-} 
+}

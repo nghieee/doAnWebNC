@@ -1,0 +1,172 @@
+@model web_ban_thuoc.Models.CreatePurchaseOrderViewModel
+@using web_ban_thuoc.Models
+@{
+    ViewData["Title"] = "Tạo đơn đặt hàng";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+    var suppliers = (IEnumerable<Supplier>)ViewBag.Suppliers;
+    var warehouses = (IEnumerable<Warehouse>)ViewBag.Warehouses;
+    var products = (IEnumerable<Product>)ViewBag.Products;
+}
+
+<div class="container-fluid py-3">
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <h5 class="fw-bold mb-4">Đơn đặt hàng nhà cung cấp</h5>
+        <form method="post" id="poForm">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Nhà cung cấp <span class="text-danger">*</span></label>
+                    <select asp-for="SupplierId" id="supplierSelect" class="form-select" required>
+                        <option value="">-- Chọn NCC trước --</option>
+                        @foreach (var s in suppliers)
+                        {
+                            <option value="@s.SupplierId" selected="@(Model.SupplierId == s.SupplierId)">@s.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Kho nhận</label>
+                    <select asp-for="WarehouseId" class="form-select" required>
+                        @foreach (var w in warehouses)
+                        {
+                            <option value="@w.WarehouseId">@w.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Ngày dự kiến</label>
+                    <input asp-for="ExpectedDate" type="date" class="form-control" />
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Ghi chú</label>
+                    <input asp-for="Note" class="form-control" />
+                </div>
+            </div>
+
+            <div id="productHint" class="alert alert-info py-2 small mb-3">
+                <i class="fa fa-info-circle me-1"></i> Chọn <strong>Nhà cung cấp</strong> để hiển thị danh sách sản phẩm thuộc NCC đó.
+            </div>
+
+            <h6 class="fw-semibold mb-2">Chi tiết sản phẩm</h6>
+            <div id="linesContainer">
+                @for (int i = 0; i < Model.Lines.Count; i++)
+                {
+                    <div class="row g-2 mb-2 line-row">
+                        <div class="col-md-5">
+                            <select name="Lines[@i].ProductId" class="form-select product-select" required>
+                                <option value="">-- Sản phẩm --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input name="Lines[@i].QuantityOrdered" type="number" min="1" class="form-control" placeholder="SL đặt" required />
+                        </div>
+                        <div class="col-md-3">
+                            <input name="Lines[@i].UnitCost" type="number" min="0" step="1000" class="form-control unit-cost-input" placeholder="Giá nhập" required />
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-outline-danger btn-sm remove-line"><i class="fa fa-trash"></i></button>
+                        </div>
+                    </div>
+                }
+            </div>
+            <button type="button" class="btn btn-outline-secondary btn-sm mb-4" id="addLine" disabled><i class="fa fa-plus"></i> Thêm dòng</button>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Tạo đơn (Nháp)</button>
+                <a href="/AdminPurchase" class="btn btn-outline-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+let lineIndex = @Model.Lines.Count;
+const allProducts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+    products.Select(p => new { id = p.ProductId, name = p.ProductName, supplierId = p.SupplierId, costPrice = p.CostPrice ?? 0 })));
+
+function getProductsForSupplier(supplierId) {
+    if (!supplierId) return [];
+    return allProducts.filter(p => p.supplierId == supplierId);
+}
+
+function buildProductOptions(supplierId, selectedId) {
+    const list = getProductsForSupplier(supplierId);
+    let html = '<option value="">-- Sản phẩm --</option>';
+    list.forEach(p => {
+        const sel = selectedId && selectedId == p.id ? ' selected' : '';
+        html += `<option value="${p.id}" data-cost="${p.costPrice}"${sel}>${p.name}</option>`;
+    });
+    return html;
+}
+
+function refreshAllProductSelects() {
+    const supplierId = document.getElementById('supplierSelect').value;
+    const list = getProductsForSupplier(supplierId);
+    const addBtn = document.getElementById('addLine');
+    const hint = document.getElementById('productHint');
+
+    addBtn.disabled = !supplierId || list.length === 0;
+
+    if (!supplierId) {
+        hint.className = 'alert alert-info py-2 small mb-3';
+        hint.innerHTML = '<i class="fa fa-info-circle me-1"></i> Chọn <strong>Nhà cung cấp</strong> để hiển thị danh sách sản phẩm.';
+    } else if (list.length === 0) {
+        hint.className = 'alert alert-warning py-2 small mb-3';
+        hint.innerHTML = '<i class="fa fa-triangle-exclamation me-1"></i> NCC này chưa có sản phẩm nào. Gán NCC tại <a href="/AdminProduct">Quản lý sản phẩm</a>.';
+    } else {
+        hint.className = 'alert alert-success py-2 small mb-3';
+        hint.innerHTML = `<i class="fa fa-check-circle me-1"></i> ${list.length} sản phẩm thuộc NCC đã chọn.`;
+    }
+
+    document.querySelectorAll('.product-select').forEach(select => {
+        const current = select.value;
+        select.innerHTML = buildProductOptions(supplierId, current);
+        if (current && [...select.options].some(o => o.value === current)) {
+            select.value = current;
+        }
+    });
+}
+
+document.getElementById('supplierSelect').addEventListener('change', () => {
+    document.querySelectorAll('.line-row').forEach(row => {
+        const costInput = row.querySelector('.unit-cost-input');
+        if (costInput) costInput.value = '';
+    });
+    refreshAllProductSelects();
+});
+
+document.getElementById('linesContainer').addEventListener('change', e => {
+    if (e.target.classList.contains('product-select')) {
+        const opt = e.target.selectedOptions[0];
+        const cost = opt?.dataset?.cost;
+        const row = e.target.closest('.line-row');
+        const costInput = row?.querySelector('.unit-cost-input');
+        if (costInput && cost && cost !== '0') costInput.value = cost;
+    }
+});
+
+document.getElementById('addLine').addEventListener('click', () => {
+    const supplierId = document.getElementById('supplierSelect').value;
+    if (!supplierId) return;
+    const html = `<div class="row g-2 mb-2 line-row">
+        <div class="col-md-5"><select name="Lines[${lineIndex}].ProductId" class="form-select product-select" required>${buildProductOptions(supplierId)}</select></div>
+        <div class="col-md-3"><input name="Lines[${lineIndex}].QuantityOrdered" type="number" min="1" class="form-control" placeholder="SL đặt" required /></div>
+        <div class="col-md-3"><input name="Lines[${lineIndex}].UnitCost" type="number" min="0" step="1000" class="form-control unit-cost-input" placeholder="Giá nhập" required /></div>
+        <div class="col-md-1"><button type="button" class="btn btn-outline-danger btn-sm remove-line"><i class="fa fa-trash"></i></button></div>
+    </div>`;
+    document.getElementById('linesContainer').insertAdjacentHTML('beforeend', html);
+    lineIndex++;
+});
+
+document.getElementById('linesContainer').addEventListener('click', e => {
+    if (e.target.closest('.remove-line')) {
+        const rows = document.querySelectorAll('.line-row');
+        if (rows.length > 1) e.target.closest('.line-row').remove();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', refreshAllProductSelects);
+</script>
+}

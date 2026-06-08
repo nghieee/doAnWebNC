@@ -61,6 +61,11 @@
             {
                 <dt class="col-5">Xuất xứ:</dt><dd class="col-7">@Model.Origin</dd>
             }
+            <dt class="col-5">Nhà cung cấp:</dt><dd class="col-7">@(Model.Supplier?.Name ?? "—")</dd>
+            <dt class="col-5">SKU:</dt><dd class="col-7">@(Model.Sku ?? "—")</dd>
+            <dt class="col-5">Barcode:</dt><dd class="col-7">@(Model.Barcode ?? "—")</dd>
+            <dt class="col-5">Số ĐK BYT:</dt><dd class="col-7">@(Model.RegistrationNumber ?? "—")</dd>
+            <dt class="col-5">Loại thuốc:</dt><dd class="col-7">@(Model.RequiresPrescription ? "Kê đơn" : "OTC")</dd>
             <dt class="col-5">Tồn kho:</dt><dd class="col-7">@Model.StockQuantity</dd>
             @if (!string.IsNullOrEmpty(Model.Ingredients))
             {

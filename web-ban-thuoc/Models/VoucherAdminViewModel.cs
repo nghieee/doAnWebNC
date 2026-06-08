@@ -12,5 +12,11 @@ namespace web_ban_thuoc.Models
         public int DaDung { get; set; }
         public int ConLai { get; set; }
         public bool IsActive { get; set; }
+        public bool IsPublic { get; set; }
+        public int VoucherId { get; set; }
+        public decimal? MinOrderAmount { get; set; }
+        public string? RequiredRank { get; set; }
+        public int? CategoryId { get; set; }
+        public string? CategoryName { get; set; }
     }
 } 

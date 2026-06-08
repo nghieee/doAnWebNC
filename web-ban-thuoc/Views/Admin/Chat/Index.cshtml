@@ -81,8 +81,10 @@
 <script>
     const adminId = 'admin';
     const selectedUserId = '@(selectedUser?.Id ?? "")';
-    let connection = new signalR.HubConnectionBuilder().withUrl('/chathub').build();
-    connection.start();
+    let connection = new signalR.HubConnectionBuilder().withUrl('/chathub?userId=admin').build();
+    connection.start().then(() => {
+        if (selectedUserId) connection.invoke('JoinConversation', selectedUserId);
+    });
     // Gửi tin nhắn từ admin
     const adminForm = document.getElementById('admin-chat-form');
     if(adminForm) {
@@ -96,8 +98,7 @@
         };
     }
     connection.on('ReceiveMessage', function(senderId, message) {
-        // Nếu đang chat với user này thì append tin nhắn vào khung chat
-        if(senderId === selectedUserId && selectedUserId) {
+        if ((senderId === selectedUserId || senderId === adminId) && selectedUserId) {
             const chatBox = document.querySelector('.col-md-8 .flex-grow-1.bg-light.p-3.overflow-auto');
             if(chatBox) {
                 const msgDiv = document.createElement('div');

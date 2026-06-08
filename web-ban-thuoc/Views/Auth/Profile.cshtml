@@ -1,4 +1,5 @@
 @model web_ban_thuoc.Models.ProfileViewModel
+@using web_ban_thuoc.Models
 @{
     ViewData["Title"] = "Thông tin cá nhân";
     Layout = "_Layout";
@@ -272,10 +273,21 @@
                                                             <span class="small text-muted">Trạng thái thanh toán:</span>
                                                             <span class="badge @GetPaymentStatusBadgeClass(order.PaymentStatus)">@GetPaymentStatusText(order.PaymentStatus)</span>
                                                         </div>
+                                                        @if (!string.IsNullOrEmpty(order.TrackingCode))
+                                                        {
+                                                            <div class="mt-3 p-2 rounded-3 bg-light small">
+                                                                <i class="fas fa-truck text-primary me-1"></i>
+                                                                <strong>@order.Carrier</strong> — Mã vận đơn: <code>@order.TrackingCode</code>
+                                                                @if (!string.IsNullOrEmpty(order.TrackingUrl))
+                                                                {
+                                                                    <div class="mt-1"><a href="@order.TrackingUrl" target="_blank" rel="noopener">Theo dõi đơn hàng →</a></div>
+                                                                }
+                                                            </div>
+                                                        }
                                                     </div>
                                                     
                                                     <!-- Nút thanh toán cho đơn hàng online chưa thanh toán -->
-                                                    @if (order.PaymentMethod == "PayOS" && order.PaymentStatus == "Chưa thanh toán")
+                                                    @if (order.PaymentMethod == "PayOS" && order.PaymentStatus == PaymentStatuses.Unpaid)
                                                     {
                                                         <div class="border-top pt-3">
                                                             <button class="btn btn-primary btn-pay-online" data-order-id="@order.OrderId">
@@ -284,7 +296,7 @@
                                                         </div>
                                                     }
                                                     
-                                                    @if (order.Status == "Chờ xác nhận" || order.Status == "Đã xác nhận")
+                                                    @if (OrderStatuses.CanCustomerCancel(order.Status ?? ""))
                                                     {
                                                         <button class="btn btn-danger btn-cancel-order mt-3" data-id="@order.OrderId">Hủy đơn</button>
                                                     }
@@ -311,6 +323,78 @@
                                 <span class="fw-semibold">Hạng thành viên: </span>
                                 <span class="badge bg-info text-white">@Model.Rank</span>
                             </div>
+                            <div class="mb-4 p-3 rounded-3" style="background: linear-gradient(135deg, #fffbeb, #fef3c7);">
+                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                    <div>
+                                        <span class="fw-semibold">Điểm thưởng: </span>
+                                        <span class="badge bg-warning text-dark fs-6" id="loyalty-points-badge">@Model.LoyaltyPoints.ToString("N0") điểm</span>
+                                    </div>
+                                    <span class="small text-muted">Tích điểm khi đơn được giao · Đổi quà bên dưới</span>
+                                </div>
+                            </div>
+
+                            <h6 class="fw-bold mb-3"><i class="fas fa-store me-2 text-primary"></i>Cửa hàng đổi quà</h6>
+                            <div class="row g-3 mb-4">
+                                @foreach (var reward in Model.LoyaltyRewards)
+                                {
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="card h-100 border-0 shadow-sm rounded-3 @(reward.CanRedeem ? "" : "opacity-75")">
+                                            <div class="card-body d-flex flex-column">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <h6 class="fw-bold mb-0">@reward.Title</h6>
+                                                    <span class="badge bg-warning text-dark">@reward.PointsCost.ToString("N0") điểm</span>
+                                                </div>
+                                                @if (!string.IsNullOrEmpty(reward.Description))
+                                                {
+                                                    <p class="small text-muted mb-2">@reward.Description</p>
+                                                }
+                                                <div class="small mb-2">
+                                                    <span class="badge bg-primary-subtle text-primary">@reward.RewardLabel</span>
+                                                    @if (!string.IsNullOrEmpty(reward.RequiredRank))
+                                                    {
+                                                        <span class="badge bg-info-subtle text-info ms-1">@reward.RequiredRank+</span>
+                                                    }
+                                                    @if (reward.StockRemaining.HasValue)
+                                                    {
+                                                        <span class="badge bg-secondary-subtle text-secondary ms-1">Còn @reward.StockRemaining</span>
+                                                    }
+                                                </div>
+                                                <div class="mt-auto">
+                                                    @if (reward.CanRedeem)
+                                                    {
+                                                        <button type="button" class="btn btn-primary btn-sm w-100 btn-redeem-reward" data-id="@reward.LoyaltyRewardId" data-title="@reward.Title" data-points="@reward.PointsCost">
+                                                            <i class="fas fa-gift me-1"></i> Đổi ngay
+                                                        </button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm w-100" disabled title="@reward.DisabledReason">@reward.DisabledReason</button>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                @if (!Model.LoyaltyRewards.Any())
+                                {
+                                    <div class="col-12 text-muted small">Chưa có quà đổi điểm. Vui lòng quay lại sau.</div>
+                                }
+                            </div>
+
+                            @if (Model.RedeemHistory.Any())
+                            {
+                                <h6 class="fw-bold mb-2"><i class="fas fa-clock-rotate-left me-2"></i>Lịch sử đổi quà</h6>
+                                <ul class="list-group list-group-flush mb-4 small">
+                                    @foreach (var h in Model.RedeemHistory)
+                                    {
+                                        <li class="list-group-item px-0 d-flex justify-content-between">
+                                            <span>@h.Title</span>
+                                            <span class="text-danger">-@h.Points.ToString("N0") điểm · @h.CreatedAt.ToString("dd/MM/yyyy")</span>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+
                             <div class="mb-3">
                                 <span class="fw-semibold">Danh sách voucher:</span>
                                 <table class="table table-bordered mt-2">
@@ -437,31 +521,19 @@
 </style>
 
 @functions {
-    string GetStatusText(string status)
-    {
-        return status switch
-        {
-            "Chờ xác nhận" => "Chờ xác nhận",
-            "Đã xác nhận" => "Đã xác nhận", 
-            "Đang giao" => "Đang giao",
-            "Đã giao" => "Đã giao",
-            "Đã hủy" => "Đã hủy",
-            _ => status
-        };
-    }
+    string GetStatusText(string status) => status ?? "";
     
-    string GetStatusBadgeClass(string status)
+    string GetStatusBadgeClass(string status) => status switch
     {
-        return status switch
-        {
-            "Chờ xác nhận" => "bg-warning text-dark",
-            "Đã xác nhận" => "bg-info text-white",
-            "Đang giao" => "bg-primary text-white", 
-            "Đã giao" => "bg-success text-white",
-            "Đã hủy" => "bg-danger text-white",
-            _ => "bg-secondary text-white"
-        };
-    }
+        OrderStatuses.PendingPayment => "bg-secondary text-white",
+        OrderStatuses.PendingConfirmation => "bg-warning text-dark",
+        OrderStatuses.Confirmed => "bg-info text-white",
+        OrderStatuses.Packing => "bg-primary text-white",
+        OrderStatuses.Shipped => "bg-primary text-white",
+        OrderStatuses.Delivered => "bg-success text-white",
+        OrderStatuses.Cancelled => "bg-danger text-white",
+        _ => "bg-secondary text-white"
+    };
     
     string GetPaymentStatusText(string paymentStatus)
     {
@@ -516,6 +588,34 @@ $(function() {
         
         // Chuyển hướng đến trang thanh toán PayOS
         window.location.href = '/PayOS/CreatePayment?orderId=' + orderId;
+    });
+
+    $(document).on('click', '.btn-redeem-reward', function() {
+        var btn = $(this);
+        var id = btn.data('id');
+        var title = btn.data('title');
+        var points = btn.data('points');
+        if (!confirm('Đổi "' + title + '" với ' + points + ' điểm?')) return;
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+        $.ajax({
+            url: '/api/loyalty/redeem',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ rewardId: id }),
+            success: function(res) {
+                if (res.success) {
+                    alert(res.message);
+                    location.reload();
+                } else {
+                    alert(res.message || 'Đổi quà thất bại');
+                    btn.prop('disabled', false).html('<i class="fas fa-gift me-1"></i> Đổi ngay');
+                }
+            },
+            error: function() {
+                alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                btn.prop('disabled', false).html('<i class="fas fa-gift me-1"></i> Đổi ngay');
+            }
+        });
     });
 });
 </script>

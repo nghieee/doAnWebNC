@@ -1,0 +1,272 @@
+digraph ERD {
+  rankdir=TB;
+  bgcolor="white";
+  pad=0.25;
+  margin=0.15;
+  outputorder="edgesfirst";
+  graph [layout=neato, overlap=false, splines=true, fontname="Arial"];
+  fontname="Arial"; fontsize=10;
+  node [fontname="Arial", fontsize=10];
+  edge [fontname="Arial", fontsize=9];
+
+  // Style palette similar to Chen examples
+  node [style="filled"];
+  edge [color="#555555"];
+
+  // ENTITIES (rectangle)
+  Category [shape=box, fillcolor="#b6f2b6", label="Categories", pos="0,200!" ];
+  Product [shape=box, fillcolor="#b6f2b6", label="Products", pos="0,120!" ];
+  ProductImage [shape=box, fillcolor="#b6f2b6", label="ProductImages", pos="0,40!" ];
+  Review [shape=box, fillcolor="#b6f2b6", label="Reviews", pos="520,120!" ];
+  Users [shape=box, fillcolor="#b6f2b6", label="Users (AspNetUsers)", pos="1040,200!" ];
+  Order [shape=box, fillcolor="#b6f2b6", label="Orders", pos="1040,120!" ];
+  OrderItem [shape=box, fillcolor="#b6f2b6", label="OrderItems", pos="1040,40!" ];
+  Payment [shape=box, fillcolor="#b6f2b6", label="Payments", pos="1040,-40!" ];
+  UserVoucher [shape=box, fillcolor="#b6f2b6", label="UserVouchers", pos="1560,160!" ];
+  Voucher [shape=box, fillcolor="#b6f2b6", label="Vouchers", pos="1560,80!" ];
+
+  // RELATIONSHIPS (diamond)
+  R_User_Order [shape=diamond, fillcolor="#ffe4b3", label="Dat hang", pos="1040,200!" ];
+  R_User_Order -> Users [xlabel="1"];
+  R_User_Order -> Order [xlabel="0..N"];
+
+  R_Order_Items [shape=diamond, fillcolor="#ffe4b3", label="Chua dong don", pos="1040,120!" ];
+  R_Order_Items -> Order [xlabel="1"];
+  R_Order_Items -> OrderItem [xlabel="N"];
+
+  R_Prod_OrderItems [shape=diamond, fillcolor="#ffe4b3", label="Duoc mua trong dong", pos="520,120!" ];
+  R_Prod_OrderItems -> Product [xlabel="1"];
+  R_Prod_OrderItems -> OrderItem [xlabel="N"];
+
+  R_Order_Pay [shape=diamond, fillcolor="#ffe4b3", label="Thanh toan cho", pos="1040,80!" ];
+  R_Order_Pay -> Order [xlabel="1"];
+  R_Order_Pay -> Payment [xlabel="0..N"];
+
+  R_Cat_Prod [shape=diamond, fillcolor="#ffe4b3", label="Thuoc ve", pos="0,200!" ];
+  R_Cat_Prod -> Category [xlabel="1"];
+  R_Cat_Prod -> Product [xlabel="N"];
+
+  R_Cat_Parent [shape=diamond, fillcolor="#ffe4b3", label="Phan cap cha-con", pos="0,240!" ];
+  R_Cat_Parent -> Category [xlabel="0..1 (parent)"];
+  R_Cat_Parent -> Category [xlabel="0..N (child)"];
+
+  R_Prod_Img [shape=diamond, fillcolor="#ffe4b3", label="Co anh", pos="0,120!" ];
+  R_Prod_Img -> Product [xlabel="1"];
+  R_Prod_Img -> ProductImage [xlabel="N"];
+
+  R_User_Review [shape=diamond, fillcolor="#ffe4b3", label="Viet danh gia", pos="780,200!" ];
+  R_User_Review -> Users [xlabel="1"];
+  R_User_Review -> Review [xlabel="0..N"];
+
+  R_Prod_Review [shape=diamond, fillcolor="#ffe4b3", label="San pham nhan danh gia", pos="260,160!" ];
+  R_Prod_Review -> Product [xlabel="1"];
+  R_Prod_Review -> Review [xlabel="0..N"];
+
+  R_User_UV [shape=diamond, fillcolor="#ffe4b3", label="Duoc cap voucher", pos="1300,220!" ];
+  R_User_UV -> Users [xlabel="1"];
+  R_User_UV -> UserVoucher [xlabel="0..N"];
+
+  R_UV_Vc [shape=diamond, fillcolor="#ffe4b3", label="Thuoc voucher", pos="1560,160!" ];
+  R_UV_Vc -> UserVoucher [xlabel="N"];
+  R_UV_Vc -> Voucher [xlabel="1"];
+
+  // ATTRIBUTES (oval) - full columns, arranged around each entity
+  Category_CategoryId [shape=ellipse, fillcolor="#d6d9ff", label="CategoryId (PK)", pos="-220,236!" ];
+  Category -> Category_CategoryId [style=dotted, dir=none, color="#666666"];
+  Category_CategoryName [shape=ellipse, fillcolor="#d6d9ff", label="CategoryName", pos="-220,218!" ];
+  Category -> Category_CategoryName [style=dotted, dir=none, color="#666666"];
+  Category_ImageUrl [shape=ellipse, fillcolor="#d6d9ff", label="ImageUrl", pos="-220,200!" ];
+  Category -> Category_ImageUrl [style=dotted, dir=none, color="#666666"];
+  Category_ParentCategoryId [shape=ellipse, fillcolor="#d6d9ff", label="ParentCategoryId", pos="-220,182!" ];
+  Category -> Category_ParentCategoryId [style=dotted, dir=none, color="#666666"];
+  Category_CategoryLevel [shape=ellipse, fillcolor="#d6d9ff", label="CategoryLevel", pos="220,236!" ];
+  Category -> Category_CategoryLevel [style=dotted, dir=none, color="#666666"];
+  Category_Description [shape=ellipse, fillcolor="#d6d9ff", label="Description", pos="220,218!" ];
+  Category -> Category_Description [style=dotted, dir=none, color="#666666"];
+  Category_IsFeature [shape=ellipse, fillcolor="#d6d9ff", label="IsFeature", pos="220,200!" ];
+  Category -> Category_IsFeature [style=dotted, dir=none, color="#666666"];
+  Category_ProductCount [shape=ellipse, fillcolor="#d6d9ff", label="ProductCount", pos="220,182!" ];
+  Category -> Category_ProductCount [style=dotted, dir=none, color="#666666"];
+
+  Product_ProductId [shape=ellipse, fillcolor="#d6d9ff", label="ProductId (PK)", pos="-220,210!" ];
+  Product -> Product_ProductId [style=dotted, dir=none, color="#666666"];
+  Product_CategoryId [shape=ellipse, fillcolor="#d6d9ff", label="CategoryId", pos="-220,192!" ];
+  Product -> Product_CategoryId [style=dotted, dir=none, color="#666666"];
+  Product_Dosage [shape=ellipse, fillcolor="#d6d9ff", label="Dosage", pos="-220,174!" ];
+  Product -> Product_Dosage [style=dotted, dir=none, color="#666666"];
+  Product_Ingredients [shape=ellipse, fillcolor="#d6d9ff", label="Ingredients", pos="-220,156!" ];
+  Product -> Product_Ingredients [style=dotted, dir=none, color="#666666"];
+  Product_IsFeature [shape=ellipse, fillcolor="#d6d9ff", label="IsFeature", pos="-220,138!" ];
+  Product -> Product_IsFeature [style=dotted, dir=none, color="#666666"];
+  Product_Package [shape=ellipse, fillcolor="#d6d9ff", label="Package", pos="-220,120!" ];
+  Product -> Product_Package [style=dotted, dir=none, color="#666666"];
+  Product_ProductName [shape=ellipse, fillcolor="#d6d9ff", label="ProductName", pos="-220,102!" ];
+  Product -> Product_ProductName [style=dotted, dir=none, color="#666666"];
+  Product_SoldQuantity [shape=ellipse, fillcolor="#d6d9ff", label="SoldQuantity", pos="-220,84!" ];
+  Product -> Product_SoldQuantity [style=dotted, dir=none, color="#666666"];
+  Product_TargetUsers [shape=ellipse, fillcolor="#d6d9ff", label="TargetUsers", pos="-220,66!" ];
+  Product -> Product_TargetUsers [style=dotted, dir=none, color="#666666"];
+  Product_Brand [shape=ellipse, fillcolor="#d6d9ff", label="Brand", pos="220,210!" ];
+  Product -> Product_Brand [style=dotted, dir=none, color="#666666"];
+  Product_Contraindications [shape=ellipse, fillcolor="#d6d9ff", label="Contraindications", pos="220,192!" ];
+  Product -> Product_Contraindications [style=dotted, dir=none, color="#666666"];
+  Product_IngredientUnit [shape=ellipse, fillcolor="#d6d9ff", label="IngredientUnit", pos="220,174!" ];
+  Product -> Product_IngredientUnit [style=dotted, dir=none, color="#666666"];
+  Product_IsActive [shape=ellipse, fillcolor="#d6d9ff", label="IsActive", pos="220,156!" ];
+  Product -> Product_IsActive [style=dotted, dir=none, color="#666666"];
+  Product_Origin [shape=ellipse, fillcolor="#d6d9ff", label="Origin", pos="220,138!" ];
+  Product -> Product_Origin [style=dotted, dir=none, color="#666666"];
+  Product_Price [shape=ellipse, fillcolor="#d6d9ff", label="Price", pos="220,120!" ];
+  Product -> Product_Price [style=dotted, dir=none, color="#666666"];
+  Product_Slug [shape=ellipse, fillcolor="#d6d9ff", label="Slug", pos="220,102!" ];
+  Product -> Product_Slug [style=dotted, dir=none, color="#666666"];
+  Product_StockQuantity [shape=ellipse, fillcolor="#d6d9ff", label="StockQuantity", pos="220,84!" ];
+  Product -> Product_StockQuantity [style=dotted, dir=none, color="#666666"];
+  Product_Uses [shape=ellipse, fillcolor="#d6d9ff", label="Uses", pos="220,66!" ];
+  Product -> Product_Uses [style=dotted, dir=none, color="#666666"];
+
+  ProductImage_ProductImageId [shape=ellipse, fillcolor="#d6d9ff", label="ProductImageId (PK)", pos="-220,76!" ];
+  ProductImage -> ProductImage_ProductImageId [style=dotted, dir=none, color="#666666"];
+  ProductImage_IsMain [shape=ellipse, fillcolor="#d6d9ff", label="IsMain", pos="-220,58!" ];
+  ProductImage -> ProductImage_IsMain [style=dotted, dir=none, color="#666666"];
+  ProductImage_SortOrder [shape=ellipse, fillcolor="#d6d9ff", label="SortOrder", pos="-220,40!" ];
+  ProductImage -> ProductImage_SortOrder [style=dotted, dir=none, color="#666666"];
+  ProductImage_ImageUrl [shape=ellipse, fillcolor="#d6d9ff", label="ImageUrl", pos="220,58!" ];
+  ProductImage -> ProductImage_ImageUrl [style=dotted, dir=none, color="#666666"];
+  ProductImage_ProductId [shape=ellipse, fillcolor="#d6d9ff", label="ProductId", pos="220,40!" ];
+  ProductImage -> ProductImage_ProductId [style=dotted, dir=none, color="#666666"];
+
+  Review_ReviewId [shape=ellipse, fillcolor="#d6d9ff", label="ReviewId (PK)", pos="300,156!" ];
+  Review -> Review_ReviewId [style=dotted, dir=none, color="#666666"];
+  Review_ProductId [shape=ellipse, fillcolor="#d6d9ff", label="ProductId", pos="300,138!" ];
+  Review -> Review_ProductId [style=dotted, dir=none, color="#666666"];
+  Review_ReviewDate [shape=ellipse, fillcolor="#d6d9ff", label="ReviewDate", pos="300,120!" ];
+  Review -> Review_ReviewDate [style=dotted, dir=none, color="#666666"];
+  Review_Comment [shape=ellipse, fillcolor="#d6d9ff", label="Comment", pos="740,156!" ];
+  Review -> Review_Comment [style=dotted, dir=none, color="#666666"];
+  Review_Rating [shape=ellipse, fillcolor="#d6d9ff", label="Rating", pos="740,138!" ];
+  Review -> Review_Rating [style=dotted, dir=none, color="#666666"];
+  Review_UserId [shape=ellipse, fillcolor="#d6d9ff", label="UserId", pos="740,120!" ];
+  Review -> Review_UserId [style=dotted, dir=none, color="#666666"];
+
+  Users_Id [shape=ellipse, fillcolor="#d6d9ff", label="Id (PK)", pos="820,272!" ];
+  Users -> Users_Id [style=dotted, dir=none, color="#666666"];
+  Users_ConcurrencyStamp [shape=ellipse, fillcolor="#d6d9ff", label="ConcurrencyStamp", pos="820,254!" ];
+  Users -> Users_ConcurrencyStamp [style=dotted, dir=none, color="#666666"];
+  Users_EmailConfirmed [shape=ellipse, fillcolor="#d6d9ff", label="EmailConfirmed", pos="820,236!" ];
+  Users -> Users_EmailConfirmed [style=dotted, dir=none, color="#666666"];
+  Users_LockoutEnd [shape=ellipse, fillcolor="#d6d9ff", label="LockoutEnd", pos="820,218!" ];
+  Users -> Users_LockoutEnd [style=dotted, dir=none, color="#666666"];
+  Users_NormalizedUserName [shape=ellipse, fillcolor="#d6d9ff", label="NormalizedUserName", pos="820,200!" ];
+  Users -> Users_NormalizedUserName [style=dotted, dir=none, color="#666666"];
+  Users_PhoneNumber [shape=ellipse, fillcolor="#d6d9ff", label="PhoneNumber", pos="820,182!" ];
+  Users -> Users_PhoneNumber [style=dotted, dir=none, color="#666666"];
+  Users_SecurityStamp [shape=ellipse, fillcolor="#d6d9ff", label="SecurityStamp", pos="820,164!" ];
+  Users -> Users_SecurityStamp [style=dotted, dir=none, color="#666666"];
+  Users_UserName [shape=ellipse, fillcolor="#d6d9ff", label="UserName", pos="820,146!" ];
+  Users -> Users_UserName [style=dotted, dir=none, color="#666666"];
+  Users_AccessFailedCount [shape=ellipse, fillcolor="#d6d9ff", label="AccessFailedCount", pos="1260,272!" ];
+  Users -> Users_AccessFailedCount [style=dotted, dir=none, color="#666666"];
+  Users_Email [shape=ellipse, fillcolor="#d6d9ff", label="Email", pos="1260,254!" ];
+  Users -> Users_Email [style=dotted, dir=none, color="#666666"];
+  Users_LockoutEnabled [shape=ellipse, fillcolor="#d6d9ff", label="LockoutEnabled", pos="1260,236!" ];
+  Users -> Users_LockoutEnabled [style=dotted, dir=none, color="#666666"];
+  Users_NormalizedEmail [shape=ellipse, fillcolor="#d6d9ff", label="NormalizedEmail", pos="1260,218!" ];
+  Users -> Users_NormalizedEmail [style=dotted, dir=none, color="#666666"];
+  Users_PasswordHash [shape=ellipse, fillcolor="#d6d9ff", label="PasswordHash", pos="1260,200!" ];
+  Users -> Users_PasswordHash [style=dotted, dir=none, color="#666666"];
+  Users_PhoneNumberConfirmed [shape=ellipse, fillcolor="#d6d9ff", label="PhoneNumberConfirmed", pos="1260,182!" ];
+  Users -> Users_PhoneNumberConfirmed [style=dotted, dir=none, color="#666666"];
+  Users_TwoFactorEnabled [shape=ellipse, fillcolor="#d6d9ff", label="TwoFactorEnabled", pos="1260,164!" ];
+  Users -> Users_TwoFactorEnabled [style=dotted, dir=none, color="#666666"];
+
+  Order_OrderId [shape=ellipse, fillcolor="#d6d9ff", label="OrderId (PK)", pos="820,174!" ];
+  Order -> Order_OrderId [style=dotted, dir=none, color="#666666"];
+  Order_OrderDate [shape=ellipse, fillcolor="#d6d9ff", label="OrderDate", pos="820,156!" ];
+  Order -> Order_OrderDate [style=dotted, dir=none, color="#666666"];
+  Order_Phone [shape=ellipse, fillcolor="#d6d9ff", label="Phone", pos="820,138!" ];
+  Order -> Order_Phone [style=dotted, dir=none, color="#666666"];
+  Order_Status [shape=ellipse, fillcolor="#d6d9ff", label="Status", pos="820,120!" ];
+  Order -> Order_Status [style=dotted, dir=none, color="#666666"];
+  Order_UserId [shape=ellipse, fillcolor="#d6d9ff", label="UserId", pos="820,102!" ];
+  Order -> Order_UserId [style=dotted, dir=none, color="#666666"];
+  Order_VoucherDiscount [shape=ellipse, fillcolor="#d6d9ff", label="VoucherDiscount", pos="820,84!" ];
+  Order -> Order_VoucherDiscount [style=dotted, dir=none, color="#666666"];
+  Order_FullName [shape=ellipse, fillcolor="#d6d9ff", label="FullName", pos="1260,174!" ];
+  Order -> Order_FullName [style=dotted, dir=none, color="#666666"];
+  Order_PaymentStatus [shape=ellipse, fillcolor="#d6d9ff", label="PaymentStatus", pos="1260,156!" ];
+  Order -> Order_PaymentStatus [style=dotted, dir=none, color="#666666"];
+  Order_ShippingAddress [shape=ellipse, fillcolor="#d6d9ff", label="ShippingAddress", pos="1260,138!" ];
+  Order -> Order_ShippingAddress [style=dotted, dir=none, color="#666666"];
+  Order_TotalAmount [shape=ellipse, fillcolor="#d6d9ff", label="TotalAmount", pos="1260,120!" ];
+  Order -> Order_TotalAmount [style=dotted, dir=none, color="#666666"];
+  Order_VoucherCode [shape=ellipse, fillcolor="#d6d9ff", label="VoucherCode", pos="1260,102!" ];
+  Order -> Order_VoucherCode [style=dotted, dir=none, color="#666666"];
+
+  OrderItem_OrderItemId [shape=ellipse, fillcolor="#d6d9ff", label="OrderItemId (PK)", pos="820,76!" ];
+  OrderItem -> OrderItem_OrderItemId [style=dotted, dir=none, color="#666666"];
+  OrderItem_Price [shape=ellipse, fillcolor="#d6d9ff", label="Price", pos="820,58!" ];
+  OrderItem -> OrderItem_Price [style=dotted, dir=none, color="#666666"];
+  OrderItem_Quantity [shape=ellipse, fillcolor="#d6d9ff", label="Quantity", pos="820,40!" ];
+  OrderItem -> OrderItem_Quantity [style=dotted, dir=none, color="#666666"];
+  OrderItem_OrderId [shape=ellipse, fillcolor="#d6d9ff", label="OrderId", pos="1260,58!" ];
+  OrderItem -> OrderItem_OrderId [style=dotted, dir=none, color="#666666"];
+  OrderItem_ProductId [shape=ellipse, fillcolor="#d6d9ff", label="ProductId", pos="1260,40!" ];
+  OrderItem -> OrderItem_ProductId [style=dotted, dir=none, color="#666666"];
+
+  Payment_PaymentId [shape=ellipse, fillcolor="#d6d9ff", label="PaymentId (PK)", pos="820,-4!" ];
+  Payment -> Payment_PaymentId [style=dotted, dir=none, color="#666666"];
+  Payment_OrderId [shape=ellipse, fillcolor="#d6d9ff", label="OrderId", pos="820,-22!" ];
+  Payment -> Payment_OrderId [style=dotted, dir=none, color="#666666"];
+  Payment_PaymentMethod [shape=ellipse, fillcolor="#d6d9ff", label="PaymentMethod", pos="820,-40!" ];
+  Payment -> Payment_PaymentMethod [style=dotted, dir=none, color="#666666"];
+  Payment_TransactionId [shape=ellipse, fillcolor="#d6d9ff", label="TransactionId", pos="820,-58!" ];
+  Payment -> Payment_TransactionId [style=dotted, dir=none, color="#666666"];
+  Payment_Amount [shape=ellipse, fillcolor="#d6d9ff", label="Amount", pos="1260,-4!" ];
+  Payment -> Payment_Amount [style=dotted, dir=none, color="#666666"];
+  Payment_PaymentDate [shape=ellipse, fillcolor="#d6d9ff", label="PaymentDate", pos="1260,-22!" ];
+  Payment -> Payment_PaymentDate [style=dotted, dir=none, color="#666666"];
+  Payment_PaymentStatus [shape=ellipse, fillcolor="#d6d9ff", label="PaymentStatus", pos="1260,-40!" ];
+  Payment -> Payment_PaymentStatus [style=dotted, dir=none, color="#666666"];
+
+  UserVoucher_UserVoucherId [shape=ellipse, fillcolor="#d6d9ff", label="UserVoucherId (PK)", pos="1340,196!" ];
+  UserVoucher -> UserVoucher_UserVoucherId [style=dotted, dir=none, color="#666666"];
+  UserVoucher_IsUsed [shape=ellipse, fillcolor="#d6d9ff", label="IsUsed", pos="1340,178!" ];
+  UserVoucher -> UserVoucher_IsUsed [style=dotted, dir=none, color="#666666"];
+  UserVoucher_UserId [shape=ellipse, fillcolor="#d6d9ff", label="UserId", pos="1340,160!" ];
+  UserVoucher -> UserVoucher_UserId [style=dotted, dir=none, color="#666666"];
+  UserVoucher_IsNew [shape=ellipse, fillcolor="#d6d9ff", label="IsNew", pos="1780,196!" ];
+  UserVoucher -> UserVoucher_IsNew [style=dotted, dir=none, color="#666666"];
+  UserVoucher_UsedDate [shape=ellipse, fillcolor="#d6d9ff", label="UsedDate", pos="1780,178!" ];
+  UserVoucher -> UserVoucher_UsedDate [style=dotted, dir=none, color="#666666"];
+  UserVoucher_VoucherId [shape=ellipse, fillcolor="#d6d9ff", label="VoucherId", pos="1780,160!" ];
+  UserVoucher -> UserVoucher_VoucherId [style=dotted, dir=none, color="#666666"];
+
+  Voucher_VoucherId [shape=ellipse, fillcolor="#d6d9ff", label="VoucherId (PK)", pos="1340,152!" ];
+  Voucher -> Voucher_VoucherId [style=dotted, dir=none, color="#666666"];
+  Voucher_CategoryName [shape=ellipse, fillcolor="#d6d9ff", label="CategoryName", pos="1340,134!" ];
+  Voucher -> Voucher_CategoryName [style=dotted, dir=none, color="#666666"];
+  Voucher_Description [shape=ellipse, fillcolor="#d6d9ff", label="Description", pos="1340,116!" ];
+  Voucher -> Voucher_Description [style=dotted, dir=none, color="#666666"];
+  Voucher_DiscountAmount [shape=ellipse, fillcolor="#d6d9ff", label="DiscountAmount", pos="1340,98!" ];
+  Voucher -> Voucher_DiscountAmount [style=dotted, dir=none, color="#666666"];
+  Voucher_ExpiryDate [shape=ellipse, fillcolor="#d6d9ff", label="ExpiryDate", pos="1340,80!" ];
+  Voucher -> Voucher_ExpiryDate [style=dotted, dir=none, color="#666666"];
+  Voucher_MaxUsage [shape=ellipse, fillcolor="#d6d9ff", label="MaxUsage", pos="1340,62!" ];
+  Voucher -> Voucher_MaxUsage [style=dotted, dir=none, color="#666666"];
+  Voucher_UsedCount [shape=ellipse, fillcolor="#d6d9ff", label="UsedCount", pos="1340,44!" ];
+  Voucher -> Voucher_UsedCount [style=dotted, dir=none, color="#666666"];
+  Voucher_CategoryId [shape=ellipse, fillcolor="#d6d9ff", label="CategoryId", pos="1780,134!" ];
+  Voucher -> Voucher_CategoryId [style=dotted, dir=none, color="#666666"];
+  Voucher_Code [shape=ellipse, fillcolor="#d6d9ff", label="Code", pos="1780,116!" ];
+  Voucher -> Voucher_Code [style=dotted, dir=none, color="#666666"];
+  Voucher_Detail [shape=ellipse, fillcolor="#d6d9ff", label="Detail", pos="1780,98!" ];
+  Voucher -> Voucher_Detail [style=dotted, dir=none, color="#666666"];
+  Voucher_DiscountType [shape=ellipse, fillcolor="#d6d9ff", label="DiscountType", pos="1780,80!" ];
+  Voucher -> Voucher_DiscountType [style=dotted, dir=none, color="#666666"];
+  Voucher_IsActive [shape=ellipse, fillcolor="#d6d9ff", label="IsActive", pos="1780,62!" ];
+  Voucher -> Voucher_IsActive [style=dotted, dir=none, color="#666666"];
+  Voucher_PercentValue [shape=ellipse, fillcolor="#d6d9ff", label="PercentValue", pos="1780,44!" ];
+  Voucher -> Voucher_PercentValue [style=dotted, dir=none, color="#666666"];
+
+}

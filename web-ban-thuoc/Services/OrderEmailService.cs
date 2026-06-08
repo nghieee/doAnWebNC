@@ -7,6 +7,7 @@ namespace web_ban_thuoc.Services
         Task SendOrderConfirmationEmailAsync(OrderConfirmationEmail orderData);
         Task SendPaymentSuccessEmailAsync(OrderConfirmationEmail orderData);
         Task SendPaymentFailedEmailAsync(OrderConfirmationEmail orderData);
+        Task SendOrderStatusUpdateEmailAsync(OrderStatusEmail data);
     }
 
     public class OrderEmailService : IOrderEmailService
@@ -329,6 +330,38 @@ Bạn có thể đăng nhập vào tài khoản để thử thanh toán lại.
                 text += $"- {item.Product?.ProductName}: {item.Quantity} x {item.Price:N0} VNĐ = {(item.Price * item.Quantity):N0} VNĐ\n";
             }
             return text;
+        }
+
+        public async Task SendOrderStatusUpdateEmailAsync(OrderStatusEmail data)
+        {
+            try
+            {
+                var subject = $"Đơn #{data.OrderId}: {data.ToStatus} — Nhà Thuốc Long Châu";
+                var trackingBlock = "";
+                if (!string.IsNullOrEmpty(data.TrackingCode))
+                {
+                    var link = data.TrackingUrl ?? "#";
+                    trackingBlock = $@"
+                        <p><strong>Mã vận đơn:</strong> {data.TrackingCode}</p>
+                        <p><strong>Đơn vị:</strong> {data.Carrier}</p>
+                        {(data.TrackingUrl != null ? $"<p><a href='{link}'>Theo dõi đơn hàng</a></p>" : "")}";
+                }
+
+                var html = $@"
+<div style='font-family:sans-serif;max-width:520px;margin:auto;padding:24px;background:#f4f7fb;border-radius:12px;'>
+  <h2 style='color:#1976d2;'>Cập nhật đơn hàng #{data.OrderId}</h2>
+  <p>Xin chào <b>{data.CustomerName}</b>,</p>
+  <p>Đơn hàng của bạn đã chuyển sang: <strong style='color:#1565c0'>{data.ToStatus}</strong></p>
+  <p>Tổng giá trị: <b>{data.TotalAmount:N0}đ</b></p>
+  {trackingBlock}
+  <p style='font-size:13px;color:#666;'>Xem chi tiết tại mục Hồ sơ → Đơn hàng trên website.</p>
+</div>";
+                await _emailSender.SendEmailAsync(data.CustomerEmail, subject, html);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending status update email for order {OrderId}", data.OrderId);
+            }
         }
     }
 } 

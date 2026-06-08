@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace web_ban_thuoc.Models;
@@ -9,6 +9,17 @@ public partial class Product
 
     public string ProductName { get; set; } = null!;
 
+    public string? Sku { get; set; }
+
+    public string? Barcode { get; set; }
+
+    /// <summary>Số đăng ký lưu hành (BYT).</summary>
+    public string? RegistrationNumber { get; set; }
+
+    public bool RequiresPrescription { get; set; }
+
+    public decimal? CostPrice { get; set; }
+
     public string? Brand { get; set; }
 
     public decimal Price { get; set; }
@@ -16,6 +27,8 @@ public partial class Product
     public string? Package { get; set; }
 
     public int? CategoryId { get; set; }
+
+    public int? SupplierId { get; set; }
 
     public string? Ingredients { get; set; }
 
@@ -33,6 +46,8 @@ public partial class Product
 
     public int StockQuantity { get; set; }
 
+    /// <summary>Tổng tồn các kho (đồng bộ từ WarehouseStocks).</summary>
+
     public bool IsActive { get; set; }
 
     public string? IngredientUnit { get; set; }
@@ -43,7 +58,13 @@ public partial class Product
 
     public virtual Category? Category { get; set; }
 
+    public virtual Supplier? Supplier { get; set; }
+
     public virtual ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();
+
+    public virtual ICollection<WarehouseStock> WarehouseStocks { get; set; } = new List<WarehouseStock>();
+
+    public virtual ICollection<ProductBatch> ProductBatches { get; set; } = new List<ProductBatch>();
 
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 

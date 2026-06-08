@@ -1,6 +1,6 @@
 @model List<web_ban_thuoc.Models.UserAdminViewModel>
 @{
-    ViewData["Title"] = "Quản lý User";
+    ViewData["Title"] = "Quản lý khách hàng";
     Layout = "~/Views/Admin/_Layout.cshtml";
 }
 
@@ -40,7 +40,7 @@
     <!-- Header với nút xuất Excel -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="d-flex align-items-center gap-3">
-            <span class="text-muted">Tổng: @Model.Count user</span>
+            <span class="text-muted">Tổng: @Model.Count khách hàng (không gồm nhân viên)</span>
         </div>
         <div class="d-flex gap-2">
             <a href="@Url.Action("Export", "AdminUser")" class="btn btn-success btn-lg d-flex align-items-center gap-2">

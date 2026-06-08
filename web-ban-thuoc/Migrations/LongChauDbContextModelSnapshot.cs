@@ -266,6 +266,64 @@ namespace web_ban_thuoc.Migrations
                     b.ToTable("Banners");
                 });
 
+            modelBuilder.Entity("web_ban_thuoc.Models.Cart", b =>
+                {
+                    b.Property<int>("CartId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CartId"));
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("VoucherCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("VoucherDiscount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("CartId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Carts");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.CartItem", b =>
+                {
+                    b.Property<int>("CartItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CartItemId"));
+
+                    b.Property<int>("CartId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("CartItemId");
+
+                    b.HasIndex("CartId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("CartItems");
+                });
+
             modelBuilder.Entity("web_ban_thuoc.Models.Category", b =>
                 {
                     b.Property<int>("CategoryId")
@@ -332,6 +390,91 @@ namespace web_ban_thuoc.Migrations
                     b.ToTable("ChatMessages");
                 });
 
+            modelBuilder.Entity("web_ban_thuoc.Models.GoodsReceipt", b =>
+                {
+                    b.Property<int>("GoodsReceiptId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GoodsReceiptId"));
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("PurchaseOrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReceiptCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("ReceiptDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WarehouseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("GoodsReceiptId");
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.HasIndex("ReceiptCode")
+                        .IsUnique();
+
+                    b.HasIndex("SupplierId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.ToTable("GoodsReceipts");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.GoodsReceiptLine", b =>
+                {
+                    b.Property<int>("GoodsReceiptLineId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GoodsReceiptLineId"));
+
+                    b.Property<string>("BatchNo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("GoodsReceiptId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PurchaseOrderLineId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitCost")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("GoodsReceiptLineId");
+
+                    b.HasIndex("GoodsReceiptId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("PurchaseOrderLineId");
+
+                    b.ToTable("GoodsReceiptLines");
+                });
+
             modelBuilder.Entity("web_ban_thuoc.Models.InventoryTransaction", b =>
                 {
                     b.Property<int>("TransactionId")
@@ -340,23 +483,169 @@ namespace web_ban_thuoc.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TransactionId"));
 
-                    b.Property<int?>("ProductId")
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("GoodsReceiptId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("QuantityChange")
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("OrderId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("TransactionDate")
+                    b.Property<int?>("ProductBatchId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantityAfter")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantityBefore")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SupplierName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("TransactionDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("TransactionType")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("UnitCost")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("WarehouseId")
+                        .HasColumnType("int");
 
                     b.HasKey("TransactionId");
 
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("GoodsReceiptId");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("ProductBatchId");
+
                     b.HasIndex("ProductId");
 
+                    b.HasIndex("SupplierId");
+
+                    b.HasIndex("WarehouseId");
+
                     b.ToTable("InventoryTransactions");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.LoyaltyPointTransaction", b =>
+                {
+                    b.Property<int>("LoyaltyPointTransactionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LoyaltyPointTransactionId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("LoyaltyRewardId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TransactionType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("LoyaltyPointTransactionId");
+
+                    b.HasIndex("LoyaltyRewardId");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("UserId", "OrderId", "TransactionType")
+                        .HasFilter("[OrderId] IS NOT NULL");
+
+                    b.ToTable("LoyaltyPointTransactions");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.LoyaltyReward", b =>
+                {
+                    b.Property<int>("LoyaltyRewardId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LoyaltyRewardId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("DiscountAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ExpiryDays")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("MaxPerUser")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("MinOrderAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("PercentValue")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("PointsCost")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RequiredRank")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RewardType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("StockRemaining")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("LoyaltyRewardId");
+
+                    b.ToTable("LoyaltyRewards");
                 });
 
             modelBuilder.Entity("web_ban_thuoc.Models.Order", b =>
@@ -433,6 +722,75 @@ namespace web_ban_thuoc.Migrations
                     b.ToTable("OrderItems");
                 });
 
+            modelBuilder.Entity("web_ban_thuoc.Models.OrderStatusHistory", b =>
+                {
+                    b.Property<int>("OrderStatusHistoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrderStatusHistoryId"));
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ChangedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FromStatus")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ToStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("OrderStatusHistoryId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("OrderStatusHistories");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.PayOSWebhookEvent", b =>
+                {
+                    b.Property<int>("PayOSWebhookEventId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PayOSWebhookEventId"));
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("OrderCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("PaymentSuccess")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("ProcessedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RawPayload")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("PayOSWebhookEventId");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
+                    b.ToTable("PayOSWebhookEvents");
+                });
+
             modelBuilder.Entity("web_ban_thuoc.Models.Payment", b =>
                 {
                     b.Property<int>("PaymentId")
@@ -474,6 +832,9 @@ namespace web_ban_thuoc.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductId"));
 
+                    b.Property<string>("Barcode")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Brand")
                         .HasColumnType("nvarchar(max)");
 
@@ -482,6 +843,9 @@ namespace web_ban_thuoc.Migrations
 
                     b.Property<string>("Contraindications")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("CostPrice")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Dosage")
                         .HasColumnType("nvarchar(max)");
@@ -511,6 +875,15 @@ namespace web_ban_thuoc.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("RegistrationNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("RequiresPrescription")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Sku")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("Slug")
                         .HasColumnType("nvarchar(max)");
 
@@ -518,6 +891,9 @@ namespace web_ban_thuoc.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("StockQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SupplierId")
                         .HasColumnType("int");
 
                     b.Property<string>("TargetUsers")
@@ -530,7 +906,64 @@ namespace web_ban_thuoc.Migrations
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("Sku")
+                        .IsUnique()
+                        .HasFilter("[Sku] IS NOT NULL AND [Sku] <> ''");
+
+                    b.HasIndex("SupplierId");
+
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.ProductBatch", b =>
+                {
+                    b.Property<int>("ProductBatchId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductBatchId"));
+
+                    b.Property<string>("BatchNo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("GoodsReceiptLineId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantityOnHand")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("UnitCost")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("WarehouseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductBatchId");
+
+                    b.HasIndex("GoodsReceiptLineId")
+                        .IsUnique()
+                        .HasFilter("[GoodsReceiptLineId] IS NOT NULL");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("SupplierId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.ToTable("ProductBatches");
                 });
 
             modelBuilder.Entity("web_ban_thuoc.Models.ProductImage", b =>
@@ -559,6 +992,84 @@ namespace web_ban_thuoc.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("ProductImages");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.PurchaseOrder", b =>
+                {
+                    b.Property<int>("PurchaseOrderId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PurchaseOrderId"));
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ExpectedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OrderCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("OrderDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WarehouseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("PurchaseOrderId");
+
+                    b.HasIndex("OrderCode")
+                        .IsUnique();
+
+                    b.HasIndex("SupplierId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.ToTable("PurchaseOrders");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.PurchaseOrderLine", b =>
+                {
+                    b.Property<int>("PurchaseOrderLineId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PurchaseOrderLineId"));
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PurchaseOrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantityOrdered")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantityReceived")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitCost")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("PurchaseOrderLineId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.ToTable("PurchaseOrderLines");
                 });
 
             modelBuilder.Entity("web_ban_thuoc.Models.Review", b =>
@@ -593,6 +1104,93 @@ namespace web_ban_thuoc.Migrations
                     b.ToTable("Reviews");
                 });
 
+            modelBuilder.Entity("web_ban_thuoc.Models.Shipment", b =>
+                {
+                    b.Property<int>("ShipmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ShipmentId"));
+
+                    b.Property<string>("Carrier")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EstimatedDelivery")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ShippedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("ShippingFee")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("TrackingCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ShipmentId");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
+
+                    b.ToTable("Shipments");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.Supplier", b =>
+                {
+                    b.Property<int>("SupplierId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SupplierId"));
+
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Phone")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TaxCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("SupplierId");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Suppliers");
+                });
+
             modelBuilder.Entity("web_ban_thuoc.Models.UserRankInfo", b =>
                 {
                     b.Property<string>("UserId")
@@ -606,6 +1204,9 @@ namespace web_ban_thuoc.Migrations
 
                     b.Property<DateTime?>("LastRankReset")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("LoyaltyPoints")
+                        .HasColumnType("int");
 
                     b.Property<string>("Rank")
                         .IsRequired()
@@ -641,7 +1242,7 @@ namespace web_ban_thuoc.Migrations
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("VoucherId")
                         .HasColumnType("int");
@@ -649,6 +1250,9 @@ namespace web_ban_thuoc.Migrations
                     b.HasKey("UserVoucherId");
 
                     b.HasIndex("VoucherId");
+
+                    b.HasIndex("UserId", "VoucherId")
+                        .IsUnique();
 
                     b.ToTable("UserVouchers");
                 });
@@ -691,18 +1295,128 @@ namespace web_ban_thuoc.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("bit");
+
                     b.Property<int?>("MaxUsage")
                         .HasColumnType("int");
 
+                    b.Property<decimal?>("MinOrderAmount")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal?>("PercentValue")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("RequiredRank")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("UsedCount")
                         .HasColumnType("int");
 
                     b.HasKey("VoucherId");
 
+                    b.HasIndex("CategoryId");
+
                     b.ToTable("Vouchers");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.VoucherRedemption", b =>
+                {
+                    b.Property<int>("VoucherRedemptionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VoucherRedemptionId"));
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsReverted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("RedeemedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("VoucherId")
+                        .HasColumnType("int");
+
+                    b.HasKey("VoucherRedemptionId");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("VoucherId", "OrderId")
+                        .IsUnique();
+
+                    b.ToTable("VoucherRedemptions");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.Warehouse", b =>
+                {
+                    b.Property<int>("WarehouseId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("WarehouseId"));
+
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("WarehouseId");
+
+                    b.ToTable("Warehouses");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.WarehouseStock", b =>
+                {
+                    b.Property<int>("WarehouseStockId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("WarehouseStockId"));
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantityOnHand")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantityReserved")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("WarehouseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("WarehouseStockId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("WarehouseId", "ProductId")
+                        .IsUnique();
+
+                    b.ToTable("WarehouseStocks");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -756,6 +1470,25 @@ namespace web_ban_thuoc.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("web_ban_thuoc.Models.CartItem", b =>
+                {
+                    b.HasOne("web_ban_thuoc.Models.Cart", "Cart")
+                        .WithMany("Items")
+                        .HasForeignKey("CartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("web_ban_thuoc.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Cart");
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("web_ban_thuoc.Models.Category", b =>
                 {
                     b.HasOne("web_ban_thuoc.Models.Category", "ParentCategory")
@@ -765,13 +1498,124 @@ namespace web_ban_thuoc.Migrations
                     b.Navigation("ParentCategory");
                 });
 
-            modelBuilder.Entity("web_ban_thuoc.Models.InventoryTransaction", b =>
+            modelBuilder.Entity("web_ban_thuoc.Models.GoodsReceipt", b =>
                 {
+                    b.HasOne("web_ban_thuoc.Models.PurchaseOrder", "PurchaseOrder")
+                        .WithMany("GoodsReceipts")
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("web_ban_thuoc.Models.Supplier", "Supplier")
+                        .WithMany("GoodsReceipts")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("web_ban_thuoc.Models.Warehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PurchaseOrder");
+
+                    b.Navigation("Supplier");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.GoodsReceiptLine", b =>
+                {
+                    b.HasOne("web_ban_thuoc.Models.GoodsReceipt", "GoodsReceipt")
+                        .WithMany("Lines")
+                        .HasForeignKey("GoodsReceiptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("web_ban_thuoc.Models.Product", "Product")
-                        .WithMany("InventoryTransactions")
-                        .HasForeignKey("ProductId");
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("web_ban_thuoc.Models.PurchaseOrderLine", "PurchaseOrderLine")
+                        .WithMany()
+                        .HasForeignKey("PurchaseOrderLineId");
+
+                    b.Navigation("GoodsReceipt");
 
                     b.Navigation("Product");
+
+                    b.Navigation("PurchaseOrderLine");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.InventoryTransaction", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("web_ban_thuoc.Models.GoodsReceipt", "GoodsReceipt")
+                        .WithMany()
+                        .HasForeignKey("GoodsReceiptId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("web_ban_thuoc.Models.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("web_ban_thuoc.Models.ProductBatch", "ProductBatch")
+                        .WithMany()
+                        .HasForeignKey("ProductBatchId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("web_ban_thuoc.Models.Product", "Product")
+                        .WithMany("InventoryTransactions")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("web_ban_thuoc.Models.Supplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("web_ban_thuoc.Models.Warehouse", "Warehouse")
+                        .WithMany("InventoryTransactions")
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("GoodsReceipt");
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("ProductBatch");
+
+                    b.Navigation("Supplier");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.LoyaltyPointTransaction", b =>
+                {
+                    b.HasOne("web_ban_thuoc.Models.LoyaltyReward", null)
+                        .WithMany()
+                        .HasForeignKey("LoyaltyRewardId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("web_ban_thuoc.Models.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("web_ban_thuoc.Models.Order", b =>
@@ -799,6 +1643,17 @@ namespace web_ban_thuoc.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("web_ban_thuoc.Models.OrderStatusHistory", b =>
+                {
+                    b.HasOne("web_ban_thuoc.Models.Order", "Order")
+                        .WithMany("StatusHistories")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("web_ban_thuoc.Models.Payment", b =>
                 {
                     b.HasOne("web_ban_thuoc.Models.Order", "Order")
@@ -814,7 +1669,47 @@ namespace web_ban_thuoc.Migrations
                         .WithMany("Products")
                         .HasForeignKey("CategoryId");
 
+                    b.HasOne("web_ban_thuoc.Models.Supplier", "Supplier")
+                        .WithMany("Products")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Category");
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.ProductBatch", b =>
+                {
+                    b.HasOne("web_ban_thuoc.Models.GoodsReceiptLine", "GoodsReceiptLine")
+                        .WithOne("ProductBatch")
+                        .HasForeignKey("web_ban_thuoc.Models.ProductBatch", "GoodsReceiptLineId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("web_ban_thuoc.Models.Product", "Product")
+                        .WithMany("ProductBatches")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("web_ban_thuoc.Models.Supplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("web_ban_thuoc.Models.Warehouse", "Warehouse")
+                        .WithMany("ProductBatches")
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("GoodsReceiptLine");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Supplier");
+
+                    b.Navigation("Warehouse");
                 });
 
             modelBuilder.Entity("web_ban_thuoc.Models.ProductImage", b =>
@@ -826,6 +1721,44 @@ namespace web_ban_thuoc.Migrations
                         .IsRequired();
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.PurchaseOrder", b =>
+                {
+                    b.HasOne("web_ban_thuoc.Models.Supplier", "Supplier")
+                        .WithMany("PurchaseOrders")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("web_ban_thuoc.Models.Warehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Supplier");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.PurchaseOrderLine", b =>
+                {
+                    b.HasOne("web_ban_thuoc.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("web_ban_thuoc.Models.PurchaseOrder", "PurchaseOrder")
+                        .WithMany("Lines")
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("PurchaseOrder");
                 });
 
             modelBuilder.Entity("web_ban_thuoc.Models.Review", b =>
@@ -844,15 +1777,77 @@ namespace web_ban_thuoc.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("web_ban_thuoc.Models.Shipment", b =>
+                {
+                    b.HasOne("web_ban_thuoc.Models.Order", "Order")
+                        .WithOne("Shipment")
+                        .HasForeignKey("web_ban_thuoc.Models.Shipment", "OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("web_ban_thuoc.Models.UserVoucher", b =>
                 {
                     b.HasOne("web_ban_thuoc.Models.Voucher", "Voucher")
-                        .WithMany()
+                        .WithMany("UserVouchers")
                         .HasForeignKey("VoucherId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Voucher");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.Voucher", b =>
+                {
+                    b.HasOne("web_ban_thuoc.Models.Category", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.VoucherRedemption", b =>
+                {
+                    b.HasOne("web_ban_thuoc.Models.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("web_ban_thuoc.Models.Voucher", "Voucher")
+                        .WithMany("Redemptions")
+                        .HasForeignKey("VoucherId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Voucher");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.WarehouseStock", b =>
+                {
+                    b.HasOne("web_ban_thuoc.Models.Product", "Product")
+                        .WithMany("WarehouseStocks")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("web_ban_thuoc.Models.Warehouse", "Warehouse")
+                        .WithMany("WarehouseStocks")
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.Cart", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("web_ban_thuoc.Models.Category", b =>
@@ -862,11 +1857,25 @@ namespace web_ban_thuoc.Migrations
                     b.Navigation("Products");
                 });
 
+            modelBuilder.Entity("web_ban_thuoc.Models.GoodsReceipt", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.GoodsReceiptLine", b =>
+                {
+                    b.Navigation("ProductBatch");
+                });
+
             modelBuilder.Entity("web_ban_thuoc.Models.Order", b =>
                 {
                     b.Navigation("OrderItems");
 
                     b.Navigation("Payments");
+
+                    b.Navigation("Shipment");
+
+                    b.Navigation("StatusHistories");
                 });
 
             modelBuilder.Entity("web_ban_thuoc.Models.Product", b =>
@@ -875,9 +1884,45 @@ namespace web_ban_thuoc.Migrations
 
                     b.Navigation("OrderItems");
 
+                    b.Navigation("ProductBatches");
+
                     b.Navigation("ProductImages");
 
                     b.Navigation("Reviews");
+
+                    b.Navigation("WarehouseStocks");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.PurchaseOrder", b =>
+                {
+                    b.Navigation("GoodsReceipts");
+
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.Supplier", b =>
+                {
+                    b.Navigation("GoodsReceipts");
+
+                    b.Navigation("Products");
+
+                    b.Navigation("PurchaseOrders");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.Voucher", b =>
+                {
+                    b.Navigation("Redemptions");
+
+                    b.Navigation("UserVouchers");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.Warehouse", b =>
+                {
+                    b.Navigation("InventoryTransactions");
+
+                    b.Navigation("ProductBatches");
+
+                    b.Navigation("WarehouseStocks");
                 });
 #pragma warning restore 612, 618
         }

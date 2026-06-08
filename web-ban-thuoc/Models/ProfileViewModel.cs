@@ -22,7 +22,33 @@ public class ProfileViewModel
     public decimal TotalSpent { get; set; }
     public decimal TotalSpent6Months { get; set; }
     public string Rank { get; set; } = string.Empty;
+    public int LoyaltyPoints { get; set; }
     public List<VoucherViewModel> Vouchers { get; set; } = new();
+    public List<LoyaltyRewardViewModel> LoyaltyRewards { get; set; } = new();
+    public List<LoyaltyRedeemHistoryViewModel> RedeemHistory { get; set; } = new();
+}
+
+public class LoyaltyRewardViewModel
+{
+    public int LoyaltyRewardId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public int PointsCost { get; set; }
+    public string RewardType { get; set; } = string.Empty;
+    public decimal? PercentValue { get; set; }
+    public decimal? DiscountAmount { get; set; }
+    public string? RequiredRank { get; set; }
+    public int? StockRemaining { get; set; }
+    public bool CanRedeem { get; set; }
+    public string? DisabledReason { get; set; }
+    public string RewardLabel { get; set; } = string.Empty;
+}
+
+public class LoyaltyRedeemHistoryViewModel
+{
+    public DateTime CreatedAt { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public int Points { get; set; }
 }
 
 // ViewModel cho lịch sử đơn hàng
@@ -38,6 +64,9 @@ public class OrderHistoryViewModel
     public string FullName { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
     public List<OrderItemViewModel> Items { get; set; } = new List<OrderItemViewModel>();
+    public string? TrackingCode { get; set; }
+    public string? Carrier { get; set; }
+    public string? TrackingUrl { get; set; }
 }
 
 // ViewModel cho từng sản phẩm trong đơn hàng

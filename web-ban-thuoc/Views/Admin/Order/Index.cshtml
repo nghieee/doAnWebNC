@@ -1,10 +1,16 @@
 @model List<web_ban_thuoc.Models.Order>
+@using web_ban_thuoc.Models
 @{
     Layout = "~/Views/Admin/_Layout.cshtml";
     ViewData["Title"] = "Quản lý đơn hàng";
-    var statusList = new List<string> { "Chờ xác nhận", "Đã xác nhận", "Đang giao", "Đã giao" };
+    var statusList = OrderStatuses.AdminManageable.ToList();
 }
 <div class="container-fluid">
+    <div class="alert alert-info border-0 shadow-sm rounded-4 mb-3">
+        <i class="fa fa-circle-info me-2"></i>
+        <strong>Luồng xử lý đơn bán:</strong> Chờ xác nhận → <strong>Đã xác nhận</strong> (tự xuất kho FEFO) → Đóng gói → Giao → Hoàn tất.
+        Hủy đơn sau khi xác nhận sẽ hoàn tồn kho.
+    </div>
     <div class="card shadow-sm border-0 rounded-4 mb-4">
         <div class="card-body p-4">
             <form method="get" class="row g-3 mb-4 align-items-end">
@@ -15,7 +21,8 @@
                 <div class="col-md-3">
                     <select name="status" class="form-select">
                         @{
-                            var allStatus = new List<string> { "Tất cả", "Chờ xác nhận", "Đã xác nhận", "Đang giao", "Đã giao", "Đã hủy" };
+                            var allStatus = new List<string> { "Tất cả" };
+                            allStatus.AddRange(OrderStatuses.All);
                         }
                         @foreach (var s in allStatus)
                         {
@@ -33,7 +40,7 @@
                 </div>
                 <div class="col-md-2 d-flex gap-2">
                     <button type="submit" class="btn btn-primary w-100"><i class="fa fa-filter me-1 align-self-center"></i>Lọc</button>
-                    <a href="/Admin/Order" class="btn btn-outline-secondary w-100">Xóa lọc</a>
+                    <a href="/AdminOrder" class="btn btn-outline-secondary w-100">Xóa lọc</a>
                 </div>
             </form>
             <div class="accordion" id="ordersAccordion">
@@ -90,7 +97,24 @@
                                         </div>
                                     }
                                 </div>
-                                <div class="border-top pt-3">
+                                @if (order.StatusHistories?.Any() == true)
+                                {
+                                    <div class="border-top pt-3 mb-3">
+                                        <h6 class="fw-semibold mb-2">Lịch sử trạng thái</h6>
+                                        <ul class="list-unstyled small mb-0">
+                                            @foreach (var h in order.StatusHistories.OrderBy(x => x.ChangedAt))
+                                            {
+                                                <li class="mb-1">
+                                                    <i class="fa fa-clock text-muted me-1"></i>
+                                                    @h.ChangedAt.ToString("dd/MM/yyyy HH:mm") —
+                                                    @(h.FromStatus != null ? $"{h.FromStatus} → " : "")<strong>@h.ToStatus</strong>
+                                                    @if (!string.IsNullOrEmpty(h.Note)) { <span class="text-muted">(@h.Note)</span> }
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                }
+                                <div class="border-top pt-3 mb-3">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="fw-bold">Tổng cộng:</span>
                                         <span class="fw-bold text-primary fs-5">@order.TotalAmount?.ToString("N0")đ</span>
@@ -100,18 +124,64 @@
                                         <span class="badge bg-secondary">@order.PaymentStatus</span>
                                     </div>
                                 </div>
-                                @if (order.Status != "Đã hủy")
+                                <div class="border-top pt-3 mb-3">
+                                    <h6 class="fw-semibold mb-2"><i class="fa fa-truck me-1"></i>Vận chuyển</h6>
+                                    @if (order.Shipment != null)
+                                    {
+                                        var trackUrl = ShippingCarriers.GetTrackingUrl(order.Shipment.Carrier, order.Shipment.TrackingCode);
+                                        <div class="small">
+                                            <div><strong>@order.Shipment.Carrier</strong> — Mã: <code>@order.Shipment.TrackingCode</code></div>
+                                            @if (trackUrl != null) { <a href="@trackUrl" target="_blank" class="small">Theo dõi vận đơn</a> }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="small text-muted mb-2">Chưa có mã vận đơn</div>
+                                    }
+                                    <div class="row g-2 mt-1 shipment-form" data-order-id="@order.OrderId">
+                                        <div class="col-md-3">
+                                            <select class="form-select form-select-sm ship-carrier">
+                                                @foreach (var c in ShippingCarriers.All)
+                                                {
+                                                    <option value="@c.Code" selected="@(order.Shipment?.Carrier == c.Code)">@c.Name</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input type="text" class="form-control form-control-sm ship-tracking" placeholder="Mã vận đơn" value="@order.Shipment?.TrackingCode" />
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input type="number" class="form-control form-control-sm ship-fee" placeholder="Phí ship" value="@order.Shipment?.ShippingFee" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <button type="button" class="btn btn-sm btn-outline-primary w-100 save-shipment-btn">Lưu vận đơn</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                @if (order.Status != OrderStatuses.Cancelled && order.Status != OrderStatuses.Delivered)
                                 {
                                     <div class="mt-3 d-flex gap-2">
-                                        <select class="form-select form-select-sm status-select" data-order-id="@order.OrderId" style="width: 140px;" @(order.Status == "Đã hủy" ? "disabled" : "")>
+                                        <select class="form-select form-select-sm status-select" data-order-id="@order.OrderId" style="width: 180px;">
                                             @foreach (var s in statusList)
                                             {
-                                                var selected = order.Status == s ? "selected" : "";
-                                                var disabled = (s == "Chờ xác nhận" && order.Status != "Chờ xác nhận") ? "disabled" : "";
-                                                @:<option value="@s" @selected @disabled>@s</option>
+                                                if (OrderStatuses.CanTransition(order.Status ?? "", s) || s == order.Status)
+                                                {
+                                                    if (order.Status == s)
+                                                    {
+                                                        <option value="@s" selected>@s</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@s">@s</option>
+                                                    }
+                                                }
+                                            }
+                                            @if (OrderStatuses.CanTransition(order.Status ?? "", OrderStatuses.Cancelled))
+                                            {
+                                                <option value="@OrderStatuses.Cancelled">@OrderStatuses.Cancelled</option>
                                             }
                                         </select>
-                                        <button type="button" class="btn btn-sm btn-success change-status-btn" data-order-id="@order.OrderId" @(order.Status == "Đã hủy" ? "disabled" : "")>Cập nhật</button>
+                                        <button type="button" class="btn btn-sm btn-success change-status-btn" data-order-id="@order.OrderId">Cập nhật</button>
                                     </div>
                                 }
                             </div>
@@ -125,52 +195,63 @@
 
 @section Scripts {
 <script>
-    document.querySelectorAll('.change-status-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            var orderId = this.getAttribute('data-order-id');
-            var select = document.querySelector('.status-select[data-order-id="' + orderId + '"]');
-            var newStatus = select.value;
-            var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+document.querySelectorAll('.save-shipment-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const form = this.closest('.shipment-form');
+        const orderId = form.dataset.orderId;
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        const body = new URLSearchParams({
+            orderId, __RequestVerificationToken: token || '',
+            carrier: form.querySelector('.ship-carrier').value,
+            trackingCode: form.querySelector('.ship-tracking').value,
+            shippingFee: form.querySelector('.ship-fee').value || ''
+        });
+        fetch('@Url.Action("SaveShipment", "AdminOrder")', { method: 'POST', body })
+            .then(r => r.json()).then(d => { alert(d.message); if (d.success) location.reload(); });
+    });
+});
 
-            var formData = new FormData();
-            formData.append("orderId", orderId);
-            formData.append("newStatus", newStatus);
-            formData.append("__RequestVerificationToken", token);
-
-            fetch('@Url.Action("ChangeStatus", "AdminOrder")', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    showToast('Cập nhật trạng thái đơn hàng thành công!', 'success');
-                    setTimeout(function() {
-                        location.reload();
-                    }, 1500);
-                } else {
-                    showToast(data.message || 'Có lỗi xảy ra khi cập nhật trạng thái!', 'error');
-                }
-            })
-            .catch(error => {
-                showToast('Có lỗi xảy ra khi gửi yêu cầu!', 'error');
-            });
+document.querySelectorAll('.change-status-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const orderId = this.dataset.orderId;
+        const select = document.querySelector(`.status-select[data-order-id="${orderId}"]`);
+        const newStatus = select.value;
+        if (newStatus === '@OrderStatuses.Shipped') {
+            const tracking = document.querySelector(`.shipment-form[data-order-id="${orderId}"] .ship-tracking`)?.value?.trim();
+            if (!tracking) {
+                alert('Vui lòng nhập và lưu mã vận đơn trước khi chuyển sang Đang giao.');
+                return;
+            }
+        }
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        fetch('@Url.Action("ChangeStatus", "AdminOrder")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: `orderId=${orderId}&newStatus=${encodeURIComponent(newStatus)}&__RequestVerificationToken=${encodeURIComponent(token || '')}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            alert(data.message);
+            if (data.success) location.reload();
         });
     });
+});
 </script>
 }
 
 @functions {
-    string GetStatusBadgeClass(string status)
+    string GetStatusBadgeClass(string? status) => status switch
     {
-        return status switch
-        {
-            "Chờ xác nhận" => "bg-warning text-dark",
-            "Đã xác nhận" => "bg-info text-white",
-            "Đang giao" => "bg-primary text-white",
-            "Đã giao" => "bg-success text-white",
-            "Đã hủy" => "bg-danger text-white",
-            _ => "bg-secondary text-white"
-        };
-    }
-} 
+        OrderStatuses.PendingPayment => "bg-secondary text-white",
+        OrderStatuses.PendingConfirmation => "bg-warning text-dark",
+        OrderStatuses.Confirmed => "bg-info text-white",
+        OrderStatuses.Packing => "bg-primary text-white",
+        OrderStatuses.Shipped => "bg-primary text-white",
+        OrderStatuses.Delivered => "bg-success text-white",
+        OrderStatuses.Cancelled => "bg-danger text-white",
+        _ => "bg-secondary text-white"
+    };
+}

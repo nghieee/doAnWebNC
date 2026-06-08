@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using web_ban_thuoc.Models;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace web_ban_thuoc.Controllers.Admin
 {
+    [Authorize(Roles = "Admin,CustomerSupport")]
     [Route("admin/chat")]
     public class AdminChatController : Controller
     {

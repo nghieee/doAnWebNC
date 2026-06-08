@@ -15,16 +15,25 @@ namespace web_ban_thuoc.ViewComponents
 
         public async Task<IViewComponentResult> InvokeAsync()
         {
-            var pendingOrders = await _context.Orders.CountAsync(o => o.Status == "Chờ xác nhận");
-            var unreadMessages = await _context.ChatMessages.CountAsync(m => m.ReceiverId == "admin" && !m.IsRead);
+            var user = HttpContext.User;
+            var canSeeOrders = user.IsInRole(StaffRoles.Admin)
+                || user.IsInRole(StaffRoles.WarehouseStaff)
+                || user.IsInRole(StaffRoles.CustomerSupport);
+            var canSeeChat = user.IsInRole(StaffRoles.Admin)
+                || user.IsInRole(StaffRoles.CustomerSupport);
 
-            var model = new AdminNotificationModel
+            var pendingOrders = canSeeOrders
+                ? await _context.Orders.CountAsync(o => o.Status == OrderStatuses.PendingConfirmation)
+                : 0;
+            var unreadMessages = canSeeChat
+                ? await _context.ChatMessages.CountAsync(m => m.ReceiverId == "admin" && !m.IsRead)
+                : 0;
+
+            return View(new AdminNotificationModel
             {
                 PendingOrders = pendingOrders,
                 UnreadMessages = unreadMessages
-            };
-
-            return View(model);
+            });
         }
     }
 
