@@ -401,3 +401,29 @@ body.admin-body {
         display: none;
     }
 }
+
+/* ===== Phân trang admin (hiện đại) ===== */
+.admin-pagination .pagination { gap: 4px; }
+.admin-pagination .page-link {
+    border: none;
+    border-radius: 10px;
+    min-width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #1250dc;
+    background: #f1f5ff;
+    font-weight: 600;
+    transition: all .15s ease;
+}
+.admin-pagination .page-link:hover { background: #dbe6ff; }
+.admin-pagination .page-item.active .page-link {
+    background: #1250dc;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(18,80,220,.35);
+}
+.admin-pagination .page-item.disabled .page-link {
+    background: #f3f4f6;
+    color: #b6bcc7;
+}

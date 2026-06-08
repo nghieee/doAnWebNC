@@ -72,6 +72,7 @@
                     <th class="text-center" style="width: 140px;">NCC</th>
                     <th class="text-center" style="width: 120px;">Giá</th>
                     <th class="text-center" style="width: 160px;">Danh mục</th>
+                    <th class="text-center" style="width: 110px;">Tồn kho</th>
                     <th class="text-center" style="width: 90px;">Đã bán</th>
                     <th class="text-center" style="width: 110px;">Nổi bật</th>
                     <th class="text-center" style="width: 170px;">Hành động</th>
@@ -96,6 +97,9 @@
                         <td class="text-center small">@(item.Supplier?.Name ?? "—")</td>
                         <td class="text-primary fw-bold text-center">@item.Price.ToString("N0") đ</td>
                         <td class="text-center">@item.Category?.CategoryName</td>
+                        <td class="text-center">
+                            <span class="badge @(item.StockQuantity <= 10 ? "bg-danger-subtle text-danger" : "bg-success-subtle text-success") px-3 py-2 fs-6">@item.StockQuantity.ToString("N0")</span>
+                        </td>
                         <td class="text-center">@((item.SoldQuantity ?? 0).ToString("N0"))</td>
                         <td class="text-center">
                             @if (item.IsFeature)
@@ -128,29 +132,7 @@
     </div>
 
     <!-- Phân trang -->
-    @if (ViewBag.TotalPages > 1)
-    {
-        <nav class="d-flex justify-content-center mt-4">
-            <ul class="pagination pagination-sm">
-                <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
-                    <a class="page-link" href="@Url.Action("Index", new { page = ViewBag.CurrentPage - 1 })" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                    </a>
-                </li>
-                @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
-                {
-                    <li class="page-item @(i == (int)ViewBag.CurrentPage ? "active" : "")">
-                        <a class="page-link @(i == (int)ViewBag.CurrentPage ? "bg-primary text-white" : "")" href="@Url.Action("Index", new { page = i })">@i</a>
-                    </li>
-                }
-                <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
-                    <a class="page-link" href="@Url.Action("Index", new { page = ViewBag.CurrentPage + 1 })" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-    }
+    <partial name="_AdminPagination" />
 
     <!-- Modal chi tiết sản phẩm -->
     <div class="modal fade" id="productDetailModal" tabindex="-1" aria-labelledby="productDetailModalLabel" aria-hidden="true">

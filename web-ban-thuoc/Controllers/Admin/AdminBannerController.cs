@@ -21,7 +21,7 @@ public class AdminBannerController : Controller
     // GET: AdminBanner
     [Route("")]
     [Route("Index")]
-    public async Task<IActionResult> Index(string? searchTerm, string? typeFilter, string? statusFilter)
+    public async Task<IActionResult> Index(string? searchTerm, string? typeFilter, string? statusFilter, int page = 1)
     {
         var query = _context.Banners.AsQueryable();
 
@@ -53,15 +53,25 @@ public class AdminBannerController : Controller
             }
         }
 
+        const int pageSize = 10;
+        if (page < 1) page = 1;
+        int totalItems = await query.CountAsync();
+        int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
         var banners = await query
             .OrderBy(b => b.SortOrder)
             .ThenBy(b => b.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
         // Pass filter values to view
         ViewBag.SearchTerm = searchTerm;
         ViewBag.TypeFilter = typeFilter;
         ViewBag.StatusFilter = statusFilter;
+        ViewBag.CurrentPage = page;
+        ViewBag.TotalPages = totalPages;
+        ViewBag.TotalItems = totalItems;
 
         return View("~/Views/Admin/Banner/Index.cshtml", banners);
     }

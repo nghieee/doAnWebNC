@@ -18,7 +18,7 @@ public class AdminSupplierController : Controller
 
     [Route("")]
     [Route("Index")]
-    public async Task<IActionResult> Index(string? search)
+    public async Task<IActionResult> Index(string? search, int page = 1)
     {
         var query = _context.Suppliers.AsQueryable();
         if (!string.IsNullOrWhiteSpace(search))
@@ -29,8 +29,22 @@ public class AdminSupplierController : Controller
                 (s.Phone != null && s.Phone.Contains(search)));
         }
 
+        const int pageSize = 10;
+        if (page < 1) page = 1;
+        int totalItems = await query.CountAsync();
+        int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+        var suppliers = await query
+            .OrderBy(s => s.Name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
         ViewBag.Search = search;
-        return View("~/Views/Admin/Supplier/Index.cshtml", await query.OrderBy(s => s.Name).ToListAsync());
+        ViewBag.CurrentPage = page;
+        ViewBag.TotalPages = totalPages;
+        ViewBag.TotalItems = totalItems;
+        return View("~/Views/Admin/Supplier/Index.cshtml", suppliers);
     }
 
     [HttpGet]

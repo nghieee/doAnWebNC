@@ -1,0 +1,70 @@
+@{
+    int currentPage = ViewBag.CurrentPage != null ? Convert.ToInt32(ViewBag.CurrentPage) : 1;
+    int totalPages = ViewBag.TotalPages != null ? Convert.ToInt32(ViewBag.TotalPages) : 1;
+    int totalItems = ViewBag.TotalItems != null ? Convert.ToInt32(ViewBag.TotalItems) : -1;
+    var req = ViewContext.HttpContext.Request;
+
+    Func<int, string> pageUrl = p =>
+    {
+        var qs = new List<string>();
+        foreach (var kv in req.Query)
+        {
+            if (string.Equals(kv.Key, "page", StringComparison.OrdinalIgnoreCase)) continue;
+            foreach (var val in kv.Value)
+            {
+                if (!string.IsNullOrEmpty(val))
+                    qs.Add($"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(val)}");
+            }
+        }
+        qs.Add($"page={p}");
+        return req.Path + "?" + string.Join("&", qs);
+    };
+
+    int windowSize = 2;
+    int start = Math.Max(1, currentPage - windowSize);
+    int end = Math.Min(totalPages, currentPage + windowSize);
+}
+
+@if (totalPages > 1)
+{
+    <nav class="admin-pagination d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4" aria-label="Phân trang">
+        @if (totalItems >= 0)
+        {
+            <div class="small text-muted">Trang <strong>@currentPage</strong> / @totalPages · Tổng <strong>@totalItems</strong> mục</div>
+        }
+        else
+        {
+            <div></div>
+        }
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                <a class="page-link" href="@pageUrl(currentPage - 1)" aria-label="Trang trước"><i class="fa fa-chevron-left"></i></a>
+            </li>
+            @if (start > 1)
+            {
+                <li class="page-item"><a class="page-link" href="@pageUrl(1)">1</a></li>
+                @if (start > 2)
+                {
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                }
+            }
+            @for (int i = start; i <= end; i++)
+            {
+                <li class="page-item @(i == currentPage ? "active" : "")">
+                    <a class="page-link" href="@pageUrl(i)">@i</a>
+                </li>
+            }
+            @if (end < totalPages)
+            {
+                @if (end < totalPages - 1)
+                {
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                }
+                <li class="page-item"><a class="page-link" href="@pageUrl(totalPages)">@totalPages</a></li>
+            }
+            <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                <a class="page-link" href="@pageUrl(currentPage + 1)" aria-label="Trang sau"><i class="fa fa-chevron-right"></i></a>
+            </li>
+        </ul>
+    </nav>
+}

@@ -3,60 +3,235 @@
 @{
     ViewData["Title"] = "Chi tiết đơn đặt hàng";
     Layout = "~/Views/Admin/_Layout.cshtml";
+
+    string StatusBadge(string s) => s switch
+    {
+        PurchaseOrderStatuses.Draft => "bg-secondary",
+        PurchaseOrderStatuses.Confirmed => "bg-warning text-dark",
+        PurchaseOrderStatuses.PartiallyReceived => "bg-info text-dark",
+        PurchaseOrderStatuses.Received => "bg-success",
+        PurchaseOrderStatuses.Cancelled => "bg-danger",
+        _ => "bg-light text-dark"
+    };
+
+    var totalOrdered = Model.Lines.Sum(l => l.QuantityOrdered);
+    var totalReceived = Model.Lines.Sum(l => l.QuantityReceived);
+    var totalRemaining = Model.Lines.Sum(l => l.RemainingQuantity);
+    var pct = totalOrdered > 0 ? (int)Math.Round(totalReceived * 100.0 / totalOrdered) : 0;
+    var totalValue = Model.Lines.Sum(l => l.QuantityOrdered * l.UnitCost);
+    var receipts = Model.GoodsReceipts.OrderBy(r => r.ReceiptDate).ToList();
 }
 
 <div class="container-fluid py-3">
-    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-        <div class="d-flex justify-content-between align-items-start mb-3">
-            <div>
-                <h5 class="fw-bold mb-1">@Model.OrderCode</h5>
-                <p class="text-muted mb-0">NCC: <strong>@Model.Supplier.Name</strong> · Kho: @Model.Warehouse.Name · @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success border-0 shadow-sm rounded-4">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger border-0 shadow-sm rounded-4">@TempData["ErrorMessage"]</div>
+    }
+
+    <!-- Header -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="p-4 text-white" style="background:linear-gradient(135deg,#1250dc,#1b6ff5);">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="fa fa-file-invoice fa-lg"></i>
+                        <h4 class="fw-bold mb-0">@Model.OrderCode</h4>
+                        <span class="badge @StatusBadge(Model.Status) ms-2">@Model.Status</span>
+                    </div>
+                    <div class="opacity-75 small">
+                        <i class="fa fa-truck me-1"></i> @Model.Supplier.Name
+                        <span class="mx-2">·</span>
+                        <i class="fa fa-warehouse me-1"></i> @Model.Warehouse.Name
+                        <span class="mx-2">·</span>
+                        <i class="fa fa-calendar me-1"></i> Đặt: @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                        @if (Model.ExpectedDate.HasValue)
+                        {
+                            <span class="mx-2">·</span>
+                            <text><i class="fa fa-clock me-1"></i> Dự kiến: @Model.ExpectedDate.Value.ToString("dd/MM/yyyy")</text>
+                        }
+                    </div>
+                </div>
+                <div class="text-end">
+                    <div class="opacity-75 small">Tổng giá trị đặt</div>
+                    <div class="fs-4 fw-bold">@totalValue.ToString("N0")đ</div>
+                </div>
             </div>
-            <span class="badge bg-info text-dark fs-6">@Model.Status</span>
         </div>
-        @if (!string.IsNullOrEmpty(Model.Note))
-        {
-            <p class="small"><strong>Ghi chú:</strong> @Model.Note</p>
-        }
-        <div class="d-flex flex-wrap gap-2">
-            @if (Model.Status == PurchaseOrderStatuses.Draft)
+        <div class="card-body">
+            @if (!string.IsNullOrEmpty(Model.Note))
             {
-                <form method="post" action="/AdminPurchase/Confirm/@Model.PurchaseOrderId" class="d-inline">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-primary">Xác nhận đơn</button>
-                </form>
+                <div class="alert alert-light border rounded-3 mb-3"><i class="fa fa-note-sticky text-warning me-1"></i> <strong>Ghi chú đơn:</strong> @Model.Note</div>
             }
-            @if (Model.Status == PurchaseOrderStatuses.Confirmed || Model.Status == PurchaseOrderStatuses.PartiallyReceived)
-            {
-                <a href="/AdminPurchase/Receive/@Model.PurchaseOrderId" class="btn btn-success"><i class="fa fa-arrow-down me-1"></i> Nhập kho từ đơn</a>
-            }
-            <a href="/AdminPurchase" class="btn btn-outline-secondary">Quay lại</a>
+
+            <!-- Tiến độ nhận hàng -->
+            <div class="mb-2 d-flex justify-content-between align-items-end">
+                <span class="fw-semibold">Tiến độ nhận hàng</span>
+                <span class="small text-muted">Đã nhận <strong class="text-success">@totalReceived</strong> / @totalOrdered · còn thiếu <strong class="text-danger">@totalRemaining</strong></span>
+            </div>
+            <div class="progress rounded-pill" style="height:14px;">
+                <div class="progress-bar @(pct >= 100 ? "bg-success" : "bg-info") fw-semibold" role="progressbar"
+                     style="width:@(pct)%;" aria-valuenow="@pct" aria-valuemin="0" aria-valuemax="100">@pct%</div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                @if (Model.Status == PurchaseOrderStatuses.Draft)
+                {
+                    <form method="post" action="/AdminPurchase/Confirm/@Model.PurchaseOrderId" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-check me-1"></i> Xác nhận đơn</button>
+                    </form>
+                }
+                @if (Model.Status == PurchaseOrderStatuses.Confirmed || Model.Status == PurchaseOrderStatuses.PartiallyReceived)
+                {
+                    <a href="/AdminPurchase/Receive/@Model.PurchaseOrderId" class="btn btn-success"><i class="fa fa-arrow-down me-1"></i> Nhận hàng / Nhập kho</a>
+                }
+                <a href="/AdminPurchase" class="btn btn-outline-secondary"><i class="fa fa-arrow-left me-1"></i> Quay lại</a>
+            </div>
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-bordered bg-white shadow-sm">
-            <thead class="table-light">
-                <tr>
-                    <th>Sản phẩm</th>
-                    <th>SL đặt</th>
-                    <th>SL đã nhận</th>
-                    <th>Còn lại</th>
-                    <th>Giá nhập</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var line in Model.Lines)
-                {
-                    <tr>
-                        <td>@line.Product.ProductName</td>
-                        <td>@line.QuantityOrdered</td>
-                        <td>@line.QuantityReceived</td>
-                        <td>@line.RemainingQuantity</td>
-                        <td>@line.UnitCost.ToString("N0")đ</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <div class="row g-4">
+        <!-- Danh sách sản phẩm đặt -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white fw-semibold rounded-top-4"><i class="fa fa-boxes-stacked text-primary me-1"></i> Sản phẩm đặt hàng</div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th class="text-center">SL đặt</th>
+                                <th class="text-center">Đã nhận</th>
+                                <th class="text-center">Còn thiếu</th>
+                                <th class="text-end">Giá nhập</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var line in Model.Lines)
+                            {
+                                var linePct = line.QuantityOrdered > 0 ? (int)Math.Round(line.QuantityReceived * 100.0 / line.QuantityOrdered) : 0;
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@line.Product.ProductName</div>
+                                        <div class="progress rounded-pill mt-1" style="height:6px;max-width:220px;">
+                                            <div class="progress-bar @(linePct >= 100 ? "bg-success" : "bg-info")" style="width:@(linePct)%;"></div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">@line.QuantityOrdered</td>
+                                    <td class="text-center text-success fw-semibold">@line.QuantityReceived</td>
+                                    <td class="text-center">
+                                        @if (line.RemainingQuantity > 0)
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger">@line.RemainingQuantity</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success-subtle text-success"><i class="fa fa-check"></i> Đủ</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">@line.UnitCost.ToString("N0")đ</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr class="fw-semibold">
+                                <td>Tổng</td>
+                                <td class="text-center">@totalOrdered</td>
+                                <td class="text-center text-success">@totalReceived</td>
+                                <td class="text-center text-danger">@totalRemaining</td>
+                                <td class="text-end">@totalValue.ToString("N0")đ</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lịch sử nhận hàng từng đợt -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white fw-semibold rounded-top-4 d-flex justify-content-between align-items-center">
+                    <span><i class="fa fa-clock-rotate-left text-primary me-1"></i> Lịch sử nhận hàng</span>
+                    <span class="badge bg-primary-subtle text-primary">@receipts.Count đợt</span>
+                </div>
+                <div class="card-body">
+                    @if (!receipts.Any())
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="fa fa-inbox fa-2x mb-2 d-block opacity-50"></i>
+                            Chưa có đợt nhận hàng nào.
+                            @if (Model.Status == PurchaseOrderStatuses.Confirmed)
+                            {
+                                <div class="mt-2"><a href="/AdminPurchase/Receive/@Model.PurchaseOrderId" class="btn btn-sm btn-success">Nhận hàng đợt đầu</a></div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <ul class="list-unstyled po-timeline mb-0">
+                            @{ var idx = 0; }
+                            @foreach (var r in receipts)
+                            {
+                                idx++;
+                                var receiptQty = r.Lines.Sum(l => l.Quantity);
+                                <li class="po-timeline-item">
+                                    <span class="po-timeline-dot"></span>
+                                    <div class="po-timeline-card">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fw-semibold">Đợt @idx · @r.ReceiptCode</span>
+                                            <span class="badge bg-success-subtle text-success">+@receiptQty SP</span>
+                                        </div>
+                                        <div class="small text-muted mb-2"><i class="fa fa-calendar me-1"></i> @r.ReceiptDate.ToString("dd/MM/yyyy HH:mm")</div>
+                                        @if (!string.IsNullOrEmpty(r.Note))
+                                        {
+                                            <div class="alert alert-warning py-1 px-2 small rounded-3 mb-2"><i class="fa fa-note-sticky me-1"></i> @r.Note</div>
+                                        }
+                                        <div class="table-responsive">
+                                            <table class="table table-sm mb-0">
+                                                <thead>
+                                                    <tr class="small text-muted">
+                                                        <th>Sản phẩm</th>
+                                                        <th>Lô</th>
+                                                        <th>HSD</th>
+                                                        <th class="text-end">SL</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var rl in r.Lines)
+                                                    {
+                                                        <tr>
+                                                            <td class="text-truncate" style="max-width:120px;">@rl.Product.ProductName</td>
+                                                            <td><span class="badge bg-light text-dark border">@rl.BatchNo</span></td>
+                                                            <td class="small">@(rl.ExpiryDate?.ToString("dd/MM/yy") ?? "—")</td>
+                                                            <td class="text-end fw-semibold">@rl.Quantity</td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+@section Styles {
+<style>
+    .po-timeline { position: relative; padding-left: 1.5rem; }
+    .po-timeline::before { content: ""; position: absolute; left: 6px; top: 4px; bottom: 4px; width: 2px; background: #e3e9f7; }
+    .po-timeline-item { position: relative; margin-bottom: 1rem; }
+    .po-timeline-item:last-child { margin-bottom: 0; }
+    .po-timeline-dot { position: absolute; left: -1.5rem; top: 6px; width: 14px; height: 14px; border-radius: 50%; background: #1250dc; border: 3px solid #fff; box-shadow: 0 0 0 2px #1250dc33; }
+    .po-timeline-card { background: #f8faff; border: 1px solid #e7eefc; border-radius: .75rem; padding: .75rem .9rem; }
+</style>
+}

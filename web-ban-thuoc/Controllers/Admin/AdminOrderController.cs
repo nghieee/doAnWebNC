@@ -24,7 +24,7 @@ namespace web_ban_thuoc.Controllers.Admin
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index(string? search, string? status)
+        public async Task<IActionResult> Index(string? search, string? status, int page = 1)
         {
             var orders = _context.Orders
                 .Include(o => o.OrderItems)
@@ -44,9 +44,20 @@ namespace web_ban_thuoc.Controllers.Admin
             if (!string.IsNullOrEmpty(status) && status != "Tất cả")
                 orders = orders.Where(o => o.Status == status);
 
+            const int pageSize = 10;
+            if (page < 1) page = 1;
+            int totalItems = await orders.CountAsync();
+            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
             ViewBag.Search = search;
             ViewBag.Status = status;
-            var orderList = await orders.ToListAsync();
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalItems;
+            var orderList = await orders
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
             return View("~/Views/Admin/Order/Index.cshtml", orderList);
         }
 

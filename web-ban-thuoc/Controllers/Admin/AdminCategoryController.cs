@@ -68,6 +68,7 @@ namespace web_ban_thuoc.Controllers.Admin
             ViewBag.SelectedParentId2 = parentId2;
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalCategories;
             ViewBag.SelectedIsFeature = isFeature;
             ViewBag.SearchName = searchName;
             return View("~/Views/Admin/Category/Index.cshtml", pagedCategories);
