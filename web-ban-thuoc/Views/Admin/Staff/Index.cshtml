@@ -68,7 +68,7 @@
                                 <button type="button" class="btn btn-sm @(s.IsLocked ? "btn-outline-success" : "btn-outline-warning") btn-toggle-lock" data-id="@s.Id" title="@(s.IsLocked ? "Mở khóa" : "Khóa")">
                                     <i class="fa @(s.IsLocked ? "fa-unlock" : "fa-lock")"></i>
                                 </button>
-                                <form method="post" action="/AdminStaff/Delete/@s.Id" class="d-inline" onsubmit="return confirm('Xóa tài khoản nhân viên này?');">
+                                <form method="post" action="/AdminStaff/Delete/@s.Id" class="d-inline" onsubmit="return confirmSubmit(this, 'Xóa tài khoản nhân viên này?', { icon: 'warning', confirmButtonText: 'Xóa', confirmButtonColor: '#e03131' });">
                                     @Html.AntiForgeryToken()
                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
                                         <i class="fa fa-trash"></i>
@@ -106,7 +106,7 @@ document.querySelectorAll('.btn-toggle-lock').forEach(btn => {
             body: `__RequestVerificationToken=${encodeURIComponent(token || '')}`
         });
         const data = await res.json();
-        alert(data.message || (data.success ? 'Đã cập nhật!' : 'Lỗi'));
+        await showAlert(data.message || (data.success ? 'Đã cập nhật!' : 'Lỗi'), { icon: data.success ? 'success' : 'error' });
         if (data.success) location.reload();
     });
 });

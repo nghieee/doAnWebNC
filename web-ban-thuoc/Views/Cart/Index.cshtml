@@ -332,7 +332,8 @@
     }
 
     function removeItem(productId) {
-        if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?')) {
+        showConfirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?', { icon: 'warning', confirmButtonText: 'Xóa', confirmButtonColor: '#e03131' }).then(function(ok) {
+            if (!ok) return;
             fetch(`/Cart/Remove/${productId}`, {
                 method: 'GET',
                 headers: {
@@ -366,7 +367,7 @@
                 console.error('Error:', error);
                 showToast('Có lỗi xảy ra khi xóa sản phẩm!', 'error');
             });
-        }
+        });
     }
     
     function updateCartTotals() {
@@ -414,7 +415,7 @@ document.getElementById('checkoutForm').addEventListener('submit', function(e) {
                 window.location.href = '/Cart/ThankYou';
             }
         } else {
-            alert(result.message || 'Có lỗi xảy ra!');
+            showAlert(result.message || 'Có lỗi xảy ra!', { icon: 'error' });
         }
     });
 });

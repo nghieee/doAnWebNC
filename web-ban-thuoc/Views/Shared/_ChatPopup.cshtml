@@ -87,7 +87,7 @@
             const msg = input.value.trim();
             if (!msg) return;
             if (!userId || userId === 'guest') {
-                alert('Bạn cần đăng nhập để sử dụng chức năng chat với admin!');
+                showAlert('Bạn cần đăng nhập để sử dụng chức năng chat với admin!', { icon: 'warning' });
                 return;
             }
             connection.invoke('SendMessage', userId, adminId, msg);
