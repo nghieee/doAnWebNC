@@ -2,27 +2,58 @@
 @{
     ViewData["Title"] = "Thanh toán thất bại";
 }
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card border-danger shadow-lg">
-                <div class="card-header bg-danger text-white text-center">
-                    <i class="fas fa-times-circle fa-3x mb-2"></i>
-                    <h3 class="mb-0">Thanh toán thất bại!</h3>
+
+@section Styles {
+    <link href="~/css/payos.css" rel="stylesheet" />
+}
+
+<div class="payos-page">
+    <div class="payos-card">
+        <div class="payos-card__body">
+            <div class="payos-result">
+                <div class="payos-result__icon payos-result__icon--danger">
+                    <i class="fas fa-xmark"></i>
                 </div>
-                <div class="card-body text-center">
-                    <h5 class="mb-3">Rất tiếc, giao dịch của bạn chưa được thực hiện thành công.</h5>
-                    <p class="mb-2">Mã đơn hàng: <span class="fw-bold text-danger">#@Model?.OrderId</span></p>
-                    <p class="mb-2">Tổng tiền: <span class="fw-bold">@Model?.TotalAmount?.ToString("N0") VNĐ</span></p>
-                    <p class="mb-2">Trạng thái: <span class="badge bg-danger">Thanh toán thất bại</span></p>
-                    <p class="text-muted">Vui lòng kiểm tra lại thông tin hoặc thử lại sau. Nếu cần hỗ trợ, liên hệ <a href="tel:18006928" class="text-decoration-underline">1800 6928</a>.</p>
-                    <div class="d-flex justify-content-center gap-3 mt-4">
-                        <a href="/" class="btn btn-outline-primary"><i class="fas fa-home me-2"></i>Về trang chủ</a>
-                        <a href="/Cart/Index" class="btn btn-outline-secondary"><i class="fas fa-shopping-cart me-2"></i>Giỏ hàng</a>
-                        <a href="/PayOS/CreatePayment?orderId=@Model?.OrderId" class="btn btn-danger"><i class="fas fa-redo me-2"></i>Thử lại thanh toán</a>
+                <h1>Thanh toán thất bại</h1>
+                <p class="payos-result__sub">
+                    Rất tiếc, giao dịch của bạn chưa được thực hiện thành công.
+                </p>
+
+                <div class="payos-result__recap">
+                    <div class="payos-info-row">
+                        <span class="label">Mã đơn hàng</span>
+                        <span class="value">#@Model?.OrderId</span>
+                    </div>
+                    <div class="payos-info-row">
+                        <span class="label">Tổng tiền</span>
+                        <span class="value">@Model?.TotalAmount?.ToString("N0") VNĐ</span>
+                    </div>
+                    <div class="payos-info-row">
+                        <span class="label">Trạng thái</span>
+                        <span class="value">
+                            <span class="payos-badge payos-badge--danger"><i class="fas fa-xmark"></i> Thất bại</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="payos-result__actions">
+                    @if (Model != null)
+                    {
+                        <a href="@Url.Action("CreatePayment", "PayOS", new { orderId = Model.OrderId })" class="payos-btn payos-btn--primary">
+                            <i class="fas fa-rotate-right"></i> Thử lại thanh toán
+                        </a>
+                    }
+                    <a href="/" class="payos-btn payos-btn--ghost"><i class="fas fa-home"></i> Về trang chủ</a>
+                </div>
+
+                <div class="payos-help">
+                    <i class="fas fa-headset"></i>
+                    <div>
+                        Cần hỗ trợ? Gọi hotline
+                        <a href="tel:18006928" class="fw-semibold">1800 6928</a> (miễn phí).
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div> 
+</div>

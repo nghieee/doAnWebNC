@@ -2,27 +2,46 @@
 @{
     ViewData["Title"] = "Thanh toán thành công";
 }
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card border-success shadow-lg">
-                <div class="card-header bg-success text-white text-center">
-                    <i class="fas fa-check-circle fa-3x mb-2"></i>
-                    <h3 class="mb-0">Thanh toán thành công!</h3>
+
+@section Styles {
+    <link href="~/css/payos.css" rel="stylesheet" />
+}
+
+<div class="payos-page">
+    <div class="payos-card">
+        <div class="payos-card__body">
+            <div class="payos-result">
+                <div class="payos-result__icon payos-result__icon--success">
+                    <i class="fas fa-check"></i>
                 </div>
-                <div class="card-body text-center">
-                    <h5 class="mb-3">Cảm ơn bạn đã mua hàng tại <span class="text-primary fw-bold">Nhà Thuốc Long Châu</span>!</h5>
-                    <p class="mb-2">Mã đơn hàng: <span class="fw-bold text-success">#@Model?.OrderId</span></p>
-                    <p class="mb-2">Tổng tiền: <span class="fw-bold">@Model?.TotalAmount?.ToString("N0") VNĐ</span></p>
-                    <p class="mb-2">Trạng thái: <span class="badge bg-success">Đã thanh toán</span></p>
-                    <p class="text-muted">Chúng tôi đã gửi xác nhận đơn hàng và thông tin thanh toán qua email cho bạn.</p>
-                    <div class="d-flex justify-content-center gap-3 mt-4">
-                        <a href="/" class="btn btn-outline-primary"><i class="fas fa-home me-2"></i>Về trang chủ</a>
-                        <a href="/Cart/Index" class="btn btn-outline-secondary"><i class="fas fa-shopping-cart me-2"></i>Giỏ hàng</a>
-                        <a href="/" class="btn btn-success"><i class="fas fa-list-alt me-2"></i>Xem đơn hàng</a>
+                <h1>Thanh toán thành công!</h1>
+                <p class="payos-result__sub">
+                    Cảm ơn bạn đã mua hàng tại <strong>Nhà Thuốc Long Châu</strong>.
+                    Chúng tôi đã gửi xác nhận đơn hàng qua email cho bạn.
+                </p>
+
+                <div class="payos-result__recap">
+                    <div class="payos-info-row">
+                        <span class="label">Mã đơn hàng</span>
+                        <span class="value">#@Model?.OrderId</span>
                     </div>
+                    <div class="payos-info-row">
+                        <span class="label">Tổng tiền</span>
+                        <span class="value">@Model?.TotalAmount?.ToString("N0") VNĐ</span>
+                    </div>
+                    <div class="payos-info-row">
+                        <span class="label">Trạng thái</span>
+                        <span class="value">
+                            <span class="payos-badge payos-badge--success"><i class="fas fa-check"></i> Đã thanh toán</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="payos-result__actions">
+                    <a href="/" class="payos-btn payos-btn--primary"><i class="fas fa-home"></i> Về trang chủ</a>
+                    <a href="/Cart/Index" class="payos-btn payos-btn--ghost"><i class="fas fa-shopping-cart"></i> Giỏ hàng</a>
                 </div>
             </div>
         </div>
     </div>
-</div> 
+</div>
