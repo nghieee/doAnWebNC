@@ -48,4 +48,24 @@ yarn.lock
 # Others
 *.swp
 *.bak
-*.tmp 
+*.tmp
+
+# Reports & documents (báo cáo, tài liệu không thuộc source code)
+*.pdf
+*.doc
+*.docx
+*.ppt
+*.pptx
+*.xls
+*.xlsx
+*.odt
+*.ods
+*.odp
+
+# Archives
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tgz
