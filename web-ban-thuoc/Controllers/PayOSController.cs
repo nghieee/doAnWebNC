@@ -362,7 +362,7 @@ namespace web_ban_thuoc.Controllers
             }
         }
 
-        // Trang cancel
+        // Trang cancel – render Cancel.cshtml (không có nút thanh toán lại)
         [HttpGet]
         public async Task<IActionResult> Cancel(int orderId)
         {
@@ -374,8 +374,10 @@ namespace web_ban_thuoc.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            TempData["ErrorMessage"] = "Thanh toán đã bị hủy!";
-            return RedirectToAction("Failed", new { orderId = orderId });
+            if (order == null)
+                return RedirectToAction("Error", "Home");
+
+            return View(order);
         }
 
         // Trang thành công

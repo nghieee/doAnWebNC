@@ -207,7 +207,7 @@ document.querySelectorAll('.save-shipment-btn').forEach(btn => {
             shippingFee: form.querySelector('.ship-fee').value || ''
         });
         fetch('@Url.Action("SaveShipment", "AdminOrder")', { method: 'POST', body })
-            .then(r => r.json()).then(d => { alert(d.message); if (d.success) location.reload(); });
+            .then(r => r.json()).then(d => { showAlert(d.message, { icon: d.success ? 'success' : 'error' }).then(() => { if (d.success) location.reload(); }); });
     });
 });
 
@@ -219,7 +219,7 @@ document.querySelectorAll('.change-status-btn').forEach(btn => {
         if (newStatus === '@OrderStatuses.Shipped') {
             const tracking = document.querySelector(`.shipment-form[data-order-id="${orderId}"] .ship-tracking`)?.value?.trim();
             if (!tracking) {
-                alert('Vui lòng nhập và lưu mã vận đơn trước khi chuyển sang Đang giao.');
+                showAlert('Vui lòng nhập và lưu mã vận đơn trước khi chuyển sang Đang giao.', { icon: 'warning' });
                 return;
             }
         }
@@ -234,8 +234,7 @@ document.querySelectorAll('.change-status-btn').forEach(btn => {
         })
         .then(r => r.json())
         .then(data => {
-            alert(data.message);
-            if (data.success) location.reload();
+            showAlert(data.message, { icon: data.success ? 'success' : 'error' }).then(() => { if (data.success) location.reload(); });
         });
     });
 });

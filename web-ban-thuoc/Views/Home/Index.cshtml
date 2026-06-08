@@ -266,7 +266,7 @@
 <script>
 $(function() {
     $('#gift-img').on('click', function() {
-        alert('Bạn nhận được voucher, truy cập mục quà tặng để kiểm tra!');
+        showAlert('Bạn nhận được voucher, truy cập mục quà tặng để kiểm tra!', { icon: 'success' });
         $('#gift-popup-overlay').fadeOut(300);
         $.post('/Home/MarkGiftSeen', function(){});
     });

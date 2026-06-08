@@ -38,7 +38,7 @@
     <!-- Header với nút thêm banner và nút xóa nhanh -->
     <div class="d-flex justify-content-end align-items-center mb-4">
         <div class="d-flex gap-2">
-            <button id="bulkDeleteBtn" class="btn btn-danger btn-lg d-none align-items-center gap-2" onclick="return confirm('Bạn có chắc muốn xóa các banner đã chọn?');">
+            <button id="bulkDeleteBtn" class="btn btn-danger btn-lg d-none align-items-center gap-2">
                 <i class="fa fa-trash"></i> Xóa nhanh
             </button>
             <a href="@Url.Action("Create", "AdminBanner")" class="btn btn-primary btn-lg d-flex align-items-center gap-2">
@@ -205,9 +205,9 @@
         // Xóa nhanh các banner đã chọn
         $('#bulkDeleteBtn').on('click', function(e) {
             e.preventDefault();
-            if (confirm('Bạn có chắc muốn xóa các banner đã chọn?')) {
-                $('#bulkDeleteForm').submit();
-            }
+            showConfirm('Bạn có chắc muốn xóa các banner đã chọn?', { icon: 'warning', confirmButtonText: 'Xóa', confirmButtonColor: '#e03131' }).then(function(ok) {
+                if (ok) $('#bulkDeleteForm').submit();
+            });
         });
 
         // Xem chi tiết banner

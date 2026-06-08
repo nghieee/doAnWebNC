@@ -187,9 +187,9 @@
         // Xóa nhanh các danh mục đã chọn
         $('#bulkDeleteBtn').on('click', function(e) {
             e.preventDefault();
-            if (confirm('Bạn có chắc muốn xóa các danh mục đã chọn?')) {
-                $('#bulkDeleteForm').submit();
-            }
+            showConfirm('Bạn có chắc muốn xóa các danh mục đã chọn?', { icon: 'warning', confirmButtonText: 'Xóa', confirmButtonColor: '#e03131' }).then(function(ok) {
+                if (ok) $('#bulkDeleteForm').submit();
+            });
         });
         // Khởi tạo tooltip cho các nút hành động
         $(function () {

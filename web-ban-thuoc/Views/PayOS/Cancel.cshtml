@@ -17,7 +17,7 @@
                 </div>
                 <h1>Thanh toán đã bị hủy</h1>
                 <p class="payos-result__sub">
-                    Bạn đã hủy quá trình thanh toán. Đơn hàng vẫn được lưu lại, bạn có thể thanh toán lại bất cứ lúc nào.
+                    Bạn đã hủy quá trình thanh toán. Đơn hàng đã được ghi nhận trạng thái <strong>đã hủy</strong>.
                 </p>
 
                 @if (Model != null)
@@ -45,13 +45,7 @@
                 }
 
                 <div class="payos-result__actions">
-                    @if (Model != null)
-                    {
-                        <a href="@Url.Action("CreatePayment", "PayOS", new { orderId = Model.OrderId })" class="payos-btn payos-btn--primary">
-                            <i class="fas fa-credit-card"></i> Thử thanh toán lại
-                        </a>
-                    }
-                    <a href="@Url.Action("Index", "Cart")" class="payos-btn payos-btn--ghost"><i class="fas fa-shopping-cart"></i> Xem giỏ hàng</a>
+                    <a href="@Url.Action("Index", "Cart")" class="payos-btn payos-btn--primary"><i class="fas fa-shopping-cart"></i> Về giỏ hàng</a>
                     <a href="@Url.Action("Index", "Home")" class="payos-btn payos-btn--ghost"><i class="fas fa-home"></i> Về trang chủ</a>
                 </div>
 
@@ -60,8 +54,8 @@
                     <div>
                         <strong>Lưu ý</strong>
                         <ul>
-                            <li>Đơn hàng của bạn vẫn được lưu trong hệ thống.</li>
-                            <li>Bạn có thể thử thanh toán lại hoặc liên hệ để được hỗ trợ.</li>
+                            <li>Đơn hàng này đã được ghi nhận trạng thái <strong>đã hủy</strong> và không thể thanh toán lại.</li>
+                            <li>Nếu muốn mua, vui lòng thêm sản phẩm vào giỏ hàng và đặt đơn mới.</li>
                             <li>Hotline hỗ trợ: <a href="tel:18006928" class="fw-semibold">1800 6928</a></li>
                         </ul>
                     </div>

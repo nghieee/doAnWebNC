@@ -663,7 +663,7 @@
 {
     <div class="card p-4 mb-4 mt-4 shadow-sm">
         <h5 class="mb-3">Sửa đánh giá của bạn</h5>
-        <form asp-action="EditReview" asp-controller="Product" method="post" id="editReviewForm" onsubmit="return confirm('Bạn có chắc chắn muốn cập nhật đánh giá?');">
+        <form asp-action="EditReview" asp-controller="Product" method="post" id="editReviewForm" onsubmit="return confirmSubmit(this, 'Bạn có chắc chắn muốn cập nhật đánh giá?', { confirmButtonText: 'Cập nhật' });">
             <input type="hidden" name="reviewId" value="@userReview.ReviewId" />
             <div class="mb-3">
                 <label class="form-label">Chọn số sao</label>

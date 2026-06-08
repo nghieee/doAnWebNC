@@ -46,7 +46,7 @@
     <!-- Header với nút thêm sản phẩm và nút xóa nhanh -->
     <div class="d-flex justify-content-end align-items-center mb-4 flex-wrap gap-2">
         <div class="d-flex gap-2 flex-wrap">
-            <button id="bulkDeleteBtn" class="btn btn-danger d-none align-items-center gap-2" onclick="return confirm('Bạn có chắc muốn xóa các sản phẩm đã chọn?');">
+            <button id="bulkDeleteBtn" class="btn btn-danger d-none align-items-center gap-2">
                 <i class="fa fa-trash"></i> Xóa nhanh
             </button>
             <a href="@Url.Action("Import", "AdminProduct")" class="btn btn-success d-flex align-items-center gap-2">
@@ -196,9 +196,9 @@
         // Xóa nhanh các sản phẩm đã chọn
         $('#bulkDeleteBtn').on('click', function(e) {
             e.preventDefault();
-            if (confirm('Bạn có chắc muốn xóa các sản phẩm đã chọn?')) {
-                $('#bulkDeleteForm').submit();
-            }
+            showConfirm('Bạn có chắc muốn xóa các sản phẩm đã chọn?', { icon: 'warning', confirmButtonText: 'Xóa', confirmButtonColor: '#e03131' }).then(function(ok) {
+                if (ok) $('#bulkDeleteForm').submit();
+            });
         });
 
         $(document).on('click', '.view-detail-btn', function() {

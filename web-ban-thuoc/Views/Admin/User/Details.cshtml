@@ -246,7 +246,8 @@ $(document).ready(function() {
         var isLocked = $(this).hasClass('btn-success');
         var action = isLocked ? 'mở khóa' : 'khóa';
         
-        if (confirm('Bạn có chắc chắn muốn ' + action + ' tài khoản này?')) {
+        showConfirm('Bạn có chắc chắn muốn ' + action + ' tài khoản này?', { icon: 'warning' }).then(function(ok) {
+            if (!ok) return;
             $.post('@Url.Action("ToggleLock", "AdminUser")/' + userId, {
                 __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
             })
@@ -263,7 +264,7 @@ $(document).ready(function() {
             .fail(function() {
                 showToast('Có lỗi xảy ra khi gửi yêu cầu!', 'error');
             });
-        }
+        });
     });
 });
 </script>

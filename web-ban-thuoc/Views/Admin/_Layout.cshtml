@@ -8,6 +8,46 @@
     <link rel="stylesheet" href="/css/site.css" />
     <link rel="stylesheet" href="/css/admin.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <!-- SweetAlert2 (modern alert/confirm popups) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Popup thông báo hiện đại thay cho alert()
+        window.showAlert = function (message, options) {
+            options = options || {};
+            return Swal.fire({
+                text: message,
+                title: options.title,
+                icon: options.icon || 'info',
+                confirmButtonText: options.confirmButtonText || 'Đồng ý',
+                confirmButtonColor: '#1250dc',
+                heightAuto: false
+            });
+        };
+        // Hộp xác nhận hiện đại thay cho confirm(); trả về Promise<boolean>
+        window.showConfirm = function (message, options) {
+            options = options || {};
+            return Swal.fire({
+                text: message,
+                title: options.title || 'Xác nhận',
+                icon: options.icon || 'question',
+                showCancelButton: true,
+                confirmButtonText: options.confirmButtonText || 'Đồng ý',
+                cancelButtonText: options.cancelButtonText || 'Hủy',
+                confirmButtonColor: options.confirmButtonColor || '#1250dc',
+                cancelButtonColor: '#6b7280',
+                reverseButtons: true,
+                focusCancel: true,
+                heightAuto: false
+            }).then(function (result) { return result.isConfirmed; });
+        };
+        // Tiện ích cho form: onsubmit="return confirmSubmit(this, 'message')"
+        window.confirmSubmit = function (form, message, options) {
+            showConfirm(message, options).then(function (ok) {
+                if (ok) { HTMLFormElement.prototype.submit.call(form); }
+            });
+            return false;
+        };
+    </script>
 </head>
 <body class="admin-body">
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>

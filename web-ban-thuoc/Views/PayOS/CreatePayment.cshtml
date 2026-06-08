@@ -182,7 +182,7 @@
                     if (result.success && result.checkoutUrl) {
                         window.location.href = result.checkoutUrl;
                     } else {
-                        alert(result.message || 'Có lỗi xảy ra khi tạo thanh toán!');
+                        showAlert(result.message || 'Có lỗi xảy ra khi tạo thanh toán!', { icon: 'error' });
                         if (btn && originalText) {
                             btn.innerHTML = originalText;
                             btn.disabled = false;
@@ -191,7 +191,7 @@
                 })
                 .catch(error => {
                     console.error('Fetch Error:', error);
-                    alert('Có lỗi xảy ra khi tạo thanh toán!');
+                    showAlert('Có lỗi xảy ra khi tạo thanh toán!', { icon: 'error' });
                     if (btn && originalText) {
                         btn.innerHTML = originalText;
                         btn.disabled = false;

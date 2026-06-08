@@ -354,7 +354,8 @@ $(document).on('click', '.btn-toggle-voucher', function() {
 });
 $(document).on('click', '.btn-delete-voucher', function() {
     var code = $(this).data('code');
-    if (confirm('Bạn có chắc chắn muốn xóa voucher này?')) {
+    showConfirm('Bạn có chắc chắn muốn xóa voucher này?', { icon: 'warning', confirmButtonText: 'Xóa', confirmButtonColor: '#e03131' }).then(function(ok) {
+        if (!ok) return;
         $.post('/AdminHome/DeleteVoucher', { code: code }, function(res) {
             if (res.success) {
                 showToast('Đã xóa voucher!', 'success');
@@ -365,7 +366,7 @@ $(document).on('click', '.btn-delete-voucher', function() {
                 showToast(res.message || 'Xóa voucher thất bại!', 'error');
             }
         });
-    }
+    });
 });
 </script>
 } 

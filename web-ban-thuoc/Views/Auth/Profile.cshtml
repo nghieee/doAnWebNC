@@ -565,17 +565,17 @@
 <script>
 $(function() {
     $('.btn-cancel-order').on('click', function() {
-        if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
-            var orderId = $(this).data('id');
+        var orderId = $(this).data('id');
+        showConfirm('Bạn có chắc chắn muốn hủy đơn hàng này?', { icon: 'warning', confirmButtonText: 'Hủy đơn', confirmButtonColor: '#e03131' }).then(function(ok) {
+            if (!ok) return;
             $.post('/Cart/CancelOrder', { orderId: orderId }, function(res) {
                 if (res.success) {
-                    alert('Đã hủy đơn hàng!');
-                    location.reload();
+                    showAlert('Đã hủy đơn hàng!', { icon: 'success' }).then(function() { location.reload(); });
                 } else {
-                    alert(res.message || 'Hủy đơn thất bại!');
+                    showAlert(res.message || 'Hủy đơn thất bại!', { icon: 'error' });
                 }
             });
-        }
+        });
     });
     
     // Xử lý nút thanh toán online
@@ -595,26 +595,27 @@ $(function() {
         var id = btn.data('id');
         var title = btn.data('title');
         var points = btn.data('points');
-        if (!confirm('Đổi "' + title + '" với ' + points + ' điểm?')) return;
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-        $.ajax({
-            url: '/api/loyalty/redeem',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ rewardId: id }),
-            success: function(res) {
-                if (res.success) {
-                    alert(res.message);
-                    location.reload();
-                } else {
-                    alert(res.message || 'Đổi quà thất bại');
+        showConfirm('Đổi "' + title + '" với ' + points + ' điểm?', { icon: 'question', confirmButtonText: 'Đổi ngay' }).then(function(ok) {
+            if (!ok) return;
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+            $.ajax({
+                url: '/api/loyalty/redeem',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ rewardId: id }),
+                success: function(res) {
+                    if (res.success) {
+                        showAlert(res.message, { icon: 'success' }).then(function() { location.reload(); });
+                    } else {
+                        showAlert(res.message || 'Đổi quà thất bại', { icon: 'error' });
+                        btn.prop('disabled', false).html('<i class="fas fa-gift me-1"></i> Đổi ngay');
+                    }
+                },
+                error: function() {
+                    showAlert('Có lỗi xảy ra. Vui lòng thử lại.', { icon: 'error' });
                     btn.prop('disabled', false).html('<i class="fas fa-gift me-1"></i> Đổi ngay');
                 }
-            },
-            error: function() {
-                alert('Có lỗi xảy ra. Vui lòng thử lại.');
-                btn.prop('disabled', false).html('<i class="fas fa-gift me-1"></i> Đổi ngay');
-            }
+            });
         });
     });
 });

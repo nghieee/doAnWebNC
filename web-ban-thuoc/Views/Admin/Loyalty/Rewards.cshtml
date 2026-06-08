@@ -159,10 +159,13 @@ $('.btn-toggle-reward').on('click', function() {
     });
 });
 $('.btn-delete-reward').on('click', function() {
-    if (!confirm('Xóa quà này?')) return;
-    $.post('/AdminLoyalty/DeleteReward', { id: $(this).data('id') }, function(res) {
-        showToast(res.message || (res.success ? 'Đã xóa' : 'Lỗi'), res.success ? 'success' : 'error');
-        if (res.success) setTimeout(() => location.reload(), 1000);
+    var id = $(this).data('id');
+    showConfirm('Xóa quà này?', { icon: 'warning', confirmButtonText: 'Xóa', confirmButtonColor: '#e03131' }).then(function(ok) {
+        if (!ok) return;
+        $.post('/AdminLoyalty/DeleteReward', { id: id }, function(res) {
+            showToast(res.message || (res.success ? 'Đã xóa' : 'Lỗi'), res.success ? 'success' : 'error');
+            if (res.success) setTimeout(() => location.reload(), 1000);
+        });
     });
 });
 toggleRewardFields();

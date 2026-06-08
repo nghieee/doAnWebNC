@@ -306,7 +306,7 @@ document.getElementById('importForm').addEventListener('submit', async function(
     const formData = new FormData(this);
     const res = await fetch('/AdminInventory/Import', { method: 'POST', body: formData });
     const result = await res.json();
-    alert(result.message);
+    await showAlert(result.message, { icon: result.success ? 'success' : 'error' });
     if (result.success) location.reload();
 });
 </script>
