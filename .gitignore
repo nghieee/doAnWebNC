@@ -49,3 +49,6 @@ yarn.lock
 *.swp
 *.bak
 *.tmp 
+changes.patch
+*.patch
+*.msi
