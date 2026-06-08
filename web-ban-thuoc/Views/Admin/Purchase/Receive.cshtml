@@ -23,13 +23,18 @@
                 <input asp-for="Note" class="form-control" />
             </div>
 
-            <table class="table table-bordered">
+            <p class="small text-muted mb-2"><i class="fa fa-circle-info me-1"></i>Nếu NCC giao thiếu, chỉ cần sửa <strong>SL nhập</strong> đúng số thực nhận và ghi chú lý do — phần còn thiếu sẽ giữ lại để nhận ở đợt sau.</p>
+            <div class="table-responsive">
+            <table class="table table-bordered align-middle">
                 <thead class="table-light">
                     <tr>
                         <th>Sản phẩm</th>
+                        <th class="text-center">SL đặt</th>
+                        <th class="text-center">Đã nhận</th>
+                        <th class="text-center">Còn lại</th>
                         <th>Mã lô</th>
                         <th>HSD</th>
-                        <th>SL nhập</th>
+                        <th style="width:130px;">SL nhận đợt này</th>
                         <th>Giá nhập</th>
                     </tr>
                 </thead>
@@ -37,21 +42,26 @@
                     @for (int i = 0; i < Model.Lines.Count; i++)
                     {
                         var line = Model.Lines[i];
-                        var product = po.Lines.First(l => l.PurchaseOrderLineId == line.PurchaseOrderLineId).Product;
+                        var poLine = po.Lines.First(l => l.PurchaseOrderLineId == line.PurchaseOrderLineId);
+                        var product = poLine.Product;
                         <tr>
                             <td>
-                                @product.ProductName
+                                <span class="fw-semibold">@product.ProductName</span>
                                 <input type="hidden" name="Lines[@i].ProductId" value="@line.ProductId" />
                                 <input type="hidden" name="Lines[@i].PurchaseOrderLineId" value="@line.PurchaseOrderLineId" />
                             </td>
+                            <td class="text-center">@poLine.QuantityOrdered</td>
+                            <td class="text-center text-success">@poLine.QuantityReceived</td>
+                            <td class="text-center"><span class="badge bg-danger-subtle text-danger">@poLine.RemainingQuantity</span></td>
                             <td><input name="Lines[@i].BatchNo" class="form-control" value="@line.BatchNo" required /></td>
                             <td><input name="Lines[@i].ExpiryDate" type="date" class="form-control" value="@(line.ExpiryDate?.ToString("yyyy-MM-dd"))" /></td>
-                            <td><input name="Lines[@i].Quantity" type="number" min="1" class="form-control" value="@line.Quantity" required /></td>
+                            <td><input name="Lines[@i].Quantity" type="number" min="0" max="@poLine.RemainingQuantity" class="form-control" value="@line.Quantity" required /></td>
                             <td><input name="Lines[@i].UnitCost" type="number" min="0" step="1000" class="form-control" value="@line.UnitCost" required /></td>
                         </tr>
                     }
                 </tbody>
             </table>
+            </div>
 
             <button type="submit" class="btn btn-success"><i class="fa fa-check me-1"></i> Xác nhận nhập kho</button>
             <a href="/AdminPurchase/Details/@po.PurchaseOrderId" class="btn btn-outline-secondary">Hủy</a>

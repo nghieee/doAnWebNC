@@ -24,7 +24,7 @@ public class AdminPurchaseController : Controller
 
     [Route("")]
     [Route("Index")]
-    public async Task<IActionResult> Index(string? status)
+    public async Task<IActionResult> Index(string? status, int page = 1)
     {
         var query = _context.PurchaseOrders
             .Include(po => po.Supplier)
@@ -36,7 +36,15 @@ public class AdminPurchaseController : Controller
         if (!string.IsNullOrWhiteSpace(status) && status != "Tất cả")
             query = query.Where(po => po.Status == status);
 
-        var list = await query.Select(po => new PurchaseOrderListViewModel
+        const int pageSize = 10;
+        if (page < 1) page = 1;
+        int totalItems = await query.CountAsync();
+        int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+        var list = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(po => new PurchaseOrderListViewModel
         {
             PurchaseOrderId = po.PurchaseOrderId,
             OrderCode = po.OrderCode,
@@ -49,6 +57,9 @@ public class AdminPurchaseController : Controller
         }).ToListAsync();
 
         ViewBag.Status = status;
+        ViewBag.CurrentPage = page;
+        ViewBag.TotalPages = totalPages;
+        ViewBag.TotalItems = totalItems;
         return View("~/Views/Admin/Purchase/Index.cshtml", list);
     }
 
@@ -125,6 +136,9 @@ public class AdminPurchaseController : Controller
             .Include(p => p.Warehouse)
             .Include(p => p.Lines)
             .ThenInclude(l => l.Product)
+            .Include(p => p.GoodsReceipts)
+            .ThenInclude(r => r.Lines)
+            .ThenInclude(rl => rl.Product)
             .FirstOrDefaultAsync(p => p.PurchaseOrderId == id);
 
         if (po == null) return NotFound();
