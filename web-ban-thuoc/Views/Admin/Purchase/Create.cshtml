@@ -6,6 +6,7 @@
     var suppliers = (IEnumerable<Supplier>)ViewBag.Suppliers;
     var warehouses = (IEnumerable<Warehouse>)ViewBag.Warehouses;
     var products = (IEnumerable<Product>)ViewBag.Products;
+    var stockByProduct = (Dictionary<int, int>)ViewBag.StockByProduct ?? new Dictionary<int, int>();
 }
 
 <div class="container-fluid py-3">
@@ -54,9 +55,10 @@
                 {
                     <div class="row g-2 mb-2 line-row">
                         <div class="col-md-5">
-                            <select name="Lines[@i].ProductId" class="form-select product-select" required>
-                                <option value="">-- Sản phẩm --</option>
-                            </select>
+                            <input type="hidden" name="Lines[@i].ProductId" class="product-id-input" value="@(Model.Lines[i].ProductId > 0 ? Model.Lines[i].ProductId.ToString() : "")" />
+                            <button type="button" class="btn btn-outline-secondary w-100 text-start d-flex align-items-center gap-2 product-picker-btn" disabled>
+                                <span class="product-picker-label text-muted"><i class="fa fa-magnifying-glass me-1"></i> Chọn sản phẩm...</span>
+                            </button>
                         </div>
                         <div class="col-md-3">
                             <input name="Lines[@i].QuantityOrdered" type="number" min="1" class="form-control" placeholder="SL đặt" required />
@@ -80,34 +82,128 @@
     </div>
 </div>
 
+<!-- Modal chọn sản phẩm: ảnh, tên, tồn kho khả dụng (lọc theo NCC đã chọn) -->
+<div class="modal fade" id="poProductPickerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-boxes-stacked me-2"></i>Chọn sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><i class="fa fa-magnifying-glass"></i></span>
+                    <input type="text" class="form-control" id="poProductSearch" placeholder="Tìm theo tên hoặc SKU..." autocomplete="off" />
+                </div>
+                <div class="row g-2" id="poProductList"></div>
+                <p class="text-muted text-center mb-0 d-none" id="poProductEmpty">Không có sản phẩm phù hợp.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
 <script>
 let lineIndex = @Model.Lines.Count;
 const allProducts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-    products.Select(p => new { id = p.ProductId, name = p.ProductName, supplierId = p.SupplierId, costPrice = p.CostPrice ?? 0 })));
+    products.Select(p => new {
+        id = p.ProductId,
+        name = p.ProductName,
+        sku = p.Sku ?? "",
+        supplierId = p.SupplierId,
+        costPrice = p.CostPrice ?? 0,
+        stock = stockByProduct.ContainsKey(p.ProductId) ? stockByProduct[p.ProductId] : 0,
+        img = "/images/products/" + ((p.ProductImages.FirstOrDefault(i => i.IsMain == true) ?? p.ProductImages.FirstOrDefault())?.ImageUrl ?? "default.png")
+    })));
+
+const pickerModalEl = document.getElementById('poProductPickerModal');
+const pickerModal = new bootstrap.Modal(pickerModalEl);
+const pickerListEl = document.getElementById('poProductList');
+const pickerSearchEl = document.getElementById('poProductSearch');
+const pickerEmptyEl = document.getElementById('poProductEmpty');
+let activeRow = null;
 
 function getProductsForSupplier(supplierId) {
     if (!supplierId) return [];
     return allProducts.filter(p => p.supplierId == supplierId);
 }
 
-function buildProductOptions(supplierId, selectedId) {
-    const list = getProductsForSupplier(supplierId);
-    let html = '<option value="">-- Sản phẩm --</option>';
-    list.forEach(p => {
-        const sel = selectedId && selectedId == p.id ? ' selected' : '';
-        html += `<option value="${p.id}" data-cost="${p.costPrice}"${sel}>${p.name}</option>`;
-    });
-    return html;
+function productById(id) {
+    return allProducts.find(p => p.id == id);
 }
 
-function refreshAllProductSelects() {
+function setRowProduct(row, product) {
+    const idInput = row.querySelector('.product-id-input');
+    const label = row.querySelector('.product-picker-label');
+    if (!product) {
+        idInput.value = '';
+        label.className = 'product-picker-label text-muted';
+        label.innerHTML = '<i class="fa fa-magnifying-glass me-1"></i> Chọn sản phẩm...';
+        return;
+    }
+    idInput.value = product.id;
+    label.className = 'product-picker-label d-flex align-items-center gap-2 w-100';
+    label.innerHTML = `<img src="${product.img}" alt="" class="rounded border" style="width:32px;height:32px;object-fit:cover;background:#f4f6fb;" />
+        <span class="text-truncate"><span class="fw-semibold d-block text-truncate">${product.name}</span>
+        <small class="text-muted">Tồn khả dụng: ${product.stock}${product.sku ? ' • SKU: ' + product.sku : ''}</small></span>`;
+    const costInput = row.querySelector('.unit-cost-input');
+    if (costInput && product.costPrice && product.costPrice != 0) costInput.value = product.costPrice;
+}
+
+function renderPickerList(list) {
+    pickerListEl.innerHTML = list.map(p => `
+        <div class="col-md-6 po-picker-item" data-id="${p.id}" data-search="${(p.name + ' ' + p.sku).toLowerCase()}">
+            <div class="card h-100 border po-picker-card" role="button">
+                <div class="card-body d-flex align-items-center gap-3 py-2">
+                    <img src="${p.img}" alt="" class="rounded border" style="width:56px;height:56px;object-fit:cover;background:#f4f6fb;" />
+                    <div class="flex-grow-1" style="min-width:0;">
+                        <div class="fw-semibold text-truncate">${p.name}</div>
+                        <div class="small text-muted">SKU: ${p.sku || '—'}</div>
+                        <span class="badge ${p.stock <= 10 ? 'bg-danger' : 'bg-success'} mt-1">Tồn khả dụng: ${p.stock}</span>
+                    </div>
+                </div>
+            </div>
+        </div>`).join('');
+    pickerEmptyEl.classList.toggle('d-none', list.length !== 0);
+}
+
+function openPickerFor(row) {
+    const supplierId = document.getElementById('supplierSelect').value;
+    if (!supplierId) return;
+    activeRow = row;
+    pickerSearchEl.value = '';
+    renderPickerList(getProductsForSupplier(supplierId));
+    pickerModal.show();
+}
+
+pickerListEl.addEventListener('click', e => {
+    const item = e.target.closest('.po-picker-item');
+    if (!item || !activeRow) return;
+    setRowProduct(activeRow, productById(item.dataset.id));
+    pickerModal.hide();
+});
+
+pickerSearchEl.addEventListener('input', function () {
+    const q = this.value.trim().toLowerCase();
+    let visible = 0;
+    pickerListEl.querySelectorAll('.po-picker-item').forEach(item => {
+        const match = item.dataset.search.indexOf(q) !== -1;
+        item.classList.toggle('d-none', !match);
+        if (match) visible++;
+    });
+    pickerEmptyEl.classList.toggle('d-none', visible !== 0);
+});
+
+pickerModalEl.addEventListener('shown.bs.modal', () => pickerSearchEl.focus());
+
+function refreshLinesState() {
     const supplierId = document.getElementById('supplierSelect').value;
     const list = getProductsForSupplier(supplierId);
     const addBtn = document.getElementById('addLine');
     const hint = document.getElementById('productHint');
 
     addBtn.disabled = !supplierId || list.length === 0;
+    document.querySelectorAll('.product-picker-btn').forEach(b => b.disabled = !supplierId || list.length === 0);
 
     if (!supplierId) {
         hint.className = 'alert alert-info py-2 small mb-3';
@@ -119,39 +215,27 @@ function refreshAllProductSelects() {
         hint.className = 'alert alert-success py-2 small mb-3';
         hint.innerHTML = `<i class="fa fa-check-circle me-1"></i> ${list.length} sản phẩm thuộc NCC đã chọn.`;
     }
-
-    document.querySelectorAll('.product-select').forEach(select => {
-        const current = select.value;
-        select.innerHTML = buildProductOptions(supplierId, current);
-        if (current && [...select.options].some(o => o.value === current)) {
-            select.value = current;
-        }
-    });
 }
 
 document.getElementById('supplierSelect').addEventListener('change', () => {
     document.querySelectorAll('.line-row').forEach(row => {
+        setRowProduct(row, null);
         const costInput = row.querySelector('.unit-cost-input');
         if (costInput) costInput.value = '';
     });
-    refreshAllProductSelects();
-});
-
-document.getElementById('linesContainer').addEventListener('change', e => {
-    if (e.target.classList.contains('product-select')) {
-        const opt = e.target.selectedOptions[0];
-        const cost = opt?.dataset?.cost;
-        const row = e.target.closest('.line-row');
-        const costInput = row?.querySelector('.unit-cost-input');
-        if (costInput && cost && cost !== '0') costInput.value = cost;
-    }
+    refreshLinesState();
 });
 
 document.getElementById('addLine').addEventListener('click', () => {
     const supplierId = document.getElementById('supplierSelect').value;
     if (!supplierId) return;
     const html = `<div class="row g-2 mb-2 line-row">
-        <div class="col-md-5"><select name="Lines[${lineIndex}].ProductId" class="form-select product-select" required>${buildProductOptions(supplierId)}</select></div>
+        <div class="col-md-5">
+            <input type="hidden" name="Lines[${lineIndex}].ProductId" class="product-id-input" />
+            <button type="button" class="btn btn-outline-secondary w-100 text-start d-flex align-items-center gap-2 product-picker-btn">
+                <span class="product-picker-label text-muted"><i class="fa fa-magnifying-glass me-1"></i> Chọn sản phẩm...</span>
+            </button>
+        </div>
         <div class="col-md-3"><input name="Lines[${lineIndex}].QuantityOrdered" type="number" min="1" class="form-control" placeholder="SL đặt" required /></div>
         <div class="col-md-3"><input name="Lines[${lineIndex}].UnitCost" type="number" min="0" step="1000" class="form-control unit-cost-input" placeholder="Giá nhập" required /></div>
         <div class="col-md-1"><button type="button" class="btn btn-outline-danger btn-sm remove-line"><i class="fa fa-trash"></i></button></div>
@@ -161,12 +245,24 @@ document.getElementById('addLine').addEventListener('click', () => {
 });
 
 document.getElementById('linesContainer').addEventListener('click', e => {
+    const pickerBtn = e.target.closest('.product-picker-btn');
+    if (pickerBtn) {
+        openPickerFor(pickerBtn.closest('.line-row'));
+        return;
+    }
     if (e.target.closest('.remove-line')) {
         const rows = document.querySelectorAll('.line-row');
         if (rows.length > 1) e.target.closest('.line-row').remove();
     }
 });
 
-document.addEventListener('DOMContentLoaded', refreshAllProductSelects);
+document.addEventListener('DOMContentLoaded', () => {
+    refreshLinesState();
+    // Khôi phục sản phẩm đã chọn (khi form trả lại do lỗi validate)
+    document.querySelectorAll('.line-row').forEach(row => {
+        const id = row.querySelector('.product-id-input')?.value;
+        if (id) setRowProduct(row, productById(id));
+    });
+});
 </script>
 }
