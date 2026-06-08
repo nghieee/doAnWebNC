@@ -115,7 +115,11 @@ namespace web_ban_thuoc.Controllers.Admin
                 Type = type
             };
 
-            ViewBag.Products = await _context.Products.Where(p => p.IsActive).OrderBy(p => p.ProductName).ToListAsync();
+            ViewBag.Products = await _context.Products
+                .Include(p => p.ProductImages)
+                .Where(p => p.IsActive)
+                .OrderBy(p => p.ProductName)
+                .ToListAsync();
             ViewBag.Warehouses = await _context.Warehouses.Where(w => w.IsActive).OrderBy(w => w.Name).ToListAsync();
             ViewBag.Suppliers = await _context.Suppliers.Where(s => s.IsActive).OrderBy(s => s.Name).ToListAsync();
             ViewBag.ShowHub = hub;

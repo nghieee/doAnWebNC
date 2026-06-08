@@ -255,8 +255,16 @@ public class AdminPurchaseController : Controller
         ViewBag.Suppliers = await _context.Suppliers.Where(s => s.IsActive).OrderBy(s => s.Name).ToListAsync();
         ViewBag.Warehouses = await _context.Warehouses.Where(w => w.IsActive).OrderBy(w => w.Name).ToListAsync();
         ViewBag.Products = await _context.Products
+            .Include(p => p.ProductImages)
             .Where(p => p.IsActive)
             .OrderBy(p => p.ProductName)
             .ToListAsync();
+
+        var stockRows = await _context.WarehouseStocks
+            .Select(ws => new { ws.ProductId, ws.QuantityOnHand, ws.QuantityReserved })
+            .ToListAsync();
+        ViewBag.StockByProduct = stockRows
+            .GroupBy(x => x.ProductId)
+            .ToDictionary(g => g.Key, g => g.Sum(x => Math.Max(0, x.QuantityOnHand - x.QuantityReserved)));
     }
 }
