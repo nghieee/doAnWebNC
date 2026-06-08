@@ -50,6 +50,7 @@ namespace web_ban_thuoc.Controllers.Admin
             ViewBag.SelectedOrigin = origin;
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalProducts;
             ViewBag.SearchName = searchName;
             return View("~/Views/Admin/Product/Index.cshtml", pagedProducts);
         }
