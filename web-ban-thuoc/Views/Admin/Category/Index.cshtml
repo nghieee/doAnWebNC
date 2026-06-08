@@ -139,29 +139,7 @@
             </table>
         </div>
     </form>
-    @if (ViewBag.TotalPages > 1)
-    {
-        <nav class="d-flex justify-content-center mt-4">
-            <ul class="pagination pagination-sm">
-                <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
-                    <a class="page-link" href="@Url.Action("Index", new { parentId1 = ViewBag.SelectedParentId1, parentId2 = ViewBag.SelectedParentId2, page = ViewBag.CurrentPage - 1 })" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                    </a>
-                </li>
-                @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
-                {
-                    <li class="page-item @(i == (int)ViewBag.CurrentPage ? "active" : "")">
-                        <a class="page-link @(i == (int)ViewBag.CurrentPage ? "bg-primary text-white" : "")" href="@Url.Action("Index", new { parentId1 = ViewBag.SelectedParentId1, parentId2 = ViewBag.SelectedParentId2, page = i })">@i</a>
-                    </li>
-                }
-                <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
-                    <a class="page-link" href="@Url.Action("Index", new { parentId1 = ViewBag.SelectedParentId1, parentId2 = ViewBag.SelectedParentId2, page = ViewBag.CurrentPage + 1 })" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-    }
+    <partial name="_AdminPagination" />
 </div>
 @section Scripts {
     <script>

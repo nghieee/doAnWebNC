@@ -23,7 +23,7 @@ public class AdminStaffController : Controller
 
     [Route("")]
     [Route("Index")]
-    public async Task<IActionResult> Index(string? search)
+    public async Task<IActionResult> Index(string? search, int page = 1)
     {
         var staffIds = await GetStaffUserIdsAsync();
         var query = _userManager.Users.Where(u => staffIds.Contains(u.Id));
@@ -36,7 +36,16 @@ public class AdminStaffController : Controller
                 (u.PhoneNumber != null && u.PhoneNumber.Contains(search)));
         }
 
-        var users = await query.OrderBy(u => u.Email).ToListAsync();
+        const int pageSize = 10;
+        if (page < 1) page = 1;
+        int totalItems = await query.CountAsync();
+        int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+        var users = await query
+            .OrderBy(u => u.Email)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
         var list = new List<StaffListItemViewModel>();
 
         foreach (var user in users)
@@ -55,6 +64,9 @@ public class AdminStaffController : Controller
         }
 
         ViewBag.Search = search;
+        ViewBag.CurrentPage = page;
+        ViewBag.TotalPages = totalPages;
+        ViewBag.TotalItems = totalItems;
         return View("~/Views/Admin/Staff/Index.cshtml", list);
     }
 

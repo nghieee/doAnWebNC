@@ -23,7 +23,7 @@ public class AdminUserController : Controller
     // GET: AdminUser
     [Route("")]
     [Route("Index")]
-    public async Task<IActionResult> Index(string? searchTerm, string? statusFilter, string? rankFilter)
+    public async Task<IActionResult> Index(string? searchTerm, string? statusFilter, string? rankFilter, int page = 1)
     {
         var staffRoleIds = await _context.Roles
             .Where(r => StaffRoles.All.Contains(r.Name!))
@@ -99,11 +99,23 @@ public class AdminUserController : Controller
             });
         }
 
+        const int pageSize = 10;
+        if (page < 1) page = 1;
+        int totalItems = userViewModels.Count;
+        int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+        var pagedUsers = userViewModels
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
         ViewBag.SearchTerm = searchTerm;
         ViewBag.StatusFilter = statusFilter;
         ViewBag.RankFilter = rankFilter;
+        ViewBag.CurrentPage = page;
+        ViewBag.TotalPages = totalPages;
+        ViewBag.TotalItems = totalItems;
 
-        return View("~/Views/Admin/User/Index.cshtml", userViewModels);
+        return View("~/Views/Admin/User/Index.cshtml", pagedUsers);
     }
 
     // GET: AdminUser/Details/5

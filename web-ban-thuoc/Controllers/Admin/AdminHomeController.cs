@@ -54,7 +54,7 @@ namespace web_ban_thuoc.Controllers.Admin
             return View("~/Views/Admin/Index.cshtml");
         }
 
-        public async Task<IActionResult> Voucher()
+        public async Task<IActionResult> Voucher(int page = 1)
         {
             var vouchers = await _context.Vouchers.ToListAsync();
             var userVouchers = await _context.UserVouchers.ToListAsync();
@@ -97,8 +97,20 @@ namespace web_ban_thuoc.Controllers.Admin
                 };
             }).ToList();
 
+            const int pageSize = 10;
+            if (page < 1) page = 1;
+            int totalItems = voucherList.Count;
+            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            var pagedVouchers = voucherList
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
             ViewBag.Categories = await _context.Categories.OrderBy(c => c.CategoryName).ToListAsync();
-            return View("~/Views/Admin/Voucher/Index.cshtml", voucherList);
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalItems;
+            return View("~/Views/Admin/Voucher/Index.cshtml", pagedVouchers);
         }
 
         [HttpGet]
