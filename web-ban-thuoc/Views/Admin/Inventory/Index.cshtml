@@ -3,13 +3,7 @@
 @{
     ViewData["Title"] = "Quản lý kho";
     Layout = "~/Views/Admin/_Layout.cshtml";
-    var products = (IEnumerable<Product>)ViewBag.Products;
-    var warehouses = (IEnumerable<Warehouse>)ViewBag.Warehouses;
-    var suppliers = (IEnumerable<Supplier>)ViewBag.Suppliers;
     var showHub = ViewBag.ShowHub == true;
-    var stockByProduct = Model.WarehouseStocks
-        .GroupBy(ws => ws.ProductId)
-        .ToDictionary(g => g.Key, g => g.Sum(x => x.Available));
 }
 
 @if (showHub)
@@ -86,80 +80,41 @@
 </div>
 
 <ul class="nav nav-tabs mb-4" role="tablist">
-    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabImport">Nhập kho nhanh</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabStock">Tồn theo kho</button></li>
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabStock">Tồn theo kho</button></li>
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabBatch">Lô & HSD (FEFO)</button></li>
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabHistory">Lịch sử phiếu</button></li>
 </ul>
 
 <div class="tab-content">
-    <div class="tab-pane fade show active" id="tabImport">
+    <div class="tab-pane fade show active" id="tabStock">
         <div class="row g-3 mb-4">
             <div class="col-lg-8">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white fw-semibold">Nhập kho trực tiếp (tạo lô + cập nhật WarehouseStock)</div>
-                    <div class="card-body">
-                        <p class="small text-muted">Dùng khi nhập gấp. Khuyến nghị: tạo <a href="/AdminPurchase/Create">đơn đặt hàng NCC</a> để theo dõi đầy đủ.</p>
-                        <form id="importForm" class="row g-3">
-                            @Html.AntiForgeryToken()
-                            <div class="col-md-4">
-                                <label class="form-label">Sản phẩm</label>
-                                <input type="hidden" name="ProductId" id="selectedProductId" />
-                                <button type="button" class="btn btn-outline-secondary w-100 text-start d-flex align-items-center gap-2 product-picker-trigger" data-bs-toggle="modal" data-bs-target="#productPickerModal" id="productPickerBtn">
-                                    <span id="productPickerPlaceholder" class="text-muted"><i class="fa fa-magnifying-glass me-1"></i> Chọn sản phẩm...</span>
-                                    <span id="productPickerSelected" class="d-none align-items-center gap-2 w-100">
-                                        <img id="productPickerSelectedImg" src="" alt="" class="rounded border" style="width:32px;height:32px;object-fit:cover;background:#f4f6fb;" />
-                                        <span class="text-truncate">
-                                            <span id="productPickerSelectedName" class="fw-semibold d-block text-truncate"></span>
-                                            <small id="productPickerSelectedStock" class="text-muted"></small>
-                                        </span>
-                                    </span>
-                                </button>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Số lượng</label>
-                                <input type="number" name="Quantity" class="form-control" min="1" required />
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Nhà cung cấp</label>
-                                <select name="SupplierId" class="form-select">
-                                    <option value="">-- Khác --</option>
-                                    @foreach (var s in suppliers)
-                                    {
-                                        <option value="@s.SupplierId">@s.Name</option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Giá nhập/SP</label>
-                                <input type="number" name="UnitCost" class="form-control" min="0" step="1000" />
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Mã lô <span class="text-danger">*</span></label>
-                                <input type="text" name="BatchNo" class="form-control" placeholder="LOT-2026-001" required />
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Hạn dùng</label>
-                                <input type="date" name="ExpiryDate" class="form-control" />
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Kho</label>
-                                <select name="WarehouseId" class="form-select">
-                                    @foreach (var w in warehouses)
-                                    {
-                                        <option value="@w.WarehouseId">@w.Name</option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Ghi chú</label>
-                                <input type="text" name="Note" class="form-control" />
-                            </div>
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-success"><i class="fa fa-arrow-down me-1"></i> Nhập kho</button>
-                            </div>
-                        </form>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered bg-white shadow-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th>SKU</th>
+                                <th>Kho</th>
+                                <th>Tồn thực</th>
+                                <th>Đang giữ</th>
+                                <th>Khả dụng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var ws in Model.WarehouseStocks)
+                            {
+                                <tr>
+                                    <td>@ws.ProductName</td>
+                                    <td>@(ws.Sku ?? "—")</td>
+                                    <td>@ws.WarehouseName</td>
+                                    <td>@ws.QuantityOnHand</td>
+                                    <td>@ws.QuantityReserved</td>
+                                    <td><span class="badge @(ws.Available <= 10 ? "bg-danger" : "bg-success")">@ws.Available</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
             </div>
             <div class="col-lg-4">
@@ -185,36 +140,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="tab-pane fade" id="tabStock">
-        <div class="table-responsive mb-4">
-            <table class="table table-bordered bg-white shadow-sm">
-                <thead class="table-light">
-                    <tr>
-                        <th>Sản phẩm</th>
-                        <th>SKU</th>
-                        <th>Kho</th>
-                        <th>Tồn thực</th>
-                        <th>Đang giữ</th>
-                        <th>Khả dụng</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var ws in Model.WarehouseStocks)
-                    {
-                        <tr>
-                            <td>@ws.ProductName</td>
-                            <td>@(ws.Sku ?? "—")</td>
-                            <td>@ws.WarehouseName</td>
-                            <td>@ws.QuantityOnHand</td>
-                            <td>@ws.QuantityReserved</td>
-                            <td><span class="badge @(ws.Available <= 10 ? "bg-danger" : "bg-success")">@ws.Available</span></td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
         </div>
     </div>
 
@@ -306,104 +231,3 @@
     </div>
 </div>
 
-<!-- Modal chọn sản phẩm: hiển thị ảnh, tên và tồn kho khả dụng -->
-<div class="modal fade" id="productPickerModal" tabindex="-1" aria-labelledby="productPickerModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="productPickerModalLabel"><i class="fa fa-boxes-stacked me-2"></i>Chọn sản phẩm</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-            </div>
-            <div class="modal-body">
-                <div class="input-group mb-3">
-                    <span class="input-group-text"><i class="fa fa-magnifying-glass"></i></span>
-                    <input type="text" class="form-control" id="productPickerSearch" placeholder="Tìm theo tên hoặc SKU..." autocomplete="off" />
-                </div>
-                <div class="row g-2" id="productPickerList">
-                    @foreach (var p in products)
-                    {
-                        var img = p.ProductImages?.FirstOrDefault(i => i.IsMain == true)?.ImageUrl
-                            ?? p.ProductImages?.FirstOrDefault()?.ImageUrl
-                            ?? "default.png";
-                        var imgPath = img == "default.png" ? "/images/products/default.png" : $"/images/products/{img}";
-                        var available = stockByProduct.TryGetValue(p.ProductId, out var av) ? av : 0;
-                        <div class="col-md-6 product-picker-item"
-                             data-id="@p.ProductId"
-                             data-name="@p.ProductName"
-                             data-sku="@(p.Sku ?? "")"
-                             data-img="@imgPath"
-                             data-stock="@available"
-                             data-search="@($"{p.ProductName} {p.Sku}".ToLower())">
-                            <div class="card h-100 border product-picker-card" role="button">
-                                <div class="card-body d-flex align-items-center gap-3 py-2">
-                                    <img src="@imgPath" alt="@p.ProductName" class="rounded border" style="width:56px;height:56px;object-fit:cover;background:#f4f6fb;" />
-                                    <div class="flex-grow-1" style="min-width:0;">
-                                        <div class="fw-semibold text-truncate">@p.ProductName</div>
-                                        <div class="small text-muted">SKU: @(p.Sku ?? "—")</div>
-                                        <span class="badge @(available <= 10 ? "bg-danger" : "bg-success") mt-1">Tồn khả dụng: @available</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-                <p class="text-muted text-center mb-0 d-none" id="productPickerEmpty">Không tìm thấy sản phẩm phù hợp.</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-@section Scripts {
-<script>
-(function () {
-    var modalEl = document.getElementById('productPickerModal');
-    var searchInput = document.getElementById('productPickerSearch');
-    var emptyMsg = document.getElementById('productPickerEmpty');
-    var items = Array.prototype.slice.call(document.querySelectorAll('.product-picker-item'));
-
-    function pickProduct(item) {
-        document.getElementById('selectedProductId').value = item.dataset.id;
-        document.getElementById('productPickerSelectedImg').src = item.dataset.img;
-        document.getElementById('productPickerSelectedName').textContent = item.dataset.name;
-        document.getElementById('productPickerSelectedStock').textContent =
-            'Tồn khả dụng: ' + item.dataset.stock + (item.dataset.sku ? ' • SKU: ' + item.dataset.sku : '');
-        document.getElementById('productPickerPlaceholder').classList.add('d-none');
-        var sel = document.getElementById('productPickerSelected');
-        sel.classList.remove('d-none');
-        sel.classList.add('d-flex');
-        var inst = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-        inst.hide();
-    }
-
-    items.forEach(function (item) {
-        item.querySelector('.product-picker-card').addEventListener('click', function () { pickProduct(item); });
-    });
-
-    searchInput.addEventListener('input', function () {
-        var q = this.value.trim().toLowerCase();
-        var visible = 0;
-        items.forEach(function (item) {
-            var match = item.dataset.search.indexOf(q) !== -1;
-            item.classList.toggle('d-none', !match);
-            if (match) visible++;
-        });
-        emptyMsg.classList.toggle('d-none', visible !== 0);
-    });
-
-    modalEl.addEventListener('shown.bs.modal', function () { searchInput.focus(); });
-})();
-
-document.getElementById('importForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    if (!document.getElementById('selectedProductId').value) {
-        await showAlert('Vui lòng chọn sản phẩm trước khi nhập kho.', { icon: 'warning' });
-        return;
-    }
-    const formData = new FormData(this);
-    const res = await fetch('/AdminInventory/Import', { method: 'POST', body: formData });
-    const result = await res.json();
-    await showAlert(result.message, { icon: result.success ? 'success' : 'error' });
-    if (result.success) location.reload();
-});
-</script>
-}
