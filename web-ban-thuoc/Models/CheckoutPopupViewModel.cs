@@ -15,5 +15,7 @@ namespace web_ban_thuoc.Models
         
         [Required(ErrorMessage = "Vui lòng chọn phương thức thanh toán")]
         public string PaymentMethod { get; set; } = "COD";
+
+        public string? PrescriptionNote { get; set; }
     }
 } 

@@ -110,6 +110,13 @@ namespace web_ban_thuoc.Controllers.Admin
         [ValidateAntiForgeryToken]
         public IActionResult Create(Product product, List<IFormFile> images)
         {
+            if (product.Price <= 0)
+                ModelState.AddModelError("Price", "Giá bán phải lớn hơn 0 VNĐ");
+            if (product.CostPrice.HasValue && product.CostPrice.Value <= 0)
+                ModelState.AddModelError("CostPrice", "Giá vốn phải lớn hơn 0 VNĐ");
+            if (product.CostPrice.HasValue && product.Price < product.CostPrice.Value)
+                ModelState.AddModelError("Price", "Giá bán không được nhỏ hơn giá vốn");
+
             if (ModelState.IsValid)
             {
                 product.SoldQuantity = 0;
@@ -164,6 +171,13 @@ namespace web_ban_thuoc.Controllers.Admin
         [ValidateAntiForgeryToken]
         public IActionResult Edit(Product product, List<IFormFile> images, int? mainImageId, int[] deleteImageIds)
         {
+            if (product.Price <= 0)
+                ModelState.AddModelError("Price", "Giá bán phải lớn hơn 0 VNĐ");
+            if (product.CostPrice.HasValue && product.CostPrice.Value <= 0)
+                ModelState.AddModelError("CostPrice", "Giá vốn phải lớn hơn 0 VNĐ");
+            if (product.CostPrice.HasValue && product.Price < product.CostPrice.Value)
+                ModelState.AddModelError("Price", "Giá bán không được nhỏ hơn giá vốn");
+
             if (ModelState.IsValid)
             {
                 var oldProduct = _context.Products.AsNoTracking().FirstOrDefault(p => p.ProductId == product.ProductId);

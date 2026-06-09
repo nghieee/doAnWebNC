@@ -54,7 +54,7 @@
                             <td class="text-center text-success">@poLine.QuantityReceived</td>
                             <td class="text-center"><span class="badge bg-danger-subtle text-danger">@poLine.RemainingQuantity</span></td>
                             <td><input name="Lines[@i].BatchNo" class="form-control" value="@line.BatchNo" required /></td>
-                            <td><input name="Lines[@i].ExpiryDate" type="date" class="form-control" value="@(line.ExpiryDate?.ToString("yyyy-MM-dd"))" /></td>
+                            <td><input name="Lines[@i].ExpiryDate" type="date" class="form-control" value="@(line.ExpiryDate?.ToString("yyyy-MM-dd"))" required /></td>
                             <td><input name="Lines[@i].Quantity" type="number" min="0" max="@poLine.RemainingQuantity" class="form-control" value="@line.Quantity" required /></td>
                             <td><input name="Lines[@i].UnitCost" type="number" min="0" step="1000" class="form-control" value="@line.UnitCost" required /></td>
                         </tr>

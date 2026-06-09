@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using web_ban_thuoc.Models;
+using web_ban_thuoc.Services;
 using Microsoft.AspNetCore.Identity;
 
 [Route("Products")]
@@ -9,13 +10,18 @@ public class ProductController : Controller
     private readonly LongChauDbContext _context;
     private readonly ILogger<ProductController> _logger;
     private readonly UserManager<IdentityUser> _userManager;
+    private readonly IRecommendationService _recommendationService;
 
-
-    public ProductController(LongChauDbContext context, ILogger<ProductController> logger, UserManager<IdentityUser> userManager)
+    public ProductController(
+        LongChauDbContext context,
+        ILogger<ProductController> logger,
+        UserManager<IdentityUser> userManager,
+        IRecommendationService recommendationService)
     {
         _context = context;
         _logger = logger;
         _userManager = userManager;
+        _recommendationService = recommendationService;
     }
 
     [HttpGet("{id}")]
@@ -136,6 +142,32 @@ public class ProductController : Controller
             sort = sort,
             page = page
         });
+    }
+
+    [HttpGet("Recommendations/{id}")]
+    public async Task<IActionResult> Recommendations(int id)
+    {
+        try
+        {
+            var products = await _recommendationService.GetRecommendationsAsync(id, 4);
+            var result = products.Select(p => new
+            {
+                productId = p.ProductId,
+                productName = p.ProductName,
+                price = p.Price,
+                brand = p.Brand ?? "",
+                imageUrl = p.ProductImages?.FirstOrDefault(i => i.IsMain == true)?.ImageUrl
+                        ?? p.ProductImages?.FirstOrDefault()?.ImageUrl
+                        ?? "sanpham.png",
+                category = p.Category?.CategoryName ?? ""
+            });
+            return Json(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching recommendations for product {Id}", id);
+            return Json(Array.Empty<object>());
+        }
     }
 
     [HttpGet("Suggest")]

@@ -90,9 +90,10 @@
         <div class="row g-3 mb-4">
             <div class="col-lg-8">
                 <div class="table-responsive">
-                    <table class="table table-bordered bg-white shadow-sm mb-0">
+                    <table class="table table-hover align-middle table-bordered bg-white shadow-sm mb-0">
                         <thead class="table-light">
                             <tr>
+                                <th style="width: 80px;" class="text-center">Ảnh</th>
                                 <th>Sản phẩm</th>
                                 <th>SKU</th>
                                 <th>Kho</th>
@@ -104,13 +105,17 @@
                         <tbody>
                             @foreach (var ws in Model.WarehouseStocks)
                             {
+                                var imgUrl = string.IsNullOrEmpty(ws.ProductImageUrl) ? "/images/products/default.png" : (ws.ProductImageUrl == "default.png" ? "/images/products/default.png" : $"/images/products/{ws.ProductImageUrl}");
                                 <tr>
-                                    <td>@ws.ProductName</td>
-                                    <td>@(ws.Sku ?? "—")</td>
+                                    <td class="text-center">
+                                        <img src="@imgUrl" alt="Ảnh" class="rounded-3 border shadow-sm" style="width: 50px; height: 50px; object-fit: cover; background: #f4f6fb;" />
+                                    </td>
+                                    <td><strong class="text-dark">@ws.ProductName</strong></td>
+                                    <td><span class="font-monospace text-secondary">@(ws.Sku ?? "—")</span></td>
                                     <td>@ws.WarehouseName</td>
                                     <td>@ws.QuantityOnHand</td>
                                     <td>@ws.QuantityReserved</td>
-                                    <td><span class="badge @(ws.Available <= 10 ? "bg-danger" : "bg-success")">@ws.Available</span></td>
+                                    <td><span class="badge @(ws.Available <= 10 ? "bg-danger" : "bg-success") px-3 py-2 fs-6">@ws.Available</span></td>
                                 </tr>
                             }
                         </tbody>
@@ -146,9 +151,10 @@
     <div class="tab-pane fade" id="tabBatch">
         <p class="small text-muted">Khi admin <strong>xác nhận đơn bán</strong>, hệ thống tự xuất theo FEFO — lô hết hạn sớm nhất trước.</p>
         <div class="table-responsive mb-4">
-            <table class="table table-bordered bg-white shadow-sm">
+            <table class="table table-hover align-middle table-bordered bg-white shadow-sm">
                 <thead class="table-light">
                     <tr>
+                        <th style="width: 80px;" class="text-center">Ảnh</th>
                         <th>Sản phẩm</th>
                         <th>Mã lô</th>
                         <th>HSD</th>
@@ -159,10 +165,14 @@
                 <tbody>
                     @foreach (var b in Model.Batches)
                     {
+                        var imgUrl = string.IsNullOrEmpty(b.ProductImageUrl) ? "/images/products/default.png" : (b.ProductImageUrl == "default.png" ? "/images/products/default.png" : $"/images/products/{b.ProductImageUrl}");
                         var expiringSoon = b.ExpiryDate.HasValue && b.ExpiryDate.Value <= DateTime.Today.AddDays(90);
                         <tr class="@(expiringSoon ? "table-warning" : "")">
-                            <td>@b.ProductName</td>
-                            <td>@b.BatchNo</td>
+                            <td class="text-center">
+                                <img src="@imgUrl" alt="Ảnh" class="rounded-3 border shadow-sm" style="width: 50px; height: 50px; object-fit: cover; background: #f4f6fb;" />
+                            </td>
+                            <td><strong class="text-dark">@b.ProductName</strong></td>
+                            <td><span class="font-monospace text-secondary">@b.BatchNo</span></td>
                             <td>@(b.ExpiryDate?.ToString("dd/MM/yyyy") ?? "—")</td>
                             <td>@b.WarehouseName</td>
                             <td>@b.QuantityOnHand</td>

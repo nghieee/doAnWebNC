@@ -59,6 +59,7 @@ public class WarehouseStockViewModel
     public int QuantityOnHand { get; set; }
     public int QuantityReserved { get; set; }
     public int Available => Math.Max(0, QuantityOnHand - QuantityReserved);
+    public string? ProductImageUrl { get; set; }
 }
 
 public class ProductBatchViewModel
@@ -69,6 +70,7 @@ public class ProductBatchViewModel
     public DateTime? ExpiryDate { get; set; }
     public int QuantityOnHand { get; set; }
     public string WarehouseName { get; set; } = string.Empty;
+    public string? ProductImageUrl { get; set; }
 }
 
 public class SupplierViewModel
@@ -97,6 +99,7 @@ public class CreatePurchaseOrderViewModel
     [Required]
     public int WarehouseId { get; set; }
 
+    [Required(ErrorMessage = "Bắt buộc chọn ngày dự kiến nhận hàng")]
     public DateTime? ExpectedDate { get; set; }
     public string? Note { get; set; }
 
@@ -137,6 +140,7 @@ public class GoodsReceiptLineForm
     [Required]
     public string BatchNo { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "Hạn sử dụng của lô hàng bắt buộc phải nhập")]
     public DateTime? ExpiryDate { get; set; }
 
     [Range(1, int.MaxValue)]
@@ -175,4 +179,23 @@ public class PurchaseOrderListViewModel
     public DateTime OrderDate { get; set; }
     public int TotalOrdered { get; set; }
     public int TotalReceived { get; set; }
+}
+
+public class ReplenishmentGroupViewModel
+{
+    public Supplier Supplier { get; set; } = null!;
+    public List<ReplenishmentItemViewModel> Products { get; set; } = new();
+}
+
+public class ReplenishmentItemViewModel
+{
+    public int ProductId { get; set; }
+    public string ProductName { get; set; } = string.Empty;
+    public string Sku { get; set; } = string.Empty;
+    public int StockQuantity { get; set; }
+    public int MinStockLevel { get; set; }
+    public decimal CostPrice { get; set; }
+    public string ImageUrl { get; set; } = string.Empty;
+    /// <summary>Số lượng đề xuất nhập để đạt mức tối thiểu * 3.</summary>
+    public int SuggestedOrderQty => Math.Max(1, (MinStockLevel * 3) - StockQuantity);
 }

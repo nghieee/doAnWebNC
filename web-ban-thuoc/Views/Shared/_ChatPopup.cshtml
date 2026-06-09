@@ -5,119 +5,644 @@
     var userId = user?.Id ?? "guest";
     var userName = user?.UserName ?? "Khách";
 }
+
+<!-- Chat Floating Action Button (FAB) -->
 <div id="chat-fab" class="position-fixed bottom-0 end-0 m-4" style="z-index:9999;">
-    <button id="open-chat" class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center" style="width:60px;height:60px;font-size:2rem;">
-        <i class="fa-solid fa-comments"></i>
+    <button id="open-chat" class="btn shadow-lg d-flex align-items-center justify-content-center position-relative" style="width:65px;height:65px;font-size:2rem;background:linear-gradient(135deg, #1250dc, #00d2ff);color:white;border:none;border-radius:50%;transition:all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);box-shadow: 0 10px 30px rgba(18, 80, 220, 0.4);" onmouseover="this.style.transform='scale(1.08) translateY(-3px)';" onmouseout="this.style.transform='scale(1) translateY(0)';" aria-label="Mở hỗ trợ trực tuyến">
+        <i class="fa-solid fa-comment-dots"></i>
+        <!-- Ripple effect border -->
+        <span class="chat-fab-pulse"></span>
     </button>
+    <div id="chat-notification-badge" class="position-absolute top-0 end-0 badge bg-danger rounded-pill shadow" style="display:none;font-size:0.8rem;min-width:22px;height:22px;line-height:14px;border:2px solid #fff;transform:translate(25%, -25%);">0</div>
 </div>
-<div id="chat-popup" class="position-fixed bottom-0 end-0 m-4" style="z-index:10000;width:350px;max-width:95vw;display:none;">
-    <div id="chat-header" class="bg-primary text-white rounded-top px-3 py-2 d-flex align-items-center justify-content-between">
-        <span><i class="fa-solid fa-comments me-2"></i>Hỗ trợ trực tuyến</span>
-        <button id="chat-close" style="background:none;border:none;color:#fff;font-size:1.3rem;">&times;</button>
+
+<!-- Chat Popup Window -->
+<div id="chat-popup" class="position-fixed bottom-0 end-0 m-4 shadow-2xl overflow-hidden" style="z-index:10000;width:400px;max-width:92vw;height:600px;max-height:85vh;display:none;border-radius:20px;background:#ffffff;border:1px solid rgba(0,0,0,0.08);flex-direction:column;box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);animation: slideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);">
+    <!-- Chat Header -->
+    <div id="chat-header" class="d-flex align-items-center justify-content-between text-white" style="background:linear-gradient(135deg, #1250dc, #0a3bb3);padding:16px 20px;height:75px;border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+        <div class="d-flex align-items-center gap-3">
+            <div class="position-relative">
+                <div class="d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 44px; height: 44px; background: rgba(255, 255, 255, 0.2); border: 2px solid rgba(255,255,255,0.7); border-radius: 50%; font-size: 1.2rem;">
+                    🧑‍⚕️
+                </div>
+                <!-- Online Pulse Dot -->
+                <span id="header-pulse-dot" class="position-absolute bottom-0 end-0 bg-success rounded-circle border border-white pulse-status" style="width:12px;height:12px;"></span>
+            </div>
+            <div>
+                <div style="font-weight:600;font-size:1.05rem;letter-spacing:0.3px;">Dược sĩ Long Châu</div>
+                <div id="user-connection-status" style="font-size:0.8rem;opacity:0.9;display:flex;align-items:center;gap:5px;">
+                    <span style="display:inline-block;width:6px;height:6px;background:#10b981;border-radius:50%;"></span> Sẵn sàng hỗ trợ
+                </div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <!-- Mute Toggle Button -->
+            <button id="chat-mute-btn" class="chat-action-btn" title="Tắt âm thanh" style="background:none;border:none;color:#fff;font-size:1.15rem;cursor:pointer;opacity:0.85;transition:opacity 0.2s;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                <i id="chat-mute-icon" class="fa-solid fa-volume-high"></i>
+            </button>
+            <!-- Close Button -->
+            <button id="chat-close" class="chat-action-btn" title="Đóng" style="background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;opacity:0.85;transition:transform 0.2s;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;line-height:1;">
+                ×
+            </button>
+        </div>
     </div>
-    <div id="chat-body" class="bg-white border border-top-0 rounded-bottom p-3 d-flex flex-column gap-2" style="height:350px;overflow-y:auto;">
-        <div id="chat-messages" class="flex-grow-1 overflow-auto mb-2"></div>
-        <form id="chat-form" class="d-flex gap-2 mt-2">
-            <input type="text" id="chat-input" class="form-control" placeholder="Nhập tin nhắn..." autocomplete="off" />
-            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i></button>
-        </form>
+
+    <!-- Chat Body -->
+    <div id="chat-body" class="d-flex flex-column flex-grow-1" style="height:calc(100% - 75px);background:#f8fafc;overflow:hidden;position:relative;">
+        <!-- Messages Area -->
+        <div id="chat-messages" class="flex-grow-1 overflow-auto p-3 d-flex flex-column gap-3" style="scroll-behavior:smooth;">
+            <!-- Welcome Empty State -->
+            <div id="chat-empty-state" class="text-center p-4 my-auto" style="display: none;">
+                <div class="empty-chat-icon mb-3" style="font-size: 3.5rem; color: #1250dc; opacity: 0.15; animation: floatIcon 3s ease-in-out infinite;">
+                    <i class="fa-solid fa-comments"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-2">Xin chào @userName!</h6>
+                <p class="text-muted small mb-4" style="line-height: 1.45;">Dược sĩ Long Châu đã sẵn sàng trực tuyến để tư vấn sức khỏe cho bạn. Hãy chọn một chủ đề bên dưới hoặc nhắn tin trực tiếp.</p>
+                <div class="d-flex flex-column gap-2" style="max-width: 320px; margin: 0 auto;">
+                    <button class="btn quick-question-btn text-start px-3 py-2 text-wrap" data-msg="💊 Tôi cần tư vấn sử dụng thuốc và thực phẩm chức năng">
+                        <i class="fa-solid fa-pills me-2 text-primary"></i> Tư vấn cách sử dụng thuốc
+                    </button>
+                    <button class="btn quick-question-btn text-start px-3 py-2 text-wrap" data-msg="📦 Cho tôi hỏi thông tin và trạng thái đơn hàng của tôi">
+                        <i class="fa-solid fa-box-open me-2 text-primary"></i> Kiểm tra trạng thái đơn hàng
+                    </button>
+                    <button class="btn quick-question-btn text-start px-3 py-2 text-wrap" data-msg="🩺 Hướng dẫn tôi mua thuốc kê đơn (Rx) trực tuyến">
+                        <i class="fa-solid fa-file-prescription me-2 text-primary"></i> Mua thuốc theo đơn thuốc bác sĩ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="chat-loading" class="position-absolute start-50 translate-middle-x bg-white border shadow-sm rounded-pill px-3 py-1.5" style="display:none;top:20px;font-size:0.85rem;color:#64748b;z-index:10;border-color:#e2e8f0 !important;">
+            <span class="spinner-border spinner-border-sm text-primary me-2" role="status" style="width:14px;height:14px;"></span>
+            Đang tải cuộc trò chuyện...
+        </div>
+
+        <!-- Chat Input Form Area -->
+        <div id="chat-input-area" class="border-top" style="background:#ffffff;padding:12px 16px;">
+            <!-- Message Quick Chips Suggestions -->
+            <div id="chat-quick-reply-chips" class="d-flex gap-2 overflow-auto pb-2 mb-2" style="scrollbar-width: none; white-space: nowrap; -webkit-overflow-scrolling: touch;">
+                <div class="quick-reply-chip" data-text="Cám ơn Dược sĩ!">Cám ơn Dược sĩ!</div>
+                <div class="quick-reply-chip" data-text="Thuốc này dùng lúc nào thì tốt ạ?">Thuốc này dùng lúc nào?</div>
+                <div class="quick-reply-chip" data-text="Nhà thuốc có giao hàng nhanh không?">Giao hàng bao lâu?</div>
+                <div class="quick-reply-chip" data-text="Sản phẩm này có cần đơn không ạ?">Có cần đơn không?</div>
+            </div>
+
+            <form id="chat-form" onsubmit="return false;">
+                <div class="d-flex align-items-center gap-2" style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:24px;padding:5px 6px 5px 16px;transition: border-color 0.25s, box-shadow 0.25s;" onfocusin="this.style.borderColor='#1250dc';this.style.boxShadow='0 0 0 3px rgba(18,80,220,0.1)'" onfocusout="this.style.borderColor='#e2e8f0';this.style.boxShadow='none'">
+                    <input type="text" id="chat-input" class="form-control border-0 bg-transparent p-0" placeholder="Nhập tin nhắn..." autocomplete="off" style="font-size:0.95rem;box-shadow:none;height:36px;color:#1e293b;" />
+                    <button type="submit" class="btn btn-primary d-flex align-items-center justify-content-center" style="width:36px;height:36px;border-radius:50%;background:#1250dc;border:none;padding:0;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.08)';" onmouseout="this.style.transform='scale(1)';">
+                        <i class="fa-solid fa-paper-plane" style="font-size:0.95rem;"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 <style>
-    .product-card {
-        transition: all 0.2s ease;
+    /* Premium UX/UI Custom Styles */
+    .pulse-status {
+        animation: pulseStatus 2s infinite;
     }
-    .product-card:hover {
+    @@keyframes pulseStatus {
+        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+        70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .chat-action-btn:hover {
+        background-color: rgba(255,255,255,0.15) !important;
+        transform: scale(1.05);
+    }
+
+    #chat-messages {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+    }
+
+    #chat-messages::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #chat-messages::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #chat-messages::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 20px;
+    }
+
+    #chat-messages::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    .chat-fab-pulse {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: rgba(18, 80, 220, 0.4);
+        left: 0;
+        top: 0;
+        z-index: -1;
+        animation: chatFabPulse 2.5s infinite;
+    }
+
+    @@keyframes chatFabPulse {
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(1.4); opacity: 0; }
+    }
+
+    .quick-question-btn {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        color: #334155;
+        background: #ffffff;
+        font-weight: 500;
+        font-size: 0.88rem;
+        transition: all 0.25s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .quick-question-btn:hover {
+        background: #eff6ff;
+        border-color: #1250dc;
+        color: #1250dc;
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+        box-shadow: 0 4px 10px rgba(18, 80, 220, 0.08);
     }
-    .product-card a:hover {
-        text-decoration: none !important;
+
+    .quick-reply-chip {
+        display: inline-block;
+        padding: 6px 12px;
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 0.8rem;
+        font-weight: 500;
+        border-radius: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid #e2e8f0;
     }
-    #chat-body {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+
+    .quick-reply-chip:hover {
+        background: #1250dc;
+        color: white;
+        border-color: #1250dc;
+        transform: translateY(-1px);
     }
-    .chat-message-bubble {
-        border-radius: 15px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+    .chat-bubble-wrapper {
+        display: flex;
+        margin-bottom: 4px;
+        animation: messageFadeIn 0.3s ease-out;
+    }
+
+    @@keyframes messageFadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chat-msg-bubble {
+        padding: 10px 14px;
+        max-width: 78%;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        font-size: 0.93rem;
+        line-height: 1.45;
+    }
+
+    .chat-msg-bubble.user-msg {
+        background: linear-gradient(135deg, #1250dc, #2563eb);
+        color: white;
+        border-radius: 18px 18px 4px 18px;
+        margin-left: auto;
+    }
+
+    .chat-msg-bubble.admin-msg {
+        background: #ffffff;
+        color: #1e293b;
+        border-radius: 18px 18px 18px 4px;
+        border: 1px solid #e2e8f0;
+        margin-right: auto;
+    }
+
+    .chat-date-tag {
+        display: inline-block;
+        margin: 12px auto;
+        font-size: 0.75rem;
+        color: #64748b;
+        background: #e2e8f0;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 500;
+        letter-spacing: 0.2px;
+    }
+
+    @@keyframes floatIcon {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+    }
+
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @@media (max-width: 576px) {
+        #chat-popup {
+            width: 92vw !important;
+            height: 78vh !important;
+            bottom: 12px !important;
+            right: 16px !important;
+            margin: 0 !important;
+        }
+        #chat-fab {
+            margin: 16px !important;
+        }
     }
 </style>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 <script>
     const userId = '@userId';
     const userName = '@userName';
     let connection = null;
-    let adminId = 'admin'; // Có thể lấy từ backend nếu cần
+    let adminId = 'admin';
+    let unreadCount = 0;
+    let isLoadingHistory = false;
+    
+    // Mute sound setup
+    let isMuted = localStorage.getItem('chat_muted') === 'true';
+    const incomingSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-200.wav');
+    incomingSound.volume = 0.5;
+
     document.addEventListener('DOMContentLoaded', function () {
-        // Ẩn/hiện popup
         const popup = document.getElementById('chat-popup');
         const fab = document.getElementById('chat-fab');
         const openBtn = document.getElementById('open-chat');
         const closeBtn = document.getElementById('chat-close');
-        openBtn.onclick = function () {
-            popup.style.display = 'block';
-            fab.style.display = 'none';
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatMessages = document.getElementById('chat-messages');
+        const muteBtn = document.getElementById('chat-mute-btn');
+        const muteIcon = document.getElementById('chat-mute-icon');
+
+        // Initial setup mute icon
+        updateMuteStateUI();
+
+        // Mute toggle
+        muteBtn.onclick = function() {
+            isMuted = !isMuted;
+            localStorage.setItem('chat_muted', isMuted);
+            updateMuteStateUI();
         };
+
+        function updateMuteStateUI() {
+            if (isMuted) {
+                muteIcon.className = 'fa-solid fa-volume-xmark text-danger';
+                muteBtn.title = 'Bật âm thanh';
+            } else {
+                muteIcon.className = 'fa-solid fa-volume-high';
+                muteBtn.title = 'Tắt âm thanh';
+            }
+        }
+
+        // Toggle popup visibility
+        openBtn.onclick = function () {
+            popup.style.display = 'flex';
+            fab.style.display = 'none';
+            chatInput.focus();
+            unreadCount = 0;
+            updateNotificationBadge();
+            scrollToBottom();
+        };
+
         closeBtn.onclick = function () {
             popup.style.display = 'none';
             fab.style.display = 'block';
         };
-        // Kết nối SignalR
-        connection = new signalR.HubConnectionBuilder()
-            .withUrl('/chathub?userId=' + encodeURIComponent(userId))
-            .build();
-        connection.start().then(() => {
+
+        // Click quick prompt question
+        document.querySelectorAll('.quick-question-btn').forEach(btn => {
+            btn.onclick = function() {
+                const messageText = this.getAttribute('data-msg');
+                sendMessage(messageText);
+            };
+        });
+
+        // Click quick reply chip
+        document.querySelectorAll('.quick-reply-chip').forEach(chip => {
+            chip.onclick = function() {
+                chatInput.value = this.getAttribute('data-text');
+                chatInput.focus();
+            };
+        });
+
+        // Initialize SignalR connection
+        function initializeConnection() {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl('/chathub?userId=' + encodeURIComponent(userId))
+                .withAutomaticReconnect([0, 1000, 3000, 5000, 10000])
+                .build();
+
+            connection.onreconnecting(() => {
+                updateConnectionStatus('reconnecting');
+            });
+
+            connection.onreconnected(() => {
+                updateConnectionStatus('connected');
+            });
+
+            connection.onclose(() => {
+                updateConnectionStatus('disconnected');
+            });
+
+            connection.on('ReceiveMessage', function (senderId, message) {
+                if (userId !== 'guest') {
+                    const sender = senderId === userId ? 'user' : 'admin';
+                    addMessageToUI(sender, message);
+
+                    // Check if popup is closed, increase unread
+                    if (popup.style.display === 'none') {
+                        unreadCount++;
+                        updateNotificationBadge();
+                    }
+
+                    // Play sound if not muted and sender is admin
+                    if (sender === 'admin' && !isMuted) {
+                        incomingSound.play().catch(e => console.log('Sound blocked:', e));
+                    }
+                }
+            });
+
+            connection.start()
+                .then(() => {
+                    updateConnectionStatus('connected');
+                    loadChatHistory();
+                })
+                .catch(err => {
+                    console.error('Connection failed:', err);
+                    updateConnectionStatus('disconnected');
+                });
+        }
+
+        // Update connection status UI
+        function updateConnectionStatus(status) {
+            const statusEl = document.getElementById('user-connection-status');
+            const pulseDot = document.getElementById('header-pulse-dot');
+            if (statusEl && pulseDot) {
+                switch (status) {
+                    case 'connected':
+                        statusEl.innerHTML = '<span style="display:inline-block;width:6px;height:6px;background:#10b981;border-radius:50%;"></span> Sẵn sàng hỗ trợ';
+                        pulseDot.className = 'position-absolute bottom-0 end-0 bg-success rounded-circle border border-white pulse-status';
+                        break;
+                    case 'reconnecting':
+                        statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-warning me-1"></i> Đang kết nối lại...';
+                        pulseDot.className = 'position-absolute bottom-0 end-0 bg-warning rounded-circle border border-white';
+                        break;
+                    case 'disconnected':
+                        statusEl.innerHTML = '<span style="display:inline-block;width:6px;height:6px;background:#ef4444;border-radius:50%;"></span> Mất kết nối';
+                        pulseDot.className = 'position-absolute bottom-0 end-0 bg-danger rounded-circle border border-white';
+                        break;
+                }
+            }
+        }
+
+        // Load history messages
+        function loadChatHistory() {
+            if (isLoadingHistory) return;
+            isLoadingHistory = true;
+
             if (userId && userId !== 'guest') {
+                document.getElementById('chat-loading').style.display = 'block';
+
                 fetch('/api/chat/history')
                     .then(r => r.json())
                     .then(msgs => {
-                        msgs.forEach(m => addMessage(m.senderId === userId ? 'user' : 'admin', m.message));
+                        const emptyState = document.getElementById('chat-empty-state');
+                        if (msgs && msgs.length > 0) {
+                            emptyState.style.display = 'none';
+                            
+                            // Format and display messages grouped by day
+                            let lastDateString = null;
+                            msgs.forEach(m => {
+                                const msgDate = new Date(m.sentAt);
+                                const dateString = msgDate.toLocaleDateString('vi-VN');
+                                
+                                if (dateString !== lastDateString) {
+                                    addDateSeparatorToUI(msgDate);
+                                    lastDateString = dateString;
+                                }
+
+                                const sender = m.senderId === userId ? 'user' : 'admin';
+                                addMessageToUI(sender, m.message, false, msgDate);
+                            });
+                        } else {
+                            emptyState.style.display = 'block';
+                        }
+                    })
+                    .catch(err => console.error('Failed to load history:', err))
+                    .finally(() => {
+                        document.getElementById('chat-loading').style.display = 'none';
+                        isLoadingHistory = false;
+                        scrollToBottom();
                     });
+            } else {
+                // Show empty welcome state for guests
+                document.getElementById('chat-empty-state').style.display = 'block';
             }
-        });
-        // Nhận tin nhắn
-        connection.on('ReceiveMessage', function (senderId, message) {
-            addMessage(senderId === userId ? 'user' : 'admin', message);
-        });
-        // Gửi tin nhắn
-        document.getElementById('chat-form').onsubmit = function (e) {
-            e.preventDefault();
-            const input = document.getElementById('chat-input');
-            const msg = input.value.trim();
-            if (!msg) return;
+        }
+
+        // Add Date Separator to UI
+        function addDateSeparatorToUI(dateObj) {
+            const today = new Date().toLocaleDateString('vi-VN');
+            const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('vi-VN');
+            const dateStr = dateObj.toLocaleDateString('vi-VN');
+            
+            let label = dateStr;
+            if (dateStr === today) {
+                label = 'Hôm nay';
+            } else if (dateStr === yesterday) {
+                label = 'Hôm qua';
+            }
+
+            const div = document.createElement('div');
+            div.className = 'text-center my-2';
+            div.innerHTML = `<span class="chat-date-tag">${label}</span>`;
+            chatMessages.appendChild(div);
+        }
+
+        // Add message to UI
+        function addMessageToUI(type, msg, scroll = true, timeObj = null) {
+            // Hide welcome state if exists
+            const emptyState = document.getElementById('chat-empty-state');
+            if (emptyState) emptyState.style.display = 'none';
+
+            const wrapper = document.createElement('div');
+            wrapper.className = `chat-bubble-wrapper ${type === 'user' ? 'justify-content-end' : 'justify-content-start'}`;
+
+            // Admin avatar on the left of admin message
+            let avatarHtml = '';
+            if (type === 'admin') {
+                avatarHtml = `
+                    <div class="flex-shrink-0 me-2 mt-1">
+                        <div class="d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 32px; height: 32px; background: #e2e8f0; border: 1.5px solid #cbd5e1; border-radius: 50%; font-size: 0.85rem;">
+                            🧑‍⚕️
+                        </div>
+                    </div>`;
+            }
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `chat-msg-bubble ${type === 'user' ? 'user-msg' : 'admin-msg'}`;
+
+            const displayTime = (timeObj || new Date()).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            
+            // Text or HTML content
+            let msgContentHtml = '';
+            if (msg.includes('<a') || msg.includes('class=')) {
+                msgContentHtml = msg;
+            } else {
+                msgContentHtml = escapeHtml(msg);
+            }
+
+            const checkmarks = type === 'user' ? '<span class="ms-1 text-white-50" style="font-size:0.75rem;"><i class="fa-solid fa-check-double"></i></span>' : '';
+
+            msgDiv.innerHTML = `
+                <div>${msgContentHtml}</div>
+                <div class="d-flex align-items-center justify-content-end text-end" style="font-size:0.7rem;margin-top:4px;opacity:0.75;">
+                    <span>${displayTime}</span>
+                    ${checkmarks}
+                </div>
+            `;
+
+            if (type === 'admin') {
+                wrapper.innerHTML = avatarHtml;
+                wrapper.appendChild(msgDiv);
+            } else {
+                wrapper.appendChild(msgDiv);
+            }
+
+            chatMessages.appendChild(wrapper);
+
+            if (scroll) {
+                scrollToBottom();
+            }
+        }
+
+        // Escape HTML for security
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Scroll to bottom of chat
+        function scrollToBottom() {
+            setTimeout(() => {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 50);
+        }
+
+        // Update notification badge on open button
+        function updateNotificationBadge() {
+            const badge = document.getElementById('chat-notification-badge');
+            if (unreadCount > 0) {
+                badge.style.display = 'block';
+                badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                // Add a small bounce animation to FAB
+                openBtn.style.animation = 'chatFabPulse 0.5s ease 2';
+                setTimeout(() => { openBtn.style.animation = ''; }, 1000);
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // General Send Message function
+        function sendMessage(text) {
+            if (!text) return;
+
             if (!userId || userId === 'guest') {
-                showAlert('Bạn cần đăng nhập để sử dụng chức năng chat với admin!', { icon: 'warning' });
+                showAlert('Bạn cần đăng nhập thành viên để trò chuyện cùng dược sĩ!', { icon: 'warning', title: 'Đăng nhập yêu cầu' });
                 return;
             }
-            connection.invoke('SendMessage', userId, adminId, msg);
-            // KHÔNG tự addMessage ở đây nữa để tránh lặp
-            input.value = '';
+
+            if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+                showAlert('Mất kết nối tới máy chủ. Đang thử kết nối lại...', { icon: 'error' });
+                return;
+            }
+
+            connection.invoke('SendMessage', userId, adminId, text)
+                .then(() => {
+                    chatInput.value = '';
+                    chatInput.focus();
+                })
+                .catch(err => {
+                    console.error('Send error:', err);
+                    showAlert('Gửi tin nhắn thất bại. Vui lòng gửi lại.', { icon: 'error' });
+                });
+        }
+
+        // Handle form submission
+        chatForm.onsubmit = function (e) {
+            e.preventDefault();
+            const msg = chatInput.value.trim();
+            sendMessage(msg);
         };
-        function addMessage(type, msg, isHtml) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'd-flex mb-2 ' + (type === 'user' ? 'justify-content-end' : 'justify-content-start');
-            const bubble = document.createElement('div');
-            bubble.className = 'px-3 py-2 rounded shadow-sm ' + (type === 'user' ? 'bg-info text-primary' : 'bg-light text-dark');
-            bubble.style.maxWidth = '70%';
-            bubble.style.wordBreak = 'break-word';
-            bubble.style.whiteSpace = 'pre-line';
-            bubble.style.lineHeight = '1.5';
-            if (isHtml) bubble.innerHTML = msg;
-            else bubble.innerText = msg;
-            msgDiv.appendChild(bubble);
-            document.getElementById('chat-messages').appendChild(msgDiv);
-            document.getElementById('chat-messages').scrollTop = 99999;
-        }
-        window.addProductPingToChat = function(product) {
-            const html = `<a href='/Products/${product.id}' target='_blank' class='d-flex align-items-center bg-light rounded p-1 mb-2 text-decoration-none' style='height:40px;max-width:220px;'>`
-                + `<img src='${product.image}' alt='${product.name}' class='rounded me-2' style='width:32px;height:32px;object-fit:cover;'>`
-                + `<div class='flex-grow-1 min-width-0'>`
-                + `<div class='fw-semibold text-dark text-truncate' style='max-width:140px;font-size:1rem;'>${product.name}</div>`
-                + `<div class='small text-muted text-truncate'>Mã: ${product.id}</div>`
-                + `</div>`
-                + `</a>`;
-            addMessage('user', html, true);
-        }
+
+        // Listen for Enter key, support Shift+Enter
+        chatInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                chatForm.dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // Global Product Share helper
+        window.addProductPingToChat = function (product) {
+            if (!userId || userId === 'guest') {
+                showAlert('Vui lòng đăng nhập để trao đổi về sản phẩm này!', { icon: 'warning' });
+                return;
+            }
+
+            const html = `
+                <div class="chat-product-sharecard mt-2 shadow-sm rounded overflow-hidden" style="border: 1px solid #e2e8f0; background: #ffffff; max-width: 250px;">
+                    <div class="d-flex p-2 gap-2">
+                        <img src="${product.image}" alt="${product.name}" class="rounded flex-shrink-0" style="width: 55px; height: 55px; object-fit: cover; border: 1px solid #f1f5f9;">
+                        <div class="d-flex flex-column justify-content-between min-w-0" style="line-height: 1.25;">
+                            <div class="fw-semibold text-dark text-truncate" style="font-size: 0.85rem; max-width: 150px;" title="${product.name}">${product.name}</div>
+                            <div class="small text-muted" style="font-size: 0.75rem;">Mã: ${product.id}</div>
+                        </div>
+                    </div>
+                    <a href="/Products/${product.id}" target="_blank" class="btn btn-sm btn-primary w-100 rounded-0 py-1.5" style="background: #1250dc; font-size: 0.8rem; font-weight: 500; border:none;">
+                        Xem sản phẩm <i class="fa-solid fa-arrow-up-right-from-square ms-1" style="font-size: 0.7rem;"></i>
+                    </a>
+                </div>
+            `;
+
+            // Enforce sending html via signalr connection instead of just drawing locally
+            if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                connection.invoke('SendMessage', userId, adminId, html)
+                    .then(() => {
+                        // Automatically scroll down
+                        scrollToBottom();
+                    })
+                    .catch(err => console.error('Send product ping failed:', err));
+            } else {
+                addMessageToUI('user', html, true);
+            }
+        };
+
+        // Initialize SignalR
+        initializeConnection();
+
+        // Close connection on page unload
+        window.addEventListener('beforeunload', function () {
+            if (connection) {
+                connection.stop().catch(err => console.error(err));
+            }
+        });
     });
-</script> 
+</script>

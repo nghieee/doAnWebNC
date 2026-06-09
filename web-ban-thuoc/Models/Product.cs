@@ -56,6 +56,9 @@ public partial class Product
 
     public int? SoldQuantity { get; set; }
 
+    /// <summary>Ngưỡng tồn kho tối thiểu, khi tồn <= ngưỡng sẽ đề xuất nhập hàng.</summary>
+    public int MinStockLevel { get; set; } = 0;
+
     public virtual Category? Category { get; set; }
 
     public virtual Supplier? Supplier { get; set; }

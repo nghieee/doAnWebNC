@@ -134,6 +134,13 @@
             <option value="false">Ẩn</option>
         </select>
     </div>
+    <div class="col-md-3">
+        <label class="form-label fw-semibold">Sản phẩm nổi bật</label>
+        <select asp-for="IsFeature" class="form-select">
+            <option value="false">Không nổi bật</option>
+            <option value="true">Có — Nổi bật</option>
+        </select>
+    </div>
     <div class="col-md-6">
         <label class="form-label fw-semibold">Ảnh sản phẩm (có thể chọn nhiều)</label>
         <input type="file" name="images" class="form-control" multiple accept="image/*" />

@@ -1,152 +1,751 @@
 @{
     Layout = "~/Views/Admin/_Layout.cshtml";
     ViewData["Title"] = "Tin nhắn khách hàng";
-    var users = ViewBag.Users as List<Microsoft.AspNetCore.Identity.IdentityUser>;
-    var lastMessages = ViewBag.LastMessages as List<web_ban_thuoc.Models.ChatMessage>;
-    var unreadCounts = ViewBag.UnreadCounts as Dictionary<string, int>;
+    var users = ViewBag.Users as List<Microsoft.AspNetCore.Identity.IdentityUser> ?? new List<Microsoft.AspNetCore.Identity.IdentityUser>();
+    var lastMessages = ViewBag.LastMessages as List<web_ban_thuoc.Models.ChatMessage> ?? new List<web_ban_thuoc.Models.ChatMessage>();
+    var unreadCounts = ViewBag.UnreadCounts as Dictionary<string, int> ?? new Dictionary<string, int>();
     var selectedUser = ViewBag.SelectedUser as Microsoft.AspNetCore.Identity.IdentityUser;
-    var messages = ViewBag.Messages as List<web_ban_thuoc.Models.ChatMessage>;
+    var messages = ViewBag.Messages as List<web_ban_thuoc.Models.ChatMessage> ?? new List<web_ban_thuoc.Models.ChatMessage>();
 }
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-4 col-lg-3 mb-3">
-            <div class="bg-white rounded shadow-sm p-0">
-                <div class="fw-bold fs-5 px-3 py-2 border-bottom"><i class="fa-regular fa-message me-2"></i>Messages</div>
-                <div class="list-group list-group-flush">
-                    @for (int i = 0; i < users.Count; i++)
-                    {
-                        var user = users[i];
-                        var msg = lastMessages[i];
-                        var unread = unreadCounts[user.Id];
-                        <a href="@Url.Action("Index", new { userId = user.Id })" class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-3 @(selectedUser?.Id == user.Id ? "active" : "")">
-                            <div class="flex-grow-1 min-width-0">
-                                <div class="fw-semibold text-dark text-truncate">@user.UserName</div>
-                                <div class="small text-muted text-truncate">@msg?.Message</div>
-                            </div>
-                            <div class="d-flex flex-column align-items-end">
-                                <span class="small text-muted">@msg?.SentAt.ToString("HH:mm dd/MM")</span>
-                                @if (unread > 0)
-                                {
-                                    <span class="badge bg-danger mt-1">@unread</span>
-                                }
-                            </div>
-                        </a>
+
+<div class="container-fluid py-4" style="background: #f4f6f9; min-height: calc(100vh - 120px);">
+    <div class="row g-3" style="height: 85vh;">
+        <!-- Cột 1: Sidebar Danh sách Khách hàng -->
+        <div class="col-12 col-lg-3 d-flex flex-column h-100">
+            <div class="bg-white border rounded-4 shadow-sm p-0 h-100 d-flex flex-column overflow-hidden">
+                <!-- Header Sidebar -->
+                <div class="fw-bold px-4 py-3 border-bottom d-flex align-items-center justify-content-between" style="background:#fafafa;">
+                    <span class="d-flex align-items-center gap-2 text-dark">
+                        <i class="fa-regular fa-comments text-primary" style="font-size: 1.15rem;"></i>
+                        <span>Khách hàng nhắn tin</span>
+                    </span>
+                    @{
+                        var totalUnread = unreadCounts?.Values.Sum() ?? 0;
+                        if (totalUnread > 0)
+                        {
+                            <span class="badge bg-danger rounded-pill pulse-badge">@totalUnread</span>
+                        }
                     }
                 </div>
-            </div>
-        </div>
-        <div class="col-12 col-md-8 col-lg-6">
-            @if (selectedUser != null)
-            {
-                <div class="bg-white rounded shadow-sm p-0 d-flex flex-column" style="height:500px;">
-                    <div class="d-flex align-items-center px-3 py-2 border-bottom">
-                        <img src="https://nhathuoclongchau.com.vn/estore-images/profile/v2/avatar-profile-large.svg" alt="avatar" class="rounded-circle me-2" style="width:40px;height:40px;object-fit:cover;">
-                        <span class="fw-bold fs-5">@selectedUser.UserName</span>
+                
+                <!-- Search Bar -->
+                <div class="p-3 border-bottom bg-light">
+                    <div class="input-group rounded-pill border overflow-hidden" style="background: #ffffff; border-color: #e2e8f0 !important;">
+                        <span class="input-group-text bg-transparent border-0 text-muted ps-3"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" id="customer-search" class="form-control bg-transparent border-0 py-2 ps-1" placeholder="Tìm tên khách hàng..." style="font-size:0.88rem;box-shadow:none;" />
                     </div>
-                    <div class="flex-grow-1 bg-light p-3 overflow-auto" style="min-height:0;">
-                        @foreach (var msg in messages)
+                </div>
+
+                <!-- User List -->
+                <div class="flex-grow-1 overflow-auto bg-white" id="customer-list-container">
+                    <div class="list-group list-group-flush">
+                        @for (int i = 0; i < users.Count; i++)
                         {
-                            <div class="d-flex mb-2 @(msg.SenderId == "admin" ? "justify-content-end" : "justify-content-start")">
-                                <div class="px-3 py-2 rounded shadow-sm @(msg.SenderId == "admin" ? "bg-info text-primary" : "bg-white text-dark")" style="max-width:70%;word-break:break-word;white-space:pre-line;line-height:1.5;">
-                                    @msg.Message
+                            var user = users[i];
+                            var msg = lastMessages.ElementAtOrDefault(i);
+                            var unread = unreadCounts.ContainsKey(user.Id) ? unreadCounts[user.Id] : 0;
+                            var isActive = selectedUser?.Id == user.Id;
+                            
+                            <a href="@Url.Action("Index", new { userId = user.Id })" class="list-group-item list-group-item-action customer-item px-3 py-3 @(isActive ? "active-chat" : "")" data-username="@user.UserName" style="border-left: 4px solid transparent; transition: all 0.2s; border-bottom: 1px solid #f1f5f9;">
+                                <div class="d-flex gap-3 align-items-start">
+                                    <!-- Avatar -->
+                                    <div class="flex-shrink-0 position-relative">
+                                        <div class="avatar-circle rounded-circle d-flex align-items-center justify-content-center fw-bold text-white shadow-sm" style="width: 42px; height: 42px; background: linear-gradient(135deg, #1250dc, #00d2ff); font-size: 0.95rem;">
+                                            @user.UserName.Substring(0, Math.Min(2, user.UserName.Length)).ToUpper()
+                                        </div>
+                                    </div>
+                                    <!-- Content snippet -->
+                                    <div class="flex-grow-1 min-width-0">
+                                        <div class="d-flex justify-content-between align-items-baseline mb-1">
+                                            <div class="fw-semibold text-dark text-truncate" style="font-size:0.92rem; max-width: 120px;">@user.UserName</div>
+                                            <span class="text-muted small ms-2" style="font-size:0.75rem; white-space: nowrap;">@(msg != null ? msg.SentAt.ToString("HH:mm") : "")</span>
+                                        </div>
+                                        <div class="text-muted small text-truncate" style="font-size:0.82rem; font-weight: @(unread > 0 ? "600" : "400"); color: @(unread > 0 ? "#1e293b" : "#64748b") !important;">
+                                            @if (msg != null)
+                                            {
+                                                @(msg.Message.StartsWith("<div") || msg.Message.StartsWith("<a") ? "[Hình ảnh/Sản phẩm]" : msg.Message)
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted italic">Chưa có tin nhắn</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <!-- Unread Badge -->
+                                    @if (unread > 0)
+                                    {
+                                        <div class="flex-shrink-0 ms-1 mt-1">
+                                            <span class="badge rounded-pill bg-danger" style="font-size: 0.75rem;">@unread</span>
+                                        </div>
+                                    }
                                 </div>
+                            </a>
+                        }
+                        @if (users.Count == 0)
+                        {
+                            <div class="text-center py-5 text-muted">
+                                <i class="fa-regular fa-folder-open mb-2" style="font-size: 2rem; opacity: 0.5;"></i>
+                                <div class="small">Chưa có cuộc hội thoại nào</div>
                             </div>
                         }
                     </div>
-                    <form id="admin-chat-form" class="d-flex gap-2 border-top p-3" style="background:#f8f9fa;" autocomplete="off" onsubmit="return false;">
-                        <input type="hidden" name="userId" value="@selectedUser.Id" />
-                        <input type="text" id="admin-chat-input" name="message" class="form-control" placeholder="Nhập tin nhắn..." autocomplete="off" required />
-                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i></button>
-                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột 2 & Cột 3: Khung Chat + Hồ sơ CRM (Nằm trong col-lg-9) -->
+        <div class="col-12 col-lg-9 h-100">
+            @if (selectedUser != null)
+            {
+                <div class="bg-white border rounded-4 shadow-sm p-0 d-flex h-100 overflow-hidden">
+                    <!-- Khu vực Chat trung tâm (Cột 2) -->
+                    <div class="d-flex flex-column flex-grow-1 h-100" style="min-width: 0;">
+                        <!-- Header Khung Chat -->
+                        <div class="d-flex align-items-center justify-content-between px-4 py-3 border-bottom text-white" style="background: linear-gradient(135deg, #1250dc, #0a3bb3); height: 75px;">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar-circle rounded-circle d-flex align-items-center justify-content-center fw-bold text-white shadow-sm" style="width: 45px; height: 45px; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.6); font-size: 1.05rem;">
+                                    @selectedUser.UserName.Substring(0, Math.Min(2, selectedUser.UserName.Length)).ToUpper()
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-white" style="font-size: 1.05rem;">@selectedUser.UserName</div>
+                                    <div class="small d-flex align-items-center gap-1.5" style="color: rgba(255,255,255,0.85); font-size: 0.8rem;">
+                                        <span class="d-inline-block bg-success rounded-circle" style="width: 6px; height: 6px;"></span>
+                                        Khách hàng trực tuyến
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <!-- Audio Toggle -->
+                                <button id="admin-mute-btn" class="btn btn-link text-white text-decoration-none p-0 me-2 d-flex align-items-center justify-content-center" style="width:36px;height:36px;border-radius:50%;transition:background 0.2s;" title="Tắt âm báo">
+                                    <i id="admin-mute-icon" class="fa-solid fa-volume-high" style="font-size:1.1rem;"></i>
+                                </button>
+                                <!-- CRM Toggle Button -->
+                                <button id="toggle-crm-btn" class="btn btn-link text-white text-decoration-none p-0 d-flex align-items-center justify-content-center" style="width:36px;height:36px;border-radius:50%;transition:background 0.2s;" title="Ẩn/Hiện hồ sơ khách hàng">
+                                    <i class="fa-solid fa-address-card" style="font-size: 1.2rem;"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Khung chứa tin nhắn -->
+                        <div id="admin-chat-container" class="flex-grow-1 overflow-auto p-4 d-flex flex-column gap-3" style="background: #f8fafc; min-height: 0; scroll-behavior: smooth;">
+                            @{
+                                string? lastDate = null;
+                                foreach (var msg in messages)
+                                {
+                                    var msgDateStr = msg.SentAt.ToString("dd/MM/yyyy");
+                                    if (msgDateStr != lastDate)
+                                    {
+                                        <div class="d-flex justify-content-center my-2">
+                                            <span class="px-3 py-1 text-muted border rounded-pill bg-white fw-medium" style="font-size:0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                                                @(msg.SentAt.Date == DateTime.Today ? "Hôm nay" : msg.SentAt.Date == DateTime.Today.AddDays(-1) ? "Hôm qua" : msgDateStr)
+                                            </span>
+                                        </div>
+                                        lastDate = msgDateStr;
+                                    }
+
+                                    var isSenderAdmin = msg.SenderId == "admin";
+                                    <div class="d-flex @(isSenderAdmin ? "justify-content-end" : "justify-content-start") message-item">
+                                        <div class="d-flex gap-2.5 @(isSenderAdmin ? "flex-row-reverse" : "")" style="max-width: 80%;">
+                                            <!-- Avatar nhỏ bên trái (đối với khách hàng) -->
+                                            @if (!isSenderAdmin)
+                                            {
+                                                <div class="flex-shrink-0 mt-1">
+                                                    <div class="avatar-circle rounded-circle d-flex align-items-center justify-content-center fw-bold text-white shadow-sm" style="width: 32px; height: 32px; background: linear-gradient(135deg, #1250dc, #00d2ff); font-size: 0.75rem;">
+                                                        @selectedUser.UserName.Substring(0, 1).ToUpper()
+                                                    </div>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="flex-shrink-0 mt-1">
+                                                    <div class="avatar-circle rounded-circle d-flex align-items-center justify-content-center fw-bold text-white shadow-sm" style="width: 32px; height: 32px; background: #e2e8f0; border: 1.5px solid #cbd5e1; font-size: 0.75rem;">
+                                                        🧑‍⚕️
+                                                    </div>
+                                                </div>
+                                            }
+                                            
+                                            <div>
+                                                <!-- Bubble -->
+                                                <div class="px-3 py-2.5 shadow-sm rounded-3 @(isSenderAdmin ? "bg-primary text-white" : "bg-white text-dark border")" style="font-size:0.93rem; line-height:1.45; word-break: break-word; border-radius: @(isSenderAdmin ? "16px 16px 4px 16px" : "16px 16px 16px 4px") !important;">
+                                                    @if (msg.Message.StartsWith("<div") || msg.Message.StartsWith("<a"))
+                                                    {
+                                                        @Html.Raw(msg.Message)
+                                                    }
+                                                    else
+                                                    {
+                                                        @msg.Message
+                                                    }
+                                                </div>
+                                                <!-- Time -->
+                                                <div class="small text-muted mt-1 px-1 @(isSenderAdmin ? "text-end" : "")" style="font-size: 0.72rem; opacity: 0.8;">
+                                                    @msg.SentAt.ToString("HH:mm")
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+
+                        <!-- Thanh Tin nhắn mẫu nhanh (Canned Responses) -->
+                        <div class="canned-responses-bar d-flex gap-2 overflow-auto py-2 border-top px-3 align-items-center" style="background:#ffffff; scrollbar-width:none; white-space:nowrap; -webkit-overflow-scrolling:touch; border-color: #f1f5f9 !important;">
+                            <span class="text-muted small me-2"><i class="fa-regular fa-paper-plane"></i> Mẫu nhanh:</span>
+                            <span class="badge bg-light text-secondary border canned-chip cursor-pointer px-3 py-2 rounded-pill" data-text="Xin chào! Nhà thuốc FPT Long Châu có thể hỗ trợ gì cho bạn ạ?">👋 Chào khách</span>
+                            <span class="badge bg-light text-secondary border canned-chip cursor-pointer px-3 py-2 rounded-pill" data-text="Dạ, sản phẩm này hiện tại nhà thuốc đang còn hàng sẵn tại các chi nhánh ạ.">💊 Còn hàng</span>
+                            <span class="badge bg-light text-secondary border canned-chip cursor-pointer px-3 py-2 rounded-pill" data-text="Sản phẩm này cần có đơn thuốc của bác sĩ. Bạn vui lòng chụp ảnh đơn thuốc gửi ở đây để dược sĩ kiểm tra nhé.">🩺 Hỏi đơn thuốc (Rx)</span>
+                            <span class="badge bg-light text-secondary border canned-chip cursor-pointer px-3 py-2 rounded-pill" data-text="Đơn đặt hàng của bạn đã được chuyển đi cho bên giao hàng, dự kiến bạn sẽ nhận được trong 1-2 ngày tới.">📦 Trạng thái giao hàng</span>
+                            <span class="badge bg-light text-secondary border canned-chip cursor-pointer px-3 py-2 rounded-pill" data-text="Nhà thuốc xin gửi bạn thông tin chi tiết đơn đặt hàng.">📝 Gửi thông tin</span>
+                        </div>
+
+                        <!-- Form nhập tin nhắn -->
+                        <form id="admin-chat-form" class="p-3 border-top" style="background: #ffffff;" autocomplete="off" onsubmit="return false;">
+                            <div class="d-flex align-items-center gap-2" style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:24px; padding:5px 6px 5px 16px; transition: border-color 0.25s, box-shadow 0.25s;" id="input-container">
+                                <input type="hidden" name="userId" value="@selectedUser.Id" />
+                                <input type="text" id="admin-chat-input" name="message" class="form-control border-0 bg-transparent p-0" placeholder="Nhập tin nhắn phản hồi..." autocomplete="off" required style="font-size:0.95rem; box-shadow:none; height:38px; color:#1e293b;" />
+                                <button type="submit" class="btn btn-primary d-flex align-items-center justify-content-center" style="width:38px; height:38px; border-radius:50%; background:#1250dc; border:none; padding:0; transition:transform 0.2s;">
+                                    <i class="fa-solid fa-paper-plane" style="font-size:0.95rem;"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Bảng Hồ sơ khách hàng CRM (Cột 3) -->
+                    <div class="border-start bg-white h-100 d-flex flex-column" id="crm-panel" style="width: 320px; flex-shrink: 0; transition: all 0.3s ease;">
+                        <div class="p-3 border-bottom fw-bold text-dark d-flex align-items-center gap-2" style="background: #fafafa; height:75px;">
+                            <i class="fa-solid fa-id-card-clip text-primary" style="font-size:1.15rem;"></i>
+                            <span>Hồ sơ CRM khách hàng</span>
+                        </div>
+                        <div class="flex-grow-1 overflow-auto p-3 d-flex flex-column gap-3">
+                            <!-- Loader Skeleton -->
+                            <div id="crm-loader" class="text-center py-5">
+                                <div class="spinner-border text-primary spinner-border-sm mb-2" role="status"></div>
+                                <div class="text-muted small">Đang tải hồ sơ khách hàng...</div>
+                            </div>
+                            
+                            <!-- Loaded Content -->
+                            <div id="crm-profile" style="display:none;" class="d-flex flex-column gap-4">
+                                <!-- Avatar + Rank -->
+                                <div class="text-center mt-2">
+                                    <div class="avatar-circle rounded-circle d-inline-flex align-items-center justify-content-center fw-bold text-white shadow mb-3" id="crm-avatar" style="width: 65px; height: 65px; background: linear-gradient(135deg, #1250dc, #00d2ff); font-size: 1.6rem;">
+                                        U
+                                    </div>
+                                    <h5 class="fw-bold text-dark mb-1" id="crm-username" style="font-size:1.1rem;">Khách Hàng</h5>
+                                    <div class="badge rounded-pill py-1.5 px-3 mb-2" id="crm-rank" style="font-size:0.8rem; font-weight:600;">Hạng: Bạc</div>
+                                </div>
+
+                                <!-- Detail List -->
+                                <div class="card border-0 bg-light rounded-3 p-3">
+                                    <div class="d-flex flex-column gap-2.5 small">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted"><i class="fa-regular fa-envelope me-1.5 text-secondary"></i> Email</span>
+                                            <span class="fw-semibold text-dark text-truncate ms-2" style="max-width:160px;" id="crm-email">-</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted"><i class="fa-solid fa-phone me-1.5 text-secondary"></i> Điện thoại</span>
+                                            <span class="fw-semibold text-dark" id="crm-phone">-</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted"><i class="fa-solid fa-award me-1.5 text-secondary"></i> Điểm tích lũy</span>
+                                            <span class="fw-bold text-primary" id="crm-points">0 điểm</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted"><i class="fa-solid fa-coins me-1.5 text-secondary"></i> Tổng tích lũy</span>
+                                            <span class="fw-bold text-success" id="crm-spent">0đ</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Recent Orders Table -->
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-2.5 d-flex align-items-center gap-1.5" style="font-size: 0.9rem;">
+                                        <i class="fa-solid fa-clock-rotate-left text-secondary"></i>
+                                        <span>Đơn hàng gần đây</span>
+                                    </h6>
+                                    <div id="crm-orders-list" class="d-flex flex-column gap-2">
+                                        <!-- Generates list group items dynamically -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             }
             else
             {
-                <div class="bg-white rounded shadow-sm d-flex align-items-center justify-content-center" style="height:500px;">
-                    <span class="text-muted">Bạn chưa có tin nhắn</span>
+                <div class="bg-white border rounded-4 shadow-sm d-flex align-items-center justify-content-center h-100" style="max-height: 85vh;">
+                    <div class="text-center p-5">
+                        <div class="mb-4" style="animation: floatIcon 3s ease-in-out infinite;">
+                            <i class="fa-regular fa-comments text-primary" style="font-size: 4.5rem; opacity: 0.35;"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-2">Bảng điều khiển Live Chat FPT Long Châu</h5>
+                        <p class="text-muted small mx-auto" style="max-width: 380px; line-height:1.45;">Hãy chọn một khách hàng từ danh sách bên trái để xem cuộc trò chuyện và hồ sơ mua hàng chi tiết của họ.</p>
+                    </div>
                 </div>
             }
         </div>
     </div>
 </div>
+
 <style>
-    .list-group-item.active {
-        background: #e3f0ff;
-        color: #1976d2;
-        border-color: #1976d2;
+    .list-group-item.customer-item {
+        border-left: 4px solid transparent;
+        cursor: pointer;
+    }
+
+    .list-group-item.customer-item:hover {
+        background-color: #f8fafc !important;
+        border-left-color: #cbd5e1;
+    }
+
+    .list-group-item.customer-item.active-chat {
+        background-color: #eff6ff !important;
+        border-left-color: #1250dc;
+    }
+
+    .canned-chip {
+        font-weight: 500;
+        font-size: 0.82rem;
+        cursor: pointer;
+        background: #f1f5f9 !important;
+        border-color: #cbd5e1 !important;
+        color: #475569 !important;
+        transition: all 0.2s;
+    }
+
+    .canned-chip:hover {
+        background: #1250dc !important;
+        color: #fff !important;
+        border-color: #1250dc !important;
+        transform: translateY(-1px);
+    }
+
+    .pulse-badge {
+        animation: pulseBadge 1.5s infinite;
+    }
+
+    @@keyframes pulseBadge {
+        0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.5); }
+        70% { box-shadow: 0 0 0 6px rgba(220, 53, 69, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+    }
+
+    .message-item {
+        animation: slideInMessage 0.25s ease-out;
+    }
+
+    @@keyframes slideInMessage {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    #admin-chat-container::-webkit-scrollbar,
+    #customer-list-container::-webkit-scrollbar,
+    #crm-panel .flex-grow-1::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #admin-chat-container::-webkit-scrollbar-track,
+    #customer-list-container::-webkit-scrollbar-track,
+    #crm-panel .flex-grow-1::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #admin-chat-container::-webkit-scrollbar-thumb,
+    #customer-list-container::-webkit-scrollbar-thumb,
+    #crm-panel .flex-grow-1::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+
+    #admin-chat-container::-webkit-scrollbar-thumb:hover,
+    #customer-list-container::-webkit-scrollbar-thumb:hover,
+    #crm-panel .flex-grow-1::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    /* Rank badges glow */
+    .badge-rank-bac {
+        background-color: #b4b4b4 !important;
+        color: white;
+    }
+    .badge-rank-vang {
+        background: linear-gradient(135deg, #d4af37, #f6e093) !important;
+        color: #3e2723 !important;
+        box-shadow: 0 2px 6px rgba(212, 175, 55, 0.3);
+    }
+    .badge-rank-bachkim {
+        background: linear-gradient(135deg, #e5e4e2, #607d8b) !important;
+        color: #0f172a !important;
+        box-shadow: 0 2px 8px rgba(229, 228, 226, 0.4);
+    }
+
+    /* Focus highlight */
+    #admin-chat-form #input-container {
+        border-color: #e2e8f0;
+    }
+    #admin-chat-form #input-container:focus-within {
+        border-color: #1250dc !important;
+        box-shadow: 0 0 0 3px rgba(18,80,220,0.1) !important;
+    }
+
+    @@keyframes floatIcon {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
     }
 </style>
+
 @section Scripts {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 <script>
     const adminId = 'admin';
     const selectedUserId = '@(selectedUser?.Id ?? "")';
-    let connection = new signalR.HubConnectionBuilder().withUrl('/chathub?userId=admin').build();
-    connection.start().then(() => {
-        if (selectedUserId) connection.invoke('JoinConversation', selectedUserId);
-    });
-    // Gửi tin nhắn từ admin
-    const adminForm = document.getElementById('admin-chat-form');
-    if(adminForm) {
-        adminForm.onsubmit = function(e) {
-            e.preventDefault();
-            const input = document.getElementById('admin-chat-input');
-            const msg = input.value.trim();
-            if (!msg || !selectedUserId) return;
-            connection.invoke('SendMessage', adminId, selectedUserId, msg);
-            input.value = '';
-        };
+    let connection = null;
+    let connectionStatus = 'disconnected';
+
+    // Sound alert setup
+    let isMuted = localStorage.getItem('admin_chat_muted') === 'true';
+    const alarmSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-200.wav');
+    alarmSound.volume = 0.55;
+
+    // Initialize SignalR
+    function initConnection() {
+        connection = new signalR.HubConnectionBuilder()
+            .withUrl('/chathub?userId=admin')
+            .withAutomaticReconnect([0, 1000, 3000, 5000, 10000])
+            .build();
+
+        connection.onreconnecting(() => {
+            updateConnectionStatus('reconnecting');
+        });
+
+        connection.onreconnected(() => {
+            updateConnectionStatus('connected');
+            if (selectedUserId) connection.invoke('JoinConversation', selectedUserId);
+        });
+
+        connection.onclose(() => {
+            updateConnectionStatus('disconnected');
+        });
+
+        connection.start()
+            .then(() => {
+                updateConnectionStatus('connected');
+                if (selectedUserId) connection.invoke('JoinConversation', selectedUserId);
+            })
+            .catch(err => console.error('Connection failed:', err));
+
+        // Handle incoming messages
+        connection.on('ReceiveMessage', handleReceiveMessage);
     }
-    connection.on('ReceiveMessage', function(senderId, message) {
+
+    // Update connection status label
+    function updateConnectionStatus(status) {
+        connectionStatus = status;
+        // Do any UI update if needed
+    }
+
+    // Handle received messages
+    function handleReceiveMessage(senderId, message) {
         if ((senderId === selectedUserId || senderId === adminId) && selectedUserId) {
-            const chatBox = document.querySelector('.col-md-8 .flex-grow-1.bg-light.p-3.overflow-auto');
-            if(chatBox) {
-                const msgDiv = document.createElement('div');
-                if(senderId === adminId) {
-                    msgDiv.className = 'd-flex mb-2 justify-content-end';
+            addMessageToChat(senderId, message);
+        } else if (senderId !== adminId) {
+            // Update unread badge for inactive users
+            updateUnreadBadge(senderId);
+        }
+
+        // Play chime sound if message is incoming from customer and not muted
+        if (senderId !== adminId && !isMuted) {
+            alarmSound.play().catch(e => console.log('Sound blocked:', e));
+        }
+    }
+
+    // Add message to chat list
+    function addMessageToChat(senderId, message) {
+        const chatContainer = document.getElementById('admin-chat-container');
+        if (!chatContainer) return;
+
+        const isSenderAdmin = senderId === adminId;
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `d-flex ${isSenderAdmin ? 'justify-content-end' : 'justify-content-start'} message-item`;
+
+        const time = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        
+        let formattedMessage = '';
+        if (message.includes('<div') || message.includes('<a')) {
+            formattedMessage = message;
+        } else {
+            formattedMessage = escapeHtml(message);
+        }
+
+        const avatarHtml = isSenderAdmin ? 
+            `<div class="flex-shrink-0 mt-1">
+                <div class="avatar-circle rounded-circle d-flex align-items-center justify-content-center fw-bold text-white shadow-sm" style="width: 32px; height: 32px; background: #e2e8f0; border: 1.5px solid #cbd5e1; font-size: 0.75rem;">
+                    🧑‍⚕️
+                </div>
+            </div>` : 
+            `<div class="flex-shrink-0 mt-1">
+                <div class="avatar-circle rounded-circle d-flex align-items-center justify-content-center fw-bold text-white shadow-sm" style="width: 32px; height: 32px; background: linear-gradient(135deg, #1250dc, #00d2ff); font-size: 0.75rem;">
+                    ${selectedUserId ? '@(selectedUser?.UserName ?? "U")'.substring(0,1).toUpperCase() : 'U'}
+                </div>
+            </div>`;
+
+        msgDiv.innerHTML = `
+            <div class="d-flex gap-2.5 ${isSenderAdmin ? 'flex-row-reverse' : ''}" style="max-width: 80%;">
+                ${avatarHtml}
+                <div>
+                    <div class="px-3 py-2.5 shadow-sm rounded-3 ${isSenderAdmin ? 'bg-primary text-white' : 'bg-white text-dark border'}" 
+                         style="font-size: 0.93rem; line-height:1.45; word-break: break-word; border-radius: ${isSenderAdmin ? '16px 16px 4px 16px' : '16px 16px 16px 4px'} !important;">
+                        ${formattedMessage}
+                    </div>
+                    <div class="small text-muted mt-1 px-1 ${isSenderAdmin ? 'text-end' : ''}" style="font-size: 0.72rem; opacity: 0.8;">
+                        ${time}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        chatContainer.appendChild(msgDiv);
+        scrollToBottom();
+    }
+
+    // Escape HTML strings
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Scroll chat window to bottom
+    function scrollToBottom() {
+        const chatContainer = document.getElementById('admin-chat-container');
+        if (chatContainer) {
+            setTimeout(() => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 50);
+        }
+    }
+
+    // Update unread badge in sidebar
+    function updateUnreadBadge(userId) {
+        const items = document.querySelectorAll('.customer-item');
+        items.forEach(item => {
+            if (item.getAttribute('href')?.includes(userId)) {
+                let badge = item.querySelector('.badge.bg-danger');
+                if (badge) {
+                    let count = parseInt(badge.textContent) || 0;
+                    badge.textContent = count + 1;
                 } else {
-                    msgDiv.className = 'd-flex mb-2 justify-content-start';
-                }
-                const bubble = document.createElement('div');
-                bubble.className = (senderId === adminId ? 'px-3 py-2 rounded shadow-sm bg-info text-primary' : 'px-3 py-2 rounded shadow-sm bg-white text-dark');
-                bubble.style.maxWidth = '70%';
-                bubble.style.wordBreak = 'break-word';
-                bubble.style.whiteSpace = 'pre-line';
-                bubble.style.lineHeight = '1.5';
-                bubble.innerText = message;
-                msgDiv.appendChild(bubble);
-                chatBox.appendChild(msgDiv);
-                setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 100);
-            }
-        } else if(senderId !== adminId) {
-            // Nếu không phải user đang chat và sender là user, cập nhật badge số tin chưa đọc ở danh sách user
-            const userList = document.querySelectorAll('.list-group-item');
-            userList.forEach(function(item) {
-                if(item.getAttribute('href') && item.getAttribute('href').includes(senderId)) {
-                    let badge = item.querySelector('.badge.bg-danger');
-                    if(badge) {
-                        let count = parseInt(badge.textContent) || 0;
-                        badge.textContent = count + 1;
-                    } else {
-                        const newBadge = document.createElement('span');
-                        newBadge.className = 'badge bg-danger mt-1';
-                        newBadge.textContent = '1';
-                        item.querySelector('.d-flex.flex-column.align-items-end').appendChild(newBadge);
+                    const badgeContainer = item.querySelector('.flex-grow-1')?.parentElement;
+                    if (badgeContainer) {
+                        const div = document.createElement('div');
+                        div.className = 'flex-shrink-0 ms-1 mt-1';
+                        div.innerHTML = '<span class="badge rounded-pill bg-danger" style="font-size:0.75rem;">1</span>';
+                        badgeContainer.appendChild(div);
                     }
                 }
-            });
-        }
-    });
-    // Khi click vào user bên trái, xóa badge đỏ của user đó
-    document.querySelectorAll('.list-group-item').forEach(function(item) {
-        item.addEventListener('click', function() {
-            let badge = item.querySelector('.badge.bg-danger');
-            if(badge) badge.remove();
+            }
+        });
+    }
+
+    // Search bar functionality
+    document.getElementById('customer-search').addEventListener('input', function() {
+        const q = this.value.toLowerCase().trim();
+        document.querySelectorAll('.customer-item').forEach(item => {
+            const name = item.getAttribute('data-username').toLowerCase();
+            if (name.includes(q)) {
+                item.style.setProperty('display', 'block', 'important');
+            } else {
+                item.style.setProperty('display', 'none', 'important');
+            }
         });
     });
-    window.addEventListener('DOMContentLoaded', function() {
-        const chatBox = document.querySelector('.col-md-8 .flex-grow-1.bg-light.p-3.overflow-auto');
-        if(chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Canned Response pills clicks
+    document.querySelectorAll('.canned-chip').forEach(chip => {
+        chip.addEventListener('click', function() {
+            const input = document.getElementById('admin-chat-input');
+            if (input) {
+                input.value = this.getAttribute('data-text');
+                input.focus();
+            }
+        });
+    });
+
+    // Load Customer CRM information dynamically
+    function loadCrmProfile(userId) {
+        if (!userId) return;
+
+        const loader = document.getElementById('crm-loader');
+        const profile = document.getElementById('crm-profile');
+        
+        if (loader && profile) {
+            loader.style.display = 'block';
+            profile.style.display = 'none';
+        }
+
+        fetch(`/admin/chat/customer-info/${userId}`)
+            .then(res => {
+                if (!res.ok) throw new Error('API failed');
+                return res.json();
+            })
+            .then(data => {
+                // Populate profile fields
+                document.getElementById('crm-username').textContent = data.userName;
+                document.getElementById('crm-email').textContent = data.email || 'Chưa cung cấp';
+                document.getElementById('crm-phone').textContent = data.phone || 'Chưa cung cấp';
+                document.getElementById('crm-points').textContent = data.loyaltyPoints + ' điểm';
+                document.getElementById('crm-spent').textContent = data.totalSpent.toLocaleString('vi-VN') + 'đ';
+                
+                // Avatar character
+                document.getElementById('crm-avatar').textContent = data.userName.substring(0, Math.Min(2, data.userName.length)).toUpperCase();
+
+                // Style rank badge
+                const rankBadge = document.getElementById('crm-rank');
+                rankBadge.textContent = 'Hạng: ' + data.rank;
+                rankBadge.className = 'badge rounded-pill py-1.5 px-3 mb-2';
+                if (data.rank === 'Vàng') {
+                    rankBadge.classList.add('badge-rank-vang');
+                } else if (data.rank === 'Bạch kim') {
+                    rankBadge.classList.add('badge-rank-bachkim');
+                } else {
+                    rankBadge.classList.add('badge-rank-bac');
+                }
+
+                // Render orders
+                const ordersList = document.getElementById('crm-orders-list');
+                ordersList.innerHTML = '';
+                
+                if (data.recentOrders && data.recentOrders.length > 0) {
+                    data.recentOrders.forEach(o => {
+                        let statusColor = 'secondary';
+                        if (o.status === 'Hoàn thành' || o.status === 'Đã giao') statusColor = 'success';
+                        else if (o.status === 'Chờ xử lý' || o.status === 'Đang giao') statusColor = 'warning';
+                        else if (o.status === 'Đã hủy') statusColor = 'danger';
+
+                        const div = document.createElement('div');
+                        div.className = 'p-2.5 border rounded bg-white shadow-sm';
+                        div.style.fontSize = '0.82rem';
+                        div.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <a href="/Admin/Order/Details/${o.orderId}" target="_blank" class="fw-bold text-primary text-decoration-none">Đơn #${o.orderId}</a>
+                                <span class="badge bg-${statusColor}" style="font-size:0.7rem;">${o.status || 'Chờ duyệt'}</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted mt-1">
+                                <span>${o.orderDate}</span>
+                                <span class="fw-semibold text-dark">${o.totalAmount.toLocaleString('vi-VN')}đ</span>
+                            </div>
+                        `;
+                        ordersList.appendChild(div);
+                    });
+                } else {
+                    ordersList.innerHTML = '<div class="text-center text-muted small py-3 italic">Không có đơn hàng nào gần đây</div>';
+                }
+
+                if (loader && profile) {
+                    loader.style.display = 'none';
+                    profile.style.display = 'block';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                if (loader) {
+                    loader.innerHTML = '<div class="text-danger small"><i class="fa-solid fa-triangle-exclamation mb-1"></i><br>Không thể tải hồ sơ khách hàng</div>';
+                }
+            });
+    }
+
+    // Set up everything on load
+    document.addEventListener('DOMContentLoaded', function () {
+        const adminForm = document.getElementById('admin-chat-form');
+        const input = document.getElementById('admin-chat-input');
+        
+        // Connect to hub
+        initConnection();
+
+        if (adminForm) {
+            adminForm.onsubmit = function (e) {
+                e.preventDefault();
+                const msg = input.value.trim();
+
+                if (!msg || !selectedUserId) return;
+                if (connectionStatus !== 'connected') {
+                    alert('Lỗi kết nối máy chủ SignalR. Vui lòng tải lại trang.');
+                    return;
+                }
+
+                connection.invoke('SendMessage', adminId, selectedUserId, msg)
+                    .catch(err => console.error('Send message error:', err));
+
+                input.value = '';
+                input.focus();
+            };
+
+            // Enter key listeners
+            if (input) {
+                input.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        adminForm.dispatchEvent(new Event('submit'));
+                    }
+                });
+            }
+        }
+
+        // Mute state buttons setup
+        const muteBtn = document.getElementById('admin-mute-btn');
+        const muteIcon = document.getElementById('admin-mute-icon');
+        
+        if (muteBtn && muteIcon) {
+            updateMuteBtnUI();
+            
+            muteBtn.onclick = function() {
+                isMuted = !isMuted;
+                localStorage.setItem('admin_chat_muted', isMuted);
+                updateMuteBtnUI();
+            };
+        }
+
+        function updateMuteBtnUI() {
+            if (isMuted) {
+                muteIcon.className = 'fa-solid fa-volume-xmark text-danger';
+                muteBtn.title = 'Bật âm báo';
+            } else {
+                muteIcon.className = 'fa-solid fa-volume-high';
+                muteBtn.title = 'Tắt âm báo';
+            }
+        }
+
+        // Toggle CRM side panel
+        const toggleBtn = document.getElementById('toggle-crm-btn');
+        const crmPanel = document.getElementById('crm-panel');
+        if (toggleBtn && crmPanel) {
+            toggleBtn.onclick = function() {
+                if (crmPanel.style.display === 'none') {
+                    crmPanel.style.display = 'flex';
+                } else {
+                    crmPanel.style.display = 'none';
+                }
+            };
+        }
+
+        // Remove unread badges when clicking users
+        document.querySelectorAll('.customer-item').forEach(item => {
+            item.addEventListener('click', function () {
+                const badge = this.querySelector('.badge.bg-danger');
+                if (badge) badge.remove();
+            });
+        });
+
+        // Initial loading actions if user selected
+        if (selectedUserId) {
+            loadCrmProfile(selectedUserId);
+            scrollToBottom();
+        }
+
+        // Cleanup
+        window.addEventListener('beforeunload', function () {
+            if (connection) connection.stop();
+        });
     });
 </script>
-} 
+}

@@ -18,40 +18,9 @@ namespace web_ban_thuoc.Controllers.Admin
         {
             _context = context;
         }
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            var totalOrders = await _context.Orders.CountAsync();
-            var totalRevenue = await _context.Orders.Where(o => o.Status == OrderStatuses.Delivered).SumAsync(o => o.TotalAmount ?? 0);
-            var pendingOrders = await _context.Orders.CountAsync(o => o.Status == OrderStatuses.PendingConfirmation);
-            var unreadMessages = await _context.ChatMessages.CountAsync(m => m.ReceiverId == "admin" && !m.IsRead);
-            var totalProducts = await _context.Products.CountAsync();
-            var totalCustomers = await _context.Users.CountAsync();
-            var today = DateTime.Today;
-            var todayOrders = await _context.Orders.CountAsync(o => o.OrderDate >= today);
-            var todayRevenue = await _context.Orders.Where(o => o.OrderDate >= today && o.Status == OrderStatuses.Delivered).SumAsync(o => o.TotalAmount ?? 0);
-            // Doanh thu theo tháng trong năm hiện tại
-            int year = DateTime.Now.Year;
-            var monthlyRevenue = new List<decimal>();
-            for (int month = 1; month <= 12; month++)
-            {
-                var start = new DateTime(year, month, 1);
-                var end = (month < 12) ? new DateTime(year, month + 1, 1) : new DateTime(year + 1, 1, 1);
-                var revenue = await _context.Orders
-                    .Where(o => o.Status == OrderStatuses.Delivered && o.OrderDate >= start && o.OrderDate < end)
-                    .SumAsync(o => o.TotalAmount ?? 0);
-                monthlyRevenue.Add(revenue);
-            }
-            ViewBag.TotalOrders = totalOrders;
-            ViewBag.TotalRevenue = totalRevenue;
-            ViewBag.PendingOrders = pendingOrders;
-            ViewBag.UnreadMessages = unreadMessages;
-            ViewBag.TotalProducts = totalProducts;
-            ViewBag.TotalCustomers = totalCustomers;
-            ViewBag.TodayOrders = todayOrders;
-            ViewBag.TodayRevenue = todayRevenue;
-            ViewBag.MonthlyRevenue = monthlyRevenue;
-            ViewBag.ChartYear = year;
-            return View("~/Views/Admin/Index.cshtml");
+            return RedirectToAction("Index", "AdminReport");
         }
 
         public async Task<IActionResult> Voucher(int page = 1)

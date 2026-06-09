@@ -56,6 +56,7 @@ builder.Services.AddScoped<ILoyaltyService, LoyaltyService>();
 builder.Services.AddScoped<IOrderNotificationService, OrderNotificationService>();
 builder.Services.AddScoped<IPayOSWebhookProcessor, PayOSWebhookProcessor>();
 builder.Services.AddScoped<IProductExcelImportService, ProductExcelImportService>();
+builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 builder.Services.AddHostedService<MonthlyVoucherHostedService>();
 
 // Đăng ký PayOS Services

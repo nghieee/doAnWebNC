@@ -34,8 +34,7 @@ public class AdminSidebarViewComponent : ViewComponent
         }
 
         AddGroup("Tổng quan", "fa-solid fa-chart-pie",
-            new AdminNavItem { Title = "Dashboard", Url = "/admin", IconClass = "fa-solid fa-gauge-high", PathPrefix = "/admin", Roles = [StaffRoles.Admin], ExactMatch = true },
-            new AdminNavItem { Title = "Báo cáo", Url = "/AdminReport", IconClass = "fa-solid fa-chart-line", PathPrefix = "/AdminReport", Roles = [StaffRoles.Admin] });
+            new AdminNavItem { Title = "Báo cáo thống kê", Url = "/AdminReport", IconClass = "fa-solid fa-chart-line", PathPrefix = "/AdminReport", Roles = [StaffRoles.Admin] });
 
         AddGroup("Bán hàng", "fa-solid fa-store",
             new AdminNavItem { Title = "Đơn hàng", Url = "/AdminOrder", IconClass = "fa-solid fa-cart-shopping", PathPrefix = "/AdminOrder", Roles = [StaffRoles.Admin, StaffRoles.WarehouseStaff, StaffRoles.CustomerSupport] },

@@ -25,6 +25,7 @@ public partial class Order
 
     public string? VoucherCode { get; set; }
     public decimal? VoucherDiscount { get; set; }
+    public string? PrescriptionNote { get; set; }
 
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 

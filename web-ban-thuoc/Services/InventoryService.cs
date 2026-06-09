@@ -88,16 +88,41 @@ public class InventoryService : IInventoryService
 
     public async Task<int> GetAvailableStockAsync(int productId, int? warehouseId = null)
     {
+        var today = DateTime.Today;
+        
+        var batchesQuery = _context.ProductBatches
+            .Where(b => b.ProductId == productId && b.QuantityOnHand > 0);
+            
         if (warehouseId.HasValue)
         {
-            var ws = await _context.WarehouseStocks
-                .FirstOrDefaultAsync(x => x.WarehouseId == warehouseId.Value && x.ProductId == productId);
-            return ws?.AvailableQuantity ?? 0;
+            batchesQuery = batchesQuery.Where(b => b.WarehouseId == warehouseId.Value);
+        }
+        
+        var batches = await batchesQuery.ToListAsync();
+        int totalOnHand = 0;
+        
+        if (batches.Any())
+        {
+            totalOnHand = batches.Where(b => b.ExpiryDate == null || b.ExpiryDate >= today).Sum(b => b.QuantityOnHand);
+        }
+        else
+        {
+            IQueryable<WarehouseStock> wsQuery = _context.WarehouseStocks.Where(ws => ws.ProductId == productId);
+            if (warehouseId.HasValue)
+            {
+                wsQuery = wsQuery.Where(ws => ws.WarehouseId == warehouseId.Value);
+            }
+            totalOnHand = await wsQuery.SumAsync(ws => ws.QuantityOnHand);
         }
 
-        return await _context.WarehouseStocks
-            .Where(x => x.ProductId == productId)
-            .SumAsync(x => x.QuantityOnHand - x.QuantityReserved);
+        IQueryable<WarehouseStock> reservedQuery = _context.WarehouseStocks.Where(ws => ws.ProductId == productId);
+        if (warehouseId.HasValue)
+        {
+            reservedQuery = reservedQuery.Where(ws => ws.WarehouseId == warehouseId.Value);
+        }
+        int totalReserved = await reservedQuery.SumAsync(ws => ws.QuantityReserved);
+
+        return Math.Max(0, totalOnHand - totalReserved);
     }
 
     public async Task<Dictionary<int, int>> GetAvailableStockMapAsync(IEnumerable<int> productIds, int? warehouseId = null)
@@ -106,14 +131,41 @@ public class InventoryService : IInventoryService
         if (ids.Count == 0)
             return new Dictionary<int, int>();
 
-        IQueryable<WarehouseStock> query = _context.WarehouseStocks.Where(x => ids.Contains(x.ProductId));
+        var today = DateTime.Today;
+        
+        var batchesQuery = _context.ProductBatches
+            .Where(b => ids.Contains(b.ProductId) && b.QuantityOnHand > 0);
         if (warehouseId.HasValue)
-            query = query.Where(x => x.WarehouseId == warehouseId.Value);
+            batchesQuery = batchesQuery.Where(b => b.WarehouseId == warehouseId.Value);
+            
+        var allBatches = await batchesQuery.ToListAsync();
+        var batchesLookup = allBatches.ToLookup(b => b.ProductId);
 
-        var rows = await query.ToListAsync();
-        return ids.ToDictionary(
-            id => id,
-            id => rows.Where(r => r.ProductId == id).Sum(r => r.AvailableQuantity));
+        IQueryable<WarehouseStock> wsQuery = _context.WarehouseStocks.Where(ws => ids.Contains(ws.ProductId));
+        if (warehouseId.HasValue)
+            wsQuery = wsQuery.Where(ws => ws.WarehouseId == warehouseId.Value);
+        var allStocks = await wsQuery.ToListAsync();
+        var stocksLookup = allStocks.ToLookup(ws => ws.ProductId);
+
+        var map = new Dictionary<int, int>();
+        foreach (var id in ids)
+        {
+            int totalOnHand = 0;
+            var productBatches = batchesLookup[id].ToList();
+            if (productBatches.Any())
+            {
+                totalOnHand = productBatches.Where(b => b.ExpiryDate == null || b.ExpiryDate >= today).Sum(b => b.QuantityOnHand);
+            }
+            else
+            {
+                totalOnHand = stocksLookup[id].Sum(ws => ws.QuantityOnHand);
+            }
+
+            int totalReserved = stocksLookup[id].Sum(ws => ws.QuantityReserved);
+            map[id] = Math.Max(0, totalOnHand - totalReserved);
+        }
+
+        return map;
     }
 
     public async Task SyncProductStockQuantityAsync(int productId)
@@ -246,6 +298,9 @@ public class InventoryService : IInventoryService
             if (line.Quantity <= 0)
                 throw new InvalidOperationException("Số lượng nhập phải lớn hơn 0.");
 
+            if (line.ExpiryDate == null)
+                throw new InvalidOperationException("Hạn sử dụng của lô hàng bắt buộc phải nhập.");
+
             var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == line.ProductId && p.IsActive)
                 ?? throw new InvalidOperationException($"Sản phẩm #{line.ProductId} không tồn tại.");
 
@@ -327,6 +382,9 @@ public class InventoryService : IInventoryService
 
     public async Task<PurchaseOrder> CreatePurchaseOrderAsync(PurchaseOrderInput input, string? createdByUserId)
     {
+        if (input.ExpectedDate == null)
+            throw new InvalidOperationException("Ngày dự kiến nhận hàng bắt buộc phải có.");
+
         if (input.Lines == null || input.Lines.Count == 0)
             throw new InvalidOperationException("Đơn đặt hàng phải có ít nhất một dòng.");
 
@@ -443,8 +501,9 @@ public class InventoryService : IInventoryService
 
     private async Task DeductFromBatchesFefoAsync(int productId, int warehouseId, int quantity, int orderId, string? createdByUserId)
     {
+        var today = DateTime.Today;
         var batches = await _context.ProductBatches
-            .Where(b => b.ProductId == productId && b.WarehouseId == warehouseId && b.QuantityOnHand > 0)
+            .Where(b => b.ProductId == productId && b.WarehouseId == warehouseId && b.QuantityOnHand > 0 && (b.ExpiryDate == null || b.ExpiryDate >= today))
             .OrderBy(b => b.ExpiryDate == null)
             .ThenBy(b => b.ExpiryDate)
             .ThenBy(b => b.CreatedAt)

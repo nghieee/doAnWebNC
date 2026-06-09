@@ -1,0 +1,169 @@
+@model List<web_ban_thuoc.Models.ReplenishmentGroupViewModel>
+@using web_ban_thuoc.Models
+@{
+    ViewData["Title"] = "Đề xuất nhập hàng tự động";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+    int totalProducts = Model.Sum(g => g.Products.Count);
+    int totalGroups = Model.Count;
+}
+
+<div class="container-fluid py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1"><i class="fa fa-circle-exclamation text-warning me-2"></i>Đề xuất nhập hàng tự động</h4>
+            <p class="text-muted mb-0 small">
+                Hệ thống phát hiện <strong class="text-danger">@totalProducts sản phẩm</strong> thuộc
+                <strong>@totalGroups nhà cung cấp</strong> đang ở dưới ngưỡng tồn kho tối thiểu.
+            </p>
+        </div>
+        <a href="/AdminPurchase" class="btn btn-outline-secondary">
+            <i class="fa fa-arrow-left me-1"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 bg-white rounded-4 shadow-sm">
+            <i class="fa fa-circle-check fa-3x text-success mb-3"></i>
+            <p class="text-muted fs-5 mb-0">Tất cả sản phẩm đang có tồn kho đạt ngưỡng an toàn!</p>
+        </div>
+    }
+    else
+    {
+        @foreach (var group in Model)
+        {
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3 px-4">
+                    <div>
+                        <span class="fw-bold fs-6"><i class="fa fa-building me-2 text-primary"></i>@group.Supplier.Name</span>
+                        <span class="badge bg-danger ms-2">@group.Products.Count SP cần nhập</span>
+                        @if (!string.IsNullOrEmpty(group.Supplier.Phone))
+                        {
+                            <span class="text-muted small ms-3"><i class="fa fa-phone me-1"></i>@group.Supplier.Phone</span>
+                        }
+                        @if (!string.IsNullOrEmpty(group.Supplier.Email))
+                        {
+                            <span class="text-muted small ms-3"><i class="fa fa-envelope me-1"></i>@group.Supplier.Email</span>
+                        }
+                    </div>
+                    <a href="/AdminPurchase/Create?supplierId=@group.Supplier.SupplierId"
+                       class="btn btn-sm btn-success">
+                        <i class="fa fa-plus me-1"></i> Tạo đơn cho NCC này
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width:60px"></th>
+                                    <th>Sản phẩm</th>
+                                    <th class="text-center">SKU</th>
+                                    <th class="text-center">Tồn hiện tại</th>
+                                    <th class="text-center">Ngưỡng tối thiểu</th>
+                                    <th class="text-center">Đề xuất nhập</th>
+                                    <th class="text-end">Giá nhập ước tính</th>
+                                    <th class="text-center">Tình trạng</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in group.Products.OrderBy(p => p.StockQuantity))
+                                {
+                                    var urgencyClass = item.StockQuantity == 0
+                                        ? "table-danger"
+                                        : item.StockQuantity <= item.MinStockLevel / 2
+                                            ? "table-warning"
+                                            : "";
+                                    var estCost = item.CostPrice * item.SuggestedOrderQty;
+
+                                    <tr class="@urgencyClass">
+                                        <td class="ps-3">
+                                            <img src="/images/products/@item.ImageUrl"
+                                                 alt="@item.ProductName"
+                                                 class="rounded"
+                                                 style="width:48px;height:48px;object-fit:cover;" />
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold">@item.ProductName</div>
+                                        </td>
+                                        <td class="text-center">
+                                            <code class="small">@(string.IsNullOrEmpty(item.Sku) ? "—" : item.Sku)</code>
+                                        </td>
+                                        <td class="text-center">
+                                            @if (item.StockQuantity == 0)
+                                            {
+                                                <span class="badge bg-danger">Hết hàng</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="fw-bold text-danger">@item.StockQuantity</span>
+                                            }
+                                        </td>
+                                        <td class="text-center text-muted">@item.MinStockLevel</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary fs-6 px-3">@item.SuggestedOrderQty</span>
+                                        </td>
+                                        <td class="text-end">
+                                            @if (item.CostPrice > 0)
+                                            {
+                                                <span>@estCost.ToString("N0")đ</span>
+                                                <div class="small text-muted">(@item.CostPrice.ToString("N0")đ/sp)</div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">—</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            @if (item.StockQuantity == 0)
+                                            {
+                                                <span class="badge bg-danger"><i class="fa fa-triangle-exclamation me-1"></i>Khẩn cấp</span>
+                                            }
+                                            else if (item.StockQuantity <= item.MinStockLevel / 2)
+                                            {
+                                                <span class="badge bg-warning text-dark"><i class="fa fa-exclamation me-1"></i>Thấp</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Gần ngưỡng</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="6" class="text-end fw-bold pe-3">Tổng chi phí ước tính:</td>
+                                    <td class="text-end fw-bold text-primary">
+                                        @group.Products.Where(p => p.CostPrice > 0).Sum(p => p.CostPrice * p.SuggestedOrderQty).ToString("N0")đ
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-light">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h6 class="fw-bold mb-1"><i class="fa fa-lightbulb text-warning me-2"></i>Hướng dẫn xử lý</h6>
+                    <p class="text-muted small mb-0">
+                        Nhấn <strong>Tạo đơn cho NCC này</strong> để chuyển sang trang tạo đơn đặt hàng.
+                        Số lượng đề xuất được tính = (Ngưỡng tối thiểu × 3) - Tồn hiện tại.
+                        Bạn có thể điều chỉnh số lượng trước khi lưu.
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="small text-muted">
+                        <i class="fa fa-circle text-danger me-1"></i>Đỏ = Hết hàng &nbsp;
+                        <i class="fa fa-circle text-warning me-1"></i>Vàng = Thấp &nbsp;
+                        <i class="fa fa-circle text-secondary me-1"></i>Xám = Gần ngưỡng
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

@@ -104,6 +104,7 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
+                                <th style="width: 80px;" class="text-center">Ảnh</th>
                                 <th>Sản phẩm</th>
                                 <th class="text-center">SL đặt</th>
                                 <th class="text-center">Đã nhận</th>
@@ -115,7 +116,14 @@
                             @foreach (var line in Model.Lines)
                             {
                                 var linePct = line.QuantityOrdered > 0 ? (int)Math.Round(line.QuantityReceived * 100.0 / line.QuantityOrdered) : 0;
+                                var mainImg = line.Product.ProductImages?.FirstOrDefault(i => i.IsMain == true)?.ImageUrl
+                                    ?? line.Product.ProductImages?.FirstOrDefault()?.ImageUrl
+                                    ?? "default.png";
+                                var mainImgPath = mainImg == "default.png" ? "/images/products/default.png" : $"/images/products/{mainImg}";
                                 <tr>
+                                    <td class="text-center">
+                                        <img src="@mainImgPath" alt="Ảnh" class="rounded-3 border shadow-sm" style="width: 50px; height: 50px; object-fit: cover; background: #f4f6fb;" />
+                                    </td>
                                     <td>
                                         <div class="fw-semibold">@line.Product.ProductName</div>
                                         <div class="progress rounded-pill mt-1" style="height:6px;max-width:220px;">
@@ -140,7 +148,7 @@
                         </tbody>
                         <tfoot class="table-light">
                             <tr class="fw-semibold">
-                                <td>Tổng</td>
+                                <td colspan="2">Tổng</td>
                                 <td class="text-center">@totalOrdered</td>
                                 <td class="text-center text-success">@totalReceived</td>
                                 <td class="text-center text-danger">@totalRemaining</td>

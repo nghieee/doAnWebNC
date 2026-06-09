@@ -57,6 +57,7 @@ namespace web_ban_thuoc.Controllers.Admin
 
             var warehouseStocks = await _context.WarehouseStocks
                 .Include(ws => ws.Product)
+                    .ThenInclude(p => p.ProductImages)
                 .Include(ws => ws.Warehouse)
                 .Where(ws => ws.Product.IsActive)
                 .OrderBy(ws => ws.Product.ProductName)
@@ -67,12 +68,15 @@ namespace web_ban_thuoc.Controllers.Admin
                     Sku = ws.Product.Sku,
                     WarehouseName = ws.Warehouse.Name,
                     QuantityOnHand = ws.QuantityOnHand,
-                    QuantityReserved = ws.QuantityReserved
+                    QuantityReserved = ws.QuantityReserved,
+                    ProductImageUrl = ws.Product.ProductImages.Where(pi => pi.IsMain == true).Select(pi => pi.ImageUrl).FirstOrDefault()
+                        ?? ws.Product.ProductImages.Select(pi => pi.ImageUrl).FirstOrDefault()
                 })
                 .ToListAsync();
 
             var batches = await _context.ProductBatches
                 .Include(b => b.Product)
+                    .ThenInclude(p => p.ProductImages)
                 .Include(b => b.Warehouse)
                 .Where(b => b.QuantityOnHand > 0)
                 .OrderBy(b => b.ExpiryDate == null)
@@ -85,7 +89,9 @@ namespace web_ban_thuoc.Controllers.Admin
                     BatchNo = b.BatchNo,
                     ExpiryDate = b.ExpiryDate,
                     QuantityOnHand = b.QuantityOnHand,
-                    WarehouseName = b.Warehouse.Name
+                    WarehouseName = b.Warehouse.Name,
+                    ProductImageUrl = b.Product.ProductImages.Where(pi => pi.IsMain == true).Select(pi => pi.ImageUrl).FirstOrDefault()
+                        ?? b.Product.ProductImages.Select(pi => pi.ImageUrl).FirstOrDefault()
                 })
                 .ToListAsync();
 

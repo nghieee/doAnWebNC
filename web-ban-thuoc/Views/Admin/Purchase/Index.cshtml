@@ -44,7 +44,12 @@
             </select>
             <button type="submit" class="btn btn-primary">Lọc</button>
         </form>
-        <a href="/AdminPurchase/Create" class="btn btn-success"><i class="fa fa-plus me-1"></i> Tạo đơn đặt hàng</a>
+        <div>
+            <a href="/AdminPurchase/Replenishment" class="btn btn-warning text-dark me-2">
+                <i class="fa fa-bolt-lightning me-1"></i> Đề xuất tự động
+            </a>
+            <a href="/AdminPurchase/Create" class="btn btn-success"><i class="fa fa-plus me-1"></i> Tạo đơn đặt hàng</a>
+        </div>
     </div>
 
     @if (!Model.Any())

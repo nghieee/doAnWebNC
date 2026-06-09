@@ -1,93 +1,622 @@
 @using web_ban_thuoc.Controllers.Admin
 @{
-    ViewData["Title"] = "Báo cáo vận hành";
+    ViewData["Title"] = "Báo cáo tài chính & vận hành";
     Layout = "~/Views/Admin/_Layout.cshtml";
-    var ordersByStatus = ViewBag.OrdersByStatus as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
-    var topProducts = ViewBag.TopProducts as List<TopProductReportRow> ?? new();
+
+    var expiringRows = ViewBag.ExpiringRows as List<ExpiringBatchRow> ?? new();
+    var expirySummary = ViewBag.ExpirySummary as ExpiryWarningSummary ?? new ExpiryWarningSummary();
+    var productRows = ViewBag.ProductRows as List<ProductReportRow> ?? new();
+    var paymentSummaries = ViewBag.PaymentSummaries as List<PaymentMethodSummary> ?? new();
+    var customerRows = ViewBag.CustomerRows as List<CustomerSpendingRow> ?? new();
+    var chartData = ViewBag.ChartData as List<ChartPoint> ?? new();
+
+    // Financial indicators
+    decimal revenue = ViewBag.Revenue ?? 0m;
+    decimal cogs = ViewBag.Cogs ?? 0m;
+    decimal grossProfit = ViewBag.GrossProfit ?? 0m;
+    decimal grossMargin = ViewBag.GrossMargin ?? 0m;
+    decimal voucherDiscount = ViewBag.VoucherDiscount ?? 0m;
+
+    decimal cashInflow = ViewBag.CashInflow ?? 0m;
+    decimal cashOutflow = ViewBag.CashOutflow ?? 0m;
+    decimal netCashFlow = ViewBag.NetCashFlow ?? 0m;
+
+    // Inventory indicators
+    decimal currentStockValue = ViewBag.CurrentStockValue ?? 0m;
+    decimal turnoverRatio = ViewBag.TurnoverRatio ?? 0m;
+    double dio = ViewBag.Dio ?? 0;
+    decimal writeOffLoss = ViewBag.WriteOffLoss ?? 0m;
+
     var lowStock = ViewBag.LowStock as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
-    var monthly = ViewBag.MonthlyRevenue as List<decimal> ?? new();
+    int outOfStockCount = ViewBag.OutOfStock ?? 0;
 }
+
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="fa fa-chart-line text-primary me-2"></i>Báo cáo vận hành</h4>
-        <a href="/admin/ExportReport" class="btn btn-outline-primary btn-sm"><i class="fa fa-download me-1"></i> Xuất CSV doanh thu</a>
-    </div>
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-3">
-                <div class="text-muted small">Doanh thu hôm nay</div>
-                <div class="fs-4 fw-bold text-primary">@(((decimal)ViewBag.RevenueToday).ToString("N0"))đ</div>
+    <!-- Filters and Header -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
+        <div class="row align-items-center g-3">
+            <div class="col-12 col-lg-4">
+                <h4 class="mb-1 text-primary fw-bold"><i class="fa fa-chart-line me-2"></i>Báo cáo tài chính & vận hành</h4>
+                <p class="text-muted small mb-0">Thời gian báo cáo: <strong class="text-dark">@ViewBag.RangeText</strong></p>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-3">
-                <div class="text-muted small">Tháng này</div>
-                <div class="fs-4 fw-bold text-success">@(((decimal)ViewBag.RevenueMonth).ToString("N0"))đ</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-3">
-                <div class="text-muted small">Năm @ViewBag.ChartYear</div>
-                <div class="fs-4 fw-bold text-info">@(((decimal)ViewBag.RevenueYear).ToString("N0"))đ</div>
-            </div>
-        </div>
-    </div>
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-                <h6 class="fw-bold mb-3">Doanh thu theo tháng (@ViewBag.ChartYear)</h6>
-                <canvas id="revenueChart" height="100"></canvas>
-            </div>
-            <div class="card border-0 shadow-sm rounded-4 p-4">
-                <h6 class="fw-bold mb-3">Top sản phẩm bán chạy</h6>
-                <table class="table table-sm">
-                    <thead><tr><th>Sản phẩm</th><th>SL</th><th>Doanh thu</th></tr></thead>
-                    <tbody>
-                        @foreach (var p in topProducts)
-                        {
-                            <tr><td>@p.ProductName</td><td>@p.Quantity</td><td>@p.Revenue.ToString("N0")đ</td></tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-                <h6 class="fw-bold mb-3">Đơn theo trạng thái</h6>
-                @foreach (var row in ordersByStatus)
-                {
-                    <div class="d-flex justify-content-between py-1 border-bottom small">
-                        <span>@row.Status</span><strong>@row.Count</strong>
+            <div class="col-12 col-lg-8">
+                <form id="filterForm" method="get" action="/AdminReport" class="row g-2 align-items-end justify-content-lg-end">
+                    <div class="col-12 col-sm-4 col-md-3">
+                        <label class="form-label small fw-bold text-secondary mb-1">Mốc thời gian</label>
+                        <select name="period" id="periodSelect" class="form-select form-select-sm rounded-3">
+                            <option value="today" selected="@(ViewBag.Period == "today")">Hôm nay</option>
+                            <option value="yesterday" selected="@(ViewBag.Period == "yesterday")">Hôm qua</option>
+                            <option value="last7days" selected="@(ViewBag.Period == "last7days")">7 ngày qua</option>
+                            <option value="last30days" selected="@(ViewBag.Period == "last30days")">30 ngày qua</option>
+                            <option value="thisMonth" selected="@(ViewBag.Period == "thisMonth")">Tháng này</option>
+                            <option value="lastMonth" selected="@(ViewBag.Period == "lastMonth")">Tháng trước</option>
+                            <option value="thisYear" selected="@(ViewBag.Period == "thisYear")">Năm nay</option>
+                            <option value="custom" selected="@(ViewBag.Period == "custom")">Tùy chọn...</option>
+                        </select>
                     </div>
-                }
+                    
+                    <div class="col-6 col-sm-3 col-md-2.5 custom-date-input" style="display: none;">
+                        <label class="form-label small fw-bold text-secondary mb-1">Từ ngày</label>
+                        <input type="date" name="startDate" id="startDate" class="form-control form-control-sm rounded-3" value="@ViewBag.StartDateStr" />
+                    </div>
+                    
+                    <div class="col-6 col-sm-3 col-md-2.5 custom-date-input" style="display: none;">
+                        <label class="form-label small fw-bold text-secondary mb-1">Đến ngày</label>
+                        <input type="date" name="endDate" id="endDate" class="form-control form-control-sm rounded-3" value="@ViewBag.EndDateStr" />
+                    </div>
+
+                    <div class="col-12 col-sm-2 col-md-2">
+                        <button type="submit" class="btn btn-primary btn-sm rounded-3 w-100"><i class="fa fa-filter me-1"></i> Lọc</button>
+                    </div>
+
+                    <div class="col-12 col-sm-3 col-md-2">
+                        <button type="button" onclick="exportReport()" class="btn btn-outline-success btn-sm rounded-3 w-100"><i class="fa fa-file-excel me-1"></i> Xuất Excel</button>
+                    </div>
+                </form>
             </div>
-            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-                <h6 class="fw-bold mb-3">Marketing tháng này</h6>
-                <div class="small">Voucher đã dùng: <strong>@ViewBag.VoucherRedemptionsMonth</strong></div>
-                <div class="small">Đổi quà điểm: <strong>@ViewBag.LoyaltyRedeemsMonth</strong></div>
+        </div>
+    </div>
+
+    <!-- KPI Summary Grid -->
+    <div class="row g-3 mb-4">
+        <!-- Revenue Card -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold">Doanh số & Voucher</span>
+                    <div class="bg-primary-subtle rounded-3 p-2 text-primary">
+                        <i class="fa fa-shopping-bag fa-lg"></i>
+                    </div>
+                </div>
+                <div class="fs-4 fw-extrabold text-dark">@revenue.ToString("N0")đ</div>
+                <div class="text-muted small mt-1">
+                    Đã giảm trừ voucher: <span class="text-danger fw-bold">@voucherDiscount.ToString("N0")đ</span>
+                </div>
             </div>
-            <div class="card border-0 shadow-sm rounded-4 p-4">
-                <h6 class="fw-bold mb-3">Cảnh báo tồn kho</h6>
-                <div class="small text-danger mb-2">Hết hàng: @ViewBag.OutOfStock SP</div>
-                @foreach (var p in lowStock)
-                {
-                    <div class="small py-1">@p.ProductName <span class="badge bg-warning text-dark">@p.StockQuantity</span></div>
-                }
+        </div>
+
+        <!-- Profit Card -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold">Lợi nhuận gộp (Margin)</span>
+                    <div class="bg-success-subtle rounded-3 p-2 text-success">
+                        <i class="fa fa-calculator fa-lg"></i>
+                    </div>
+                </div>
+                <div class="fs-4 fw-extrabold text-success">@grossProfit.ToString("N0")đ</div>
+                <div class="text-muted small mt-1">
+                    Biên lợi nhuận gộp: <span class="badge bg-success-subtle text-success fw-bold">@grossMargin.ToString("F2")%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Net Cash Flow Card -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold">Dòng tiền ròng (Net Flow)</span>
+                    <div class="bg-info-subtle rounded-3 p-2 text-info">
+                        <i class="fa fa-exchange-alt fa-lg"></i>
+                    </div>
+                </div>
+                <div class="fs-4 fw-extrabold @(netCashFlow >= 0 ? "text-info" : "text-danger")">@netCashFlow.ToString("N0")đ</div>
+                <div class="text-muted small mt-1">
+                    Thu: <span class="text-success">@cashInflow.ToString("N0")đ</span> | Chi: <span class="text-danger">@cashOutflow.ToString("N0")đ</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Valuation Card -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold">Tồn kho & Vòng quay</span>
+                    <div class="bg-warning-subtle rounded-3 p-2 text-warning">
+                        <i class="fa fa-archive fa-lg"></i>
+                    </div>
+                </div>
+                <div class="fs-4 fw-extrabold text-dark">@currentStockValue.ToString("N0")đ</div>
+                <div class="text-muted small mt-1">
+                    Vòng quay: <strong class="text-dark">@turnoverRatio.ToString("F2")</strong> | Lưu kho: <strong class="text-dark">@dio.ToString("N1") ngày</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabbed Details -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-pills mb-4 gap-2 border-bottom pb-3" id="reportTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active rounded-3 px-3 py-2" id="financials-tab" data-bs-toggle="tab" data-bs-target="#financials" type="button" role="tab"><i class="fa fa-coins me-2"></i>Tài chính & Dòng tiền</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-3 px-3 py-2 position-relative" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab">
+                    <i class="fa fa-boxes-stacked me-2"></i>Kho hàng & Hạn dùng
+                    @if (expirySummary.ExpiredCount > 0)
+                    {
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white" style="font-size: 0.65rem;">
+                            @expirySummary.ExpiredCount
+                        </span>
+                    }
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-3 px-3 py-2" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab"><i class="fa fa-pills me-2"></i>Hiệu suất Sản phẩm</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-3 px-3 py-2" id="customers-tab" data-bs-toggle="tab" data-bs-target="#customers" type="button" role="tab"><i class="fa fa-users me-2"></i>Khách hàng & Thanh toán</button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="reportTabsContent">
+            <!-- TAB 1: FINANCIALS & CASHFLOW -->
+            <div class="tab-pane fade show active" id="financials" role="tabpanel">
+                <div class="row g-4">
+                    <div class="col-12 col-xl-8">
+                        <div class="card border-0 bg-light rounded-4 p-3">
+                            <h6 class="fw-bold mb-3"><i class="fa fa-chart-area text-primary me-2"></i>Biểu đồ xu thế Doanh thu - Giá vốn - Lợi nhuận</h6>
+                            <div style="position: relative; height: 320px;">
+                                <canvas id="financialTrendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-xl-4">
+                        <h6 class="fw-bold mb-3"><i class="fa fa-table text-primary me-2"></i>Bảng tổng kết tài chính</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped align-middle border">
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Doanh số bán ra (Gross)</strong></td>
+                                        <td class="text-end">@revenue.ToString("N0")đ</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Khấu trừ voucher giảm giá</td>
+                                        <td class="text-end text-danger">-@voucherDiscount.ToString("N0")đ</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Giá vốn hàng bán (COGS)</strong></td>
+                                        <td class="text-end text-secondary">@cogs.ToString("N0")đ</td>
+                                    </tr>
+                                    <tr class="bg-success-subtle text-success">
+                                        <td><strong>Lợi nhuận gộp (Profit)</strong></td>
+                                        <td class="text-end fw-bold">@grossProfit.ToString("N0")đ</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Dòng tiền thực thu (Payments)</strong></td>
+                                        <td class="text-end text-success">+@cashInflow.ToString("N0")đ</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Dòng tiền thực chi (Imports)</strong></td>
+                                        <td class="text-end text-danger">-@cashOutflow.ToString("N0")đ</td>
+                                    </tr>
+                                    <tr class="bg-info-subtle text-info">
+                                        <td><strong>Dòng tiền ròng (Net cash flow)</strong></td>
+                                        <td class="text-end fw-bold">@netCashFlow.ToString("N0")đ</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: INVENTORY & EXPIRY -->
+            <div class="tab-pane fade" id="inventory" role="tabpanel">
+                <!-- Expiry alert statistics -->
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-lg-3">
+                        <div class="card bg-danger-subtle text-danger border-0 rounded-3 p-3">
+                            <div class="small fw-bold">Đã quá hạn sử dụng</div>
+                            <div class="fs-4 fw-extrabold">@expirySummary.ExpiredQty sản phẩm</div>
+                            <div class="small">@expirySummary.ExpiredCount lô hàng | Trị giá: <strong>@expirySummary.ExpiredValue.ToString("N0")đ</strong></div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <div class="card bg-warning-subtle text-warning-emphasis border-0 rounded-3 p-3">
+                            <div class="small fw-bold">Cận hạn (&lt; 30 ngày)</div>
+                            <div class="fs-4 fw-extrabold">@expirySummary.Near30Qty sản phẩm</div>
+                            <div class="small">@expirySummary.Near30Count lô hàng | Trị giá: <strong>@expirySummary.Near30Value.ToString("N0")đ</strong></div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <div class="card bg-primary-subtle text-primary border-0 rounded-3 p-3">
+                            <div class="small fw-bold">Hạn trung bình (&lt; 90 ngày)</div>
+                            <div class="fs-4 fw-extrabold">@expirySummary.Near90Qty sản phẩm</div>
+                            <div class="small">@expirySummary.Near90Count lô hàng | Trị giá: <strong>@expirySummary.Near90Value.ToString("N0")đ</strong></div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <div class="card bg-success-subtle text-success border-0 rounded-3 p-3">
+                            <div class="small fw-bold">Hạn xa (&lt; 180 ngày)</div>
+                            <div class="fs-4 fw-extrabold">@expirySummary.Near180Qty sản phẩm</div>
+                            <div class="small">@expirySummary.Near180Count lô hàng | Trị giá: <strong>@expirySummary.Near180Value.ToString("N0")đ</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-12 col-xl-8">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0"><i class="fa fa-exclamation-triangle text-danger me-2"></i>Danh sách lô thuốc cận hạn & hết hạn (FEFO)</h6>
+                            <span class="badge bg-danger rounded-3">Cảnh báo cao</span>
+                        </div>
+                        <div class="table-responsive border rounded-3" style="max-height: 380px; overflow-y: auto;">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th>Số lô</th>
+                                        <th>Ngày hết hạn</th>
+                                        <th class="text-center">Số lượng</th>
+                                        <th class="text-end">Giá vốn</th>
+                                        <th class="text-end">Thành tiền</th>
+                                        <th class="text-center">Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (expiringRows.Count == 0)
+                                    {
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4 text-muted">Không tìm thấy lô thuốc nào sắp hết hạn trong 180 ngày tới.</td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        foreach (var r in expiringRows)
+                                        {
+                                            string statusText = "";
+                                            string badgeClass = "";
+                                            if (r.Status == "Expired")
+                                            {
+                                                statusText = "Đã hết hạn";
+                                                badgeClass = "bg-danger";
+                                            }
+                                            else if (r.Status == "Near30")
+                                            {
+                                                statusText = "< 30 ngày";
+                                                badgeClass = "bg-warning text-dark";
+                                            }
+                                            else if (r.Status == "Near90")
+                                            {
+                                                statusText = "< 90 ngày";
+                                                badgeClass = "bg-primary";
+                                            }
+                                            else if (r.Status == "Near180")
+                                            {
+                                                statusText = "< 180 ngày";
+                                                badgeClass = "bg-success";
+                                            }
+                                            <tr>
+                                                <td>
+                                                    <div class="fw-bold">@r.ProductName</div>
+                                                    <span class="text-muted small">SKU: @r.Sku</span>
+                                                </td>
+                                                <td><span class="font-monospace text-secondary">@r.BatchNo</span></td>
+                                                <td>@(r.ExpiryDate.HasValue ? r.ExpiryDate.Value.ToString("dd/MM/yyyy") : "N/A")</td>
+                                                <td class="text-center">@r.QuantityOnHand</td>
+                                                <td class="text-end">@r.Cost.ToString("N0")đ</td>
+                                                <td class="text-end fw-bold">@r.TotalValue.ToString("N0")đ</td>
+                                                <td class="text-center">
+                                                    <span class="badge @badgeClass rounded-3">@statusText</span>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-4">
+                        <div class="card border-0 bg-light rounded-4 p-3 mb-3">
+                            <h6 class="fw-bold mb-2"><i class="fa fa-recycle text-secondary me-2"></i>Thất thoát & Điều chỉnh hàng</h6>
+                            <div class="fs-5 fw-bold text-danger">@writeOffLoss.ToString("N0")đ</div>
+                            <p class="text-muted small mb-0 mt-1">Tổng chi phí hao hụt hàng hóa do điều chỉnh giảm hoặc thuốc hư hỏng/hết hạn thực tế trong kỳ lọc.</p>
+                        </div>
+
+                        <div class="card border-0 bg-light rounded-4 p-3">
+                            <h6 class="fw-bold mb-2"><i class="fa fa-bell text-warning me-2"></i>Cảnh báo hết hàng / thiếu hụt</h6>
+                            <div class="text-danger small mb-2">Đã hết sạch hàng: <strong class="text-dark">@outOfStockCount</strong> sản phẩm</div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-borderless align-middle mb-0 small">
+                                    <thead>
+                                        <tr class="border-bottom"><th>Sản phẩm</th><th>Tồn</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var p in lowStock)
+                                        {
+                                            <tr>
+                                                <td class="text-truncate" style="max-width: 160px;">@p.ProductName</td>
+                                                <td><span class="badge bg-warning text-dark">@p.StockQuantity</span></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: PRODUCTS -->
+            <div class="tab-pane fade" id="products" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0"><i class="fa fa-award text-primary me-2"></i>Xếp hạng doanh số và biên lợi nhuận của sản phẩm</h6>
+                    <span class="text-muted small">Lọc theo số lượng bán ra giảm dần</span>
+                </div>
+                <div class="table-responsive border rounded-3">
+                    <table class="table table-striped table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 80px;" class="text-center">Ảnh</th>
+                                <th>Sản phẩm</th>
+                                <th>Mã SKU</th>
+                                <th class="text-center">Số lượng bán</th>
+                                <th class="text-end">Doanh số bán ra</th>
+                                <th class="text-end">Chi phí giá vốn</th>
+                                <th class="text-end">Lợi nhuận gộp</th>
+                                <th class="text-center">Biên lợi nhuận gộp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (productRows.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center py-4 text-muted">Không có dữ liệu bán hàng trong khoảng thời gian này.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var p in productRows)
+                                {
+                                    var mainImgPath = p.ProductImageUrl == "default.png" ? "/images/products/default.png" : $"/images/products/{p.ProductImageUrl}";
+                                    <tr>
+                                        <td class="text-center">
+                                            <img src="@mainImgPath" alt="Ảnh" class="rounded-3 border shadow-sm" style="width: 50px; height: 50px; object-fit: cover; background: #f4f6fb;" />
+                                        </td>
+                                        <td><strong class="text-primary">@p.ProductName</strong></td>
+                                        <td><span class="font-monospace text-secondary">@p.Sku</span></td>
+                                        <td class="text-center fw-bold">@p.QuantitySold</td>
+                                        <td class="text-end">@p.Revenue.ToString("N0")đ</td>
+                                        <td class="text-end text-muted">@p.Cogs.ToString("N0")đ</td>
+                                        <td class="text-end text-success fw-bold">@p.GrossProfit.ToString("N0")đ</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-success-subtle text-success fw-bold">@p.GrossMargin.ToString("F1")%</span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 4: CUSTOMERS & PAYMENTS -->
+            <div class="tab-pane fade" id="customers" role="tabpanel">
+                <div class="row g-4">
+                    <!-- Payments breakdown -->
+                    <div class="col-12 col-lg-5">
+                        <div class="card border-0 bg-light rounded-4 p-3 h-100">
+                            <h6 class="fw-bold mb-3"><i class="fa fa-credit-card text-primary me-2"></i>Tỷ lệ doanh thu qua phương thức thanh toán</h6>
+                            <div class="row align-items-center">
+                                <div class="col-6">
+                                    <div style="position: relative; height: 180px;">
+                                        <canvas id="paymentsPieChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-borderless small mb-0">
+                                            <tbody>
+                                                @foreach (var p in paymentSummaries)
+                                                {
+                                                    <tr>
+                                                        <td><strong>@p.PaymentMethod</strong></td>
+                                                        <td class="text-end">@p.TotalAmount.ToString("N0")đ</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top customers leaderboard -->
+                    <div class="col-12 col-lg-7">
+                        <h6 class="fw-bold mb-3"><i class="fa fa-trophy text-primary me-2"></i>Top 10 khách hàng mua nhiều nhất</h6>
+                        <div class="table-responsive border rounded-3">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Khách hàng</th>
+                                        <th>Email liên hệ</th>
+                                        <th class="text-center">Số đơn</th>
+                                        <th class="text-end">Tổng tích lũy mua</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (customerRows.Count == 0)
+                                    {
+                                        <tr>
+                                            <td colspan="4" class="text-center py-4 text-muted">Không có dữ liệu tích lũy khách hàng trong kỳ.</td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        foreach (var c in customerRows)
+                                        {
+                                            <tr>
+                                                <td><strong>@c.FullName</strong></td>
+                                                <td><span class="text-secondary font-monospace">@c.Email</span></td>
+                                                <td class="text-center font-monospace fw-bold text-primary">@c.OrderCount</td>
+                                                <td class="text-end fw-bold text-success">@c.TotalSpent.ToString("N0")đ</td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-const monthly = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(monthly));
-new Chart(document.getElementById('revenueChart'), {
-    type: 'bar',
-    data: {
-        labels: ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'],
-        datasets: [{ label: 'Doanh thu (đ)', data: monthly, backgroundColor: 'rgba(25,118,210,0.7)' }]
-    },
-    options: { scales: { y: { ticks: { callback: v => v.toLocaleString('vi-VN') } } } }
-});
+    document.addEventListener("DOMContentLoaded", function () {
+        // --- 1. PERIOD SELECT FIELD TOGGLE ---
+        const periodSelect = document.getElementById("periodSelect");
+        const customDateInputs = document.querySelectorAll(".custom-date-input");
+
+        function toggleCustomDates() {
+            if (periodSelect.value === "custom") {
+                customDateInputs.forEach(el => el.style.display = "block");
+            } else {
+                customDateInputs.forEach(el => el.style.display = "none");
+            }
+        }
+
+        periodSelect.addEventListener("change", toggleCustomDates);
+        toggleCustomDates(); // run once on load
+
+        // --- 2. CHART 1: FINANCIAL TREND CHART ---
+        const chartData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(chartData));
+        const trendLabels = chartData.map(x => x.Label);
+        const trendRevenue = chartData.map(x => x.Revenue);
+        const trendCogs = chartData.map(x => x.Cogs);
+        const trendProfit = chartData.map(x => x.Profit);
+
+        new Chart(document.getElementById("financialTrendChart").getContext("2d"), {
+            type: "line",
+            data: {
+                labels: trendLabels,
+                datasets: [
+                    {
+                        label: "Doanh thu (đ)",
+                        data: trendRevenue,
+                        borderColor: "#1976d2",
+                        backgroundColor: "rgba(25,118,210,0.05)",
+                        borderWidth: 2,
+                        tension: 0.15,
+                        fill: true
+                    },
+                    {
+                        label: "Giá vốn (đ)",
+                        data: trendCogs,
+                        borderColor: "#6b7280",
+                        backgroundColor: "transparent",
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        tension: 0.15
+                    },
+                    {
+                        label: "Lợi nhuận (đ)",
+                        data: trendProfit,
+                        borderColor: "#2e7d32",
+                        backgroundColor: "rgba(46,125,50,0.1)",
+                        borderWidth: 2.5,
+                        tension: 0.15,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                return ctx.dataset.label.replace(" (đ)", "") + ": " + ctx.parsed.y.toLocaleString('vi-VN') + " đ";
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: function(v) { return v.toLocaleString('vi-VN') + "đ"; }
+                        }
+                    }
+                }
+            }
+        });
+
+        // --- 3. CHART 2: PAYMENTS PIE CHART ---
+        const paymentSummaries = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(paymentSummaries));
+        const paymentLabels = paymentSummaries.map(x => x.PaymentMethod);
+        const paymentAmounts = paymentSummaries.map(x => x.TotalAmount);
+
+        new Chart(document.getElementById("paymentsPieChart").getContext("2d"), {
+            type: "doughnut",
+            data: {
+                labels: paymentLabels,
+                datasets: [{
+                    data: paymentAmounts,
+                    backgroundColor: [
+                        "#2e7d32", // Green
+                        "#1976d2", // Blue
+                        "#ed6c02", // Orange
+                        "#9c27b0", // Purple
+                        "#d32f2f"  // Red
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                return ctx.label + ": " + ctx.parsed.toLocaleString('vi-VN') + " đ";
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+
+    // --- 4. EXPORT REPORT TO EXCEL/CSV ---
+    function exportReport() {
+        const period = document.getElementById("periodSelect").value;
+        const startDate = document.getElementById("startDate").value;
+        const endDate = document.getElementById("endDate").value;
+        let url = `/AdminReport/Export?period=${period}`;
+        if (period === "custom") {
+            url += `&startDate=${startDate}&endDate=${endDate}`;
+        }
+        window.location.href = url;
+    }
 </script>
 }

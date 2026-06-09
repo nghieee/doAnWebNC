@@ -81,5 +81,38 @@ namespace web_ban_thuoc.Controllers.Admin
             ViewBag.Messages = messages;
             return View("~/Views/Admin/Chat/ChatWithUser.cshtml");
         }
+
+        // Lấy thông tin CRM chi tiết của khách hàng
+        [HttpGet("customer-info/{userId}")]
+        public async Task<IActionResult> GetCustomerInfo(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound(new { message = "Không tìm thấy khách hàng" });
+
+            var rankInfo = await _context.UserRankInfos.FirstOrDefaultAsync(r => r.UserId == userId);
+            var recentOrders = await _context.Orders
+                .Where(o => o.UserId == userId)
+                .OrderByDescending(o => o.OrderDate)
+                .Select(o => new {
+                    orderId = o.OrderId,
+                    orderDate = o.OrderDate.HasValue ? o.OrderDate.Value.ToString("dd/MM/yyyy HH:mm") : "",
+                    totalAmount = o.TotalAmount,
+                    status = o.Status
+                })
+                .Take(5)
+                .ToListAsync();
+
+            return Json(new {
+                userId = user.Id,
+                userName = user.UserName,
+                email = user.Email,
+                phone = user.PhoneNumber ?? "",
+                rank = rankInfo?.Rank ?? "Bạc",
+                loyaltyPoints = rankInfo?.LoyaltyPoints ?? 0,
+                totalSpent = rankInfo?.TotalSpent ?? 0,
+                recentOrders = recentOrders
+            });
+        }
     }
 } 

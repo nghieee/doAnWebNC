@@ -136,9 +136,11 @@ public class AdminPurchaseController : Controller
             .Include(p => p.Warehouse)
             .Include(p => p.Lines)
             .ThenInclude(l => l.Product)
+                .ThenInclude(p => p.ProductImages)
             .Include(p => p.GoodsReceipts)
             .ThenInclude(r => r.Lines)
             .ThenInclude(rl => rl.Product)
+                .ThenInclude(p => p.ProductImages)
             .FirstOrDefaultAsync(p => p.PurchaseOrderId == id);
 
         if (po == null) return NotFound();
@@ -171,6 +173,7 @@ public class AdminPurchaseController : Controller
             .Include(p => p.Warehouse)
             .Include(p => p.Lines)
             .ThenInclude(l => l.Product)
+                .ThenInclude(p => p.ProductImages)
             .FirstOrDefaultAsync(p => p.PurchaseOrderId == id);
 
         if (po == null) return NotFound();
@@ -262,6 +265,77 @@ public class AdminPurchaseController : Controller
             .ToListAsync();
 
         return Json(products);
+    }
+
+    [HttpGet]
+    [Route("Replenishment")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Replenishment()
+    {
+        // Calculate available stock per product (on hand - reserved - expired)
+        var today = DateTime.Today;
+        // Get stock quantities per product from all warehouses
+        var stockRows = await _context.WarehouseStocks
+            .Select(ws => new { ws.ProductId, ws.QuantityOnHand, ws.QuantityReserved })
+            .ToListAsync();
+        var stockMap = stockRows
+            .GroupBy(x => x.ProductId)
+            .ToDictionary(g => g.Key, g =>
+                {
+                    var onHand = g.Sum(x => x.QuantityOnHand);
+                    var reserved = g.Sum(x => x.QuantityReserved);
+                    return onHand - reserved; // expired will be subtracted later
+                });
+        // Get expired quantities per product from batches with expiry <= today
+        var expiredRows = await _context.ProductBatches
+            .Where(b => b.ExpiryDate != null && b.ExpiryDate <= today && b.QuantityOnHand > 0)
+            .GroupBy(b => b.ProductId)
+            .Select(g => new { ProductId = g.Key, ExpiredQty = g.Sum(b => b.QuantityOnHand) })
+            .ToListAsync();
+        var expiredMap = expiredRows.ToDictionary(x => x.ProductId, x => x.ExpiredQty);
+        // Adjust stockMap by subtracting expired quantities
+        foreach (var kvp in expiredMap)
+        {
+            if (stockMap.ContainsKey(kvp.Key))
+                stockMap[kvp.Key] = Math.Max(0, stockMap[kvp.Key] - kvp.Value);
+        }
+        // Load all active products with supplier and images
+        var allProducts = await _context.Products
+            .Include(p => p.Supplier)
+            .Include(p => p.ProductImages)
+            .Where(p => p.IsActive && p.SupplierId != null)
+            .ToListAsync();
+        // Identify low‑stock products (available <= threshold)
+        var lowStock = allProducts
+            .Where(p =>
+            {
+                var available = stockMap.GetValueOrDefault(p.ProductId, 0);
+                var threshold = p.MinStockLevel > 0 ? p.MinStockLevel : 10;
+                return available <= threshold;
+            })
+            .OrderBy(p => stockMap.GetValueOrDefault(p.ProductId, 0))
+            .ToList();
+        // Group by supplier for view model
+        var grouped = lowStock
+            .GroupBy(p => p.Supplier!)
+            .Select(g => new ReplenishmentGroupViewModel
+            {
+                Supplier = g.Key,
+                Products = g.Select(p => new ReplenishmentItemViewModel
+                {
+                    ProductId = p.ProductId,
+                    ProductName = p.ProductName ?? string.Empty,
+                    Sku = p.Sku ?? string.Empty,
+                    StockQuantity = stockMap.GetValueOrDefault(p.ProductId, 0),
+                    CostPrice = p.CostPrice ?? 0,
+                    ImageUrl = p.ProductImages?.FirstOrDefault(i => i.IsMain == true)?.ImageUrl
+                               ?? p.ProductImages?.FirstOrDefault()?.ImageUrl
+                               ?? "sanpham.png",
+                    MinStockLevel = p.MinStockLevel > 0 ? p.MinStockLevel : 10
+                }).ToList()
+            })
+            .ToList();
+        return View("~/Views/Admin/Purchase/Replenishment.cshtml", grouped);
     }
 
     private async Task LoadFormDataAsync()
