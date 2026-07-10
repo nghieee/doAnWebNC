@@ -390,6 +390,45 @@ namespace web_ban_thuoc.Migrations
                     b.ToTable("ChatMessages");
                 });
 
+            modelBuilder.Entity("web_ban_thuoc.Models.DbActivityLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EntityId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("EntityName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("UserEmail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DbActivityLogs");
+                });
+
             modelBuilder.Entity("web_ban_thuoc.Models.GoodsReceipt", b =>
                 {
                     b.Property<int>("GoodsReceiptId")
@@ -646,6 +685,69 @@ namespace web_ban_thuoc.Migrations
                     b.HasKey("LoyaltyRewardId");
 
                     b.ToTable("LoyaltyRewards");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.News", b =>
+                {
+                    b.Property<int>("NewsId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("NewsId"));
+
+                    b.Property<string>("Author")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Category")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<bool>("IsFeature")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Slug")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Source")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Summary")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ViewCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("NewsId");
+
+                    b.ToTable("News");
                 });
 
             modelBuilder.Entity("web_ban_thuoc.Models.Order", b =>
@@ -1153,6 +1255,97 @@ namespace web_ban_thuoc.Migrations
                         .IsUnique();
 
                     b.ToTable("Shipments");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.StockAdjustment", b =>
+                {
+                    b.Property<int>("StockAdjustmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StockAdjustmentId"));
+
+                    b.Property<string>("AdjustmentCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("AdjustmentType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ApprovedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequestedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("WarehouseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("StockAdjustmentId");
+
+                    b.HasIndex("AdjustmentCode")
+                        .IsUnique();
+
+                    b.HasIndex("WarehouseId");
+
+                    b.ToTable("StockAdjustments");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.StockAdjustmentDetail", b =>
+                {
+                    b.Property<int>("StockAdjustmentDetailId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StockAdjustmentDetailId"));
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ProductBatchId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StockAdjustmentId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("UnitCost")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("StockAdjustmentDetailId");
+
+                    b.HasIndex("ProductBatchId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("StockAdjustmentId");
+
+                    b.ToTable("StockAdjustmentDetails");
                 });
 
             modelBuilder.Entity("web_ban_thuoc.Models.Supplier", b =>
@@ -1794,6 +1987,43 @@ namespace web_ban_thuoc.Migrations
                     b.Navigation("Order");
                 });
 
+            modelBuilder.Entity("web_ban_thuoc.Models.StockAdjustment", b =>
+                {
+                    b.HasOne("web_ban_thuoc.Models.Warehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.StockAdjustmentDetail", b =>
+                {
+                    b.HasOne("web_ban_thuoc.Models.ProductBatch", "ProductBatch")
+                        .WithMany()
+                        .HasForeignKey("ProductBatchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("web_ban_thuoc.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("web_ban_thuoc.Models.StockAdjustment", "StockAdjustment")
+                        .WithMany("Details")
+                        .HasForeignKey("StockAdjustmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("ProductBatch");
+
+                    b.Navigation("StockAdjustment");
+                });
+
             modelBuilder.Entity("web_ban_thuoc.Models.UserVoucher", b =>
                 {
                     b.HasOne("web_ban_thuoc.Models.Voucher", "Voucher")
@@ -1904,6 +2134,11 @@ namespace web_ban_thuoc.Migrations
                     b.Navigation("GoodsReceipts");
 
                     b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("web_ban_thuoc.Models.StockAdjustment", b =>
+                {
+                    b.Navigation("Details");
                 });
 
             modelBuilder.Entity("web_ban_thuoc.Models.Supplier", b =>

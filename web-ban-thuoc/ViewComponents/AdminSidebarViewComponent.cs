@@ -41,12 +41,15 @@ public class AdminSidebarViewComponent : ViewComponent
             new AdminNavItem { Title = "Tin nhắn", Url = "/admin/chat", IconClass = "fa-regular fa-message", PathPrefix = "/admin/chat", Roles = [StaffRoles.Admin, StaffRoles.CustomerSupport] });
 
         AddGroup("Sản phẩm", "fa-solid fa-pills",
-            new AdminNavItem { Title = "Danh sách SP", Url = "/AdminProduct", IconClass = "fa-solid fa-box", PathPrefix = "/AdminProduct", Roles = [StaffRoles.Admin], ExcludePaths = ["/AdminProduct/Import"] },
+            new AdminNavItem { Title = "Danh sách SP", Url = "/AdminProduct", IconClass = "fa-solid fa-box", PathPrefix = "/AdminProduct", Roles = [StaffRoles.Admin], ExcludePaths = ["/AdminProduct/Import", "/AdminProduct/Price"] },
+            new AdminNavItem { Title = "Quản lý giá SP", Url = "/AdminProduct/Price", IconClass = "fa-solid fa-dollar-sign", PathPrefix = "/AdminProduct/Price", Roles = [StaffRoles.Admin], IsSubItem = true },
             new AdminNavItem { Title = "Nhập từ Excel", Url = "/AdminProduct/Import", IconClass = "fa-solid fa-file-excel", PathPrefix = "/AdminProduct/Import", Roles = [StaffRoles.Admin], IsSubItem = true },
             new AdminNavItem { Title = "Danh mục", Url = "/AdminCategory", IconClass = "fa-solid fa-tags", PathPrefix = "/AdminCategory", Roles = [StaffRoles.Admin] });
 
         AddGroup("Kho & NCC", "fa-solid fa-warehouse",
-            new AdminNavItem { Title = "Quản lý kho", Url = "/AdminInventory", IconClass = "fa-solid fa-boxes-stacked", PathPrefix = "/AdminInventory", Roles = [StaffRoles.Admin, StaffRoles.WarehouseStaff] },
+            new AdminNavItem { Title = "Quản lý kho", Url = "/AdminWarehouse", IconClass = "fa-solid fa-warehouse", PathPrefix = "/AdminWarehouse", Roles = [StaffRoles.Admin] },
+            new AdminNavItem { Title = "Tồn kho & Lô", Url = "/AdminInventory", IconClass = "fa-solid fa-boxes-stacked", PathPrefix = "/AdminInventory", Roles = [StaffRoles.Admin, StaffRoles.WarehouseStaff], ExcludePaths = ["/AdminInventory/StockAdjustments", "/AdminInventory/CreateStockAdjustment"] },
+            new AdminNavItem { Title = "Phiếu điều chỉnh", Url = "/AdminInventory/StockAdjustments", IconClass = "fa-solid fa-sliders", PathPrefix = "/AdminInventory/StockAdjustments", Roles = [StaffRoles.Admin, StaffRoles.WarehouseStaff], IsSubItem = true },
             new AdminNavItem { Title = "Nhà cung cấp", Url = "/AdminSupplier", IconClass = "fa-solid fa-truck", PathPrefix = "/AdminSupplier", Roles = [StaffRoles.Admin, StaffRoles.WarehouseStaff] },
             new AdminNavItem { Title = "Đặt hàng NCC", Url = "/AdminPurchase", IconClass = "fa-solid fa-file-invoice", PathPrefix = "/AdminPurchase", Roles = [StaffRoles.Admin, StaffRoles.WarehouseStaff] });
 
@@ -54,11 +57,13 @@ public class AdminSidebarViewComponent : ViewComponent
             new AdminNavItem { Title = "Voucher", Url = "/admin/Voucher", IconClass = "fa-solid fa-ticket", PathPrefix = "/admin/Voucher", Roles = [StaffRoles.Admin], ExcludePaths = ["/admin/VoucherRedemptions"] },
             new AdminNavItem { Title = "Loyalty & Điểm", Url = "/AdminLoyalty", IconClass = "fa-solid fa-medal", PathPrefix = "/AdminLoyalty", Roles = [StaffRoles.Admin], ExcludePaths = ["/AdminLoyalty/Rewards"] },
             new AdminNavItem { Title = "Cửa hàng đổi quà", Url = "/AdminLoyalty/Rewards", IconClass = "fa-solid fa-gift", PathPrefix = "/AdminLoyalty/Rewards", Roles = [StaffRoles.Admin], IsSubItem = true },
-            new AdminNavItem { Title = "Banner", Url = "/AdminBanner", IconClass = "fa-solid fa-images", PathPrefix = "/AdminBanner", Roles = [StaffRoles.Admin] });
+            new AdminNavItem { Title = "Banner", Url = "/AdminBanner", IconClass = "fa-solid fa-images", PathPrefix = "/AdminBanner", Roles = [StaffRoles.Admin] },
+            new AdminNavItem { Title = "Bài viết", Url = "/AdminNews", IconClass = "fa-solid fa-newspaper", PathPrefix = "/AdminNews", Roles = [StaffRoles.Admin] });
 
         AddGroup("Hệ thống", "fa-solid fa-gear",
             new AdminNavItem { Title = "Khách hàng", Url = "/AdminUser", IconClass = "fa-solid fa-users", PathPrefix = "/AdminUser", Roles = [StaffRoles.Admin] },
-            new AdminNavItem { Title = "Nhân viên", Url = "/AdminStaff", IconClass = "fa-solid fa-user-shield", PathPrefix = "/AdminStaff", Roles = [StaffRoles.Admin] });
+            new AdminNavItem { Title = "Nhân viên", Url = "/AdminStaff", IconClass = "fa-solid fa-user-shield", PathPrefix = "/AdminStaff", Roles = [StaffRoles.Admin] },
+            new AdminNavItem { Title = "Lịch sử hệ thống", Url = "/AdminActivityLog", IconClass = "fa-solid fa-clock-rotate-left", PathPrefix = "/AdminActivityLog", Roles = [StaffRoles.Admin] });
 
         return groups;
     }

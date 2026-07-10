@@ -1,0 +1,210 @@
+@model web_ban_thuoc.Models.StockAdjustmentIndexViewModel
+@using web_ban_thuoc.Models
+@{
+    ViewData["Title"] = "Phiếu điều chỉnh tồn kho";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+
+    string StatusBadge(string s) => s switch
+    {
+        var x when x == StockAdjustmentStatuses.Pending => "bg-warning text-dark",
+        var x when x == StockAdjustmentStatuses.Approved => "bg-success",
+        var x when x == StockAdjustmentStatuses.Rejected => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    string TypeBadge(string s) => s switch
+    {
+        StockAdjustmentTypes.Export => "bg-danger-subtle text-danger",
+        StockAdjustmentTypes.Import => "bg-success-subtle text-success",
+        StockAdjustmentTypes.Positive => "bg-success-subtle text-success",
+        StockAdjustmentTypes.Negative => "bg-warning-subtle text-warning",
+        _ => "bg-secondary"
+    };
+}
+
+<div class="container-fluid py-3">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success border-0 shadow-sm rounded-4">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger border-0 shadow-sm rounded-4">@TempData["ErrorMessage"]</div>
+    }
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold mb-0"><i class="fa fa-sliders text-primary me-2"></i>Phiếu điều chỉnh tồn kho</h4>
+            <p class="text-muted small mb-0">Xuất kho thủ công &amp; FEFO batch — theo dõi phiếu, duyệt, in ấn</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/AdminInventory" class="btn btn-outline-secondary">
+                <i class="fa fa-arrow-left me-1"></i> Tồn kho
+            </a>
+            <a href="/AdminInventory/CreateStockAdjustment" class="btn btn-primary">
+                <i class="fa fa-plus me-1"></i> Tạo phiếu mới
+            </a>
+        </div>
+    </div>
+
+    <!-- Thống kê -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Tổng phiếu</div>
+                    <div class="fs-4 fw-bold text-primary">@Model.Adjustments.Count</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Chờ duyệt</div>
+                    <div class="fs-4 fw-bold text-warning">@Model.PendingCount</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Đã duyệt</div>
+                    <div class="fs-4 fw-bold text-success">@Model.Adjustments.Count(a => a.Status == StockAdjustmentStatuses.Approved)</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Từ chối</div>
+                    <div class="fs-4 fw-bold text-danger">@Model.Adjustments.Count(a => a.Status == StockAdjustmentStatuses.Rejected)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <form method="get" class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Tìm kiếm</label>
+                    <input type="text" class="form-control" name="search" value="@Model.Search" placeholder="Mã phiếu, ghi chú..." />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold">Trạng thái</label>
+                    <select class="form-select" name="status">
+                        <option value="">Tất cả</option>
+                        <option value="Chờ duyệt" selected="@(Model.StatusFilter == "Chờ duyệt")">Chờ duyệt</option>
+                        <option value="Đã duyệt" selected="@(Model.StatusFilter == "Đã duyệt")">Đã duyệt</option>
+                        <option value="Từ chối" selected="@(Model.StatusFilter == "Từ chối")">Từ chối</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold">Loại</label>
+                    <select class="form-select" name="type">
+                        <option value="">Tất cả</option>
+                        <option value="Export" selected="@(Model.TypeFilter == "Export")">Xuất kho</option>
+                        <option value="Import" selected="@(Model.TypeFilter == "Import")">Nhập kho</option>
+                        <option value="Positive" selected="@(Model.TypeFilter == "Positive")">Điều chỉnh tăng</option>
+                        <option value="Negative" selected="@(Model.TypeFilter == "Negative")">Điều chỉnh giảm</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold">Kho</label>
+                    <select class="form-select" name="warehouseId">
+                        <option value="">Tất cả kho</option>
+                        @foreach (var wh in Model.Warehouses)
+                        {
+                            <option value="@wh.WarehouseId" selected="@(Model.SelectedWarehouseId == wh.WarehouseId)">@wh.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fa fa-filter me-1"></i> Lọc
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- Bảng phiếu -->
+    @if (Model.Adjustments.Count == 0)
+    {
+        <div class="text-center text-muted py-5">
+            <i class="fa fa-inbox fa-3x mb-3 d-block opacity-25"></i>
+            Chưa có phiếu điều chỉnh nào.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle table-bordered bg-white shadow-sm mb-0 rounded-4 overflow-hidden">
+                <thead class="table-light">
+                    <tr>
+                        <th>Mã phiếu</th>
+                        <th>Loại</th>
+                        <th>Lý do</th>
+                        <th>Kho</th>
+                        <th>Số dòng</th>
+                        <th>Tổng SL</th>
+                        <th>Người yêu cầu</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày tạo</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var sa in Model.Adjustments)
+                    {
+                        var reasonDisplay = StockAdjustmentReasons.All.TryGetValue(sa.Reason ?? "", out var r) ? r : (sa.Reason ?? "—");
+                        <tr class="@(sa.Status == StockAdjustmentStatuses.Pending ? "table-warning" : "")">
+                            <td>
+                                <a href="/AdminInventory/StockAdjustmentDetails/@sa.StockAdjustmentId" class="text-decoration-none fw-semibold">
+                                    @sa.AdjustmentCode
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge @TypeBadge(sa.AdjustmentType)">
+                                    @StockAdjustmentTypes.DisplayName(sa.AdjustmentType)
+                                </span>
+                            </td>
+                            <td class="small text-muted" style="max-width:180px;">
+                                <span class="text-truncate d-block" title="@reasonDisplay">@reasonDisplay</span>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">@sa.WarehouseName</span></td>
+                            <td class="text-center">@sa.TotalLines</td>
+                            <td class="text-center fw-semibold @(sa.TotalQuantity > 0 ? "text-danger" : "text-success")">@sa.TotalQuantity</td>
+                            <td class="small">@(sa.RequestedBy ?? "—")</td>
+                            <td>
+                                <span class="badge @StatusBadge(sa.Status)">@sa.Status</span>
+                            </td>
+                            <td class="small text-muted">@sa.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-1">
+                                    <a href="/AdminInventory/StockAdjustmentDetails/@sa.StockAdjustmentId"
+                                       class="btn btn-sm btn-outline-primary" title="Chi tiết">
+                                        <i class="fa fa-eye"></i>
+                                    </a>
+                                    @if (sa.Status == StockAdjustmentStatuses.Pending)
+                                    {
+                                        <form method="post" action="/AdminInventory/DeleteStockAdjustment/@sa.StockAdjustmentId"
+                                              onsubmit="return confirm('Xóa phiếu này?');" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

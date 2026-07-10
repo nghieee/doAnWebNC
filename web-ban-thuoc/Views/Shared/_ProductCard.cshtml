@@ -1,0 +1,51 @@
+@model web_ban_thuoc.Models.Product
+@{
+    var mainImage = Model.ProductImages?.FirstOrDefault(i => i.IsMain == true)
+                 ?? Model.ProductImages?.FirstOrDefault();
+    var oldPrice = Model.Price * 1.25m;
+    var showDiscount = true; // Hiển thị -20% ngầm định như cũ
+}
+<a class="pc fade-up" href="@Url.Action("Details", "Product", new { id = Model.ProductId })" aria-label="@Model.ProductName">
+    @if (showDiscount)
+    {
+        <div class="pc__badge">
+            <span class="pc__discount"><i class="fas fa-bolt me-1"></i>-20%</span>
+        </div>
+    }
+    <span class="pc__wish" role="button" tabindex="0" aria-label="Yêu thích"
+          onclick="event.preventDefault(); event.stopPropagation();">
+        <i class="far fa-heart"></i>
+    </span>
+
+    <div class="pc__media">
+        <img src="/images/products/@(mainImage?.ImageUrl ?? "sanpham.png")" alt="@Model.ProductName" loading="lazy" />
+    </div>
+
+    <div class="pc__body">
+        <h3 class="pc__name">@Model.ProductName</h3>
+
+        <div class="pc__price">
+            <span class="pc__price-now">@Model.Price.ToString("N0")đ</span>
+            <span class="pc__price-old">@oldPrice.ToString("N0")đ</span>
+        </div>
+
+        <div class="pc__meta">
+            <span><i class="fas fa-box-open me-1 text-muted"></i>@(Model.Package ?? "Hộp")</span>
+            @if (Model.RequiresPrescription == true)
+            {
+                <span class="chip chip--warn"><i class="fas fa-prescription"></i> Kê đơn</span>
+            }
+        </div>
+
+        <div class="pc__actions">
+            <form asp-controller="Cart" asp-action="AddToCart" method="post" class="add-to-cart-form" style="display:contents;">
+                <input type="hidden" name="productId" value="@Model.ProductId" />
+                <input type="hidden" name="quantity" value="1" />
+                <button type="submit" class="pc__btn-add" @(Model.StockQuantity <= 0 ? "disabled" : "")>
+                    <i class="fas fa-cart-plus"></i>
+                    <span>@(Model.StockQuantity > 0 ? "Thêm vào giỏ" : "Tạm hết")</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</a>

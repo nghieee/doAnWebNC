@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 500" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ec4899"/>
+      <stop offset="0.55" stop-color="#f97316"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="500" fill="url(#g1)"/>
+  <g fill="#ffffff" opacity="0.1">
+    <path d="M0,300 C400,200 800,420 1600,250 L1600,500 L0,500 Z"/>
+  </g>
+  <g font-family="Inter, Arial, sans-serif" fill="#ffffff">
+    <text x="1120" y="190" font-size="52" font-weight="800" letter-spacing="-1" text-anchor="start">Khuy�n m�i th�ng 7</text>
+    <text x="1120" y="252" font-size="52" font-weight="800" letter-spacing="-1">Gi�m �n 30%</text>
+    <text x="1120" y="300" font-size="20" font-weight="400" opacity="0.9">TPCN � Vitamin � D��c m� ph�m</text>
+    <text x="1120" y="328" font-size="20" font-weight="400" opacity="0.9">�p d�ng �n 31/07/2026</text>
+  </g>
+  <g transform="translate(1120,360)">
+    <rect width="200" height="56" rx="28" fill="#ffffff"/>
+    <text x="100" y="36" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" fill="#ec4899" text-anchor="middle">Xem �u �i �</text>
+  </g>
+  <g transform="translate(120,80)">
+    <circle r="160" fill="#ffffff" opacity="0.18"/>
+    <text font-family="Inter, Arial, sans-serif" fill="#ffffff" text-anchor="middle">
+      <tspan x="0" y="-20" font-size="32" font-weight="800">GI�M</tspan>
+      <tspan x="0" y="40" font-size="84" font-weight="900" letter-spacing="-2">30%</tspan>
+    </text>
+  </g>
+</svg>

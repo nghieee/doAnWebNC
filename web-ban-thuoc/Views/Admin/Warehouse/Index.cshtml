@@ -1,0 +1,148 @@
+@model web_ban_thuoc.Models.WarehouseIndexViewModel
+@{
+    ViewData["Title"] = "Quản lý kho";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+<div class="container-fluid py-3">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success border-0 shadow-sm rounded-4">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger border-0 shadow-sm rounded-4">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0"><i class="fa fa-warehouse text-primary me-2"></i>Quản lý kho hàng</h4>
+        <a href="/AdminWarehouse/Create" class="btn btn-primary"><i class="fa fa-plus me-1"></i> Thêm kho mới</a>
+    </div>
+
+    <!-- Tổng quan -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Tổng số kho</div>
+                    <div class="fs-4 fw-bold text-primary">@Model.Warehouses.Count</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Kho mặc định</div>
+                    <div class="fs-5 fw-bold text-success">@(Model.Warehouses.FirstOrDefault(w => w.IsDefault)?.Name ?? "—")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">SP sắp hết hàng</div>
+                    <div class="fs-4 fw-bold text-warning">@Model.LowStockCount</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">SP hết hàng</div>
+                    <div class="fs-4 fw-bold text-danger">@Model.OutOfStockCount</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách kho -->
+    <div class="row g-4">
+        @foreach (var wh in Model.Warehouses)
+        {
+            <div class="col-xl-4 col-lg-6">
+                <div class="card border-0 shadow-sm h-100 rounded-4 @(wh.IsDefault ? "border-primary border-2" : "")">
+                    <div class="card-header bg-white fw-semibold rounded-top-4 d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa fa-warehouse text-primary"></i>
+                            <span>@wh.Name</span>
+                            @if (wh.IsDefault)
+                            {
+                                <span class="badge bg-primary-subtle text-primary small">Mặc định</span>
+                            }
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown"><i class="fa fa-ellipsis-v"></i></button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="/AdminInventory?warehouseId=@wh.WarehouseId"><i class="fa fa-boxes-stacked me-1"></i> Xem tồn kho</a></li>
+                                @if (!wh.IsDefault)
+                                {
+                                    <li>
+                                        <form method="post" action="/AdminWarehouse/SetDefault/@wh.WarehouseId">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item"><i class="fa fa-star me-1"></i> Đặt mặc định</button>
+                                        </form>
+                                    </li>
+                                }
+                                <li><a class="dropdown-item" href="/AdminWarehouse/Edit/@wh.WarehouseId"><i class="fa fa-pen me-1"></i> Chỉnh sửa</a></li>
+                                @if (!wh.IsDefault)
+                                {
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li>
+                                        <form method="post" action="/AdminWarehouse/Delete/@wh.WarehouseId" onsubmit="return confirm('Xóa kho này?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item text-danger"><i class="fa fa-trash me-1"></i> Xóa kho</button>
+                                        </form>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrWhiteSpace(wh.Address))
+                        {
+                            <div class="small text-muted mb-3"><i class="fa fa-map-marker-alt me-1"></i> @wh.Address</div>
+                        }
+
+                        <div class="row g-2 text-center mb-3">
+                            <div class="col-6">
+                                <div class="bg-light rounded-3 py-2">
+                                    <div class="small text-muted">Tổng tồn</div>
+                                    <div class="fw-bold fs-5">@wh.TotalOnHand.ToString("N0")</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-light rounded-3 py-2">
+                                    <div class="small text-muted">Khả dụng</div>
+                                    <div class="fw-bold fs-5 @(wh.Available <= 10 ? "text-danger" : "text-success")">@wh.Available.ToString("N0")</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-light rounded-3 py-2">
+                                    <div class="small text-muted">Giá trị tồn</div>
+                                    <div class="fw-bold fs-5">@wh.StockValue.ToString("N0")đ</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-light rounded-3 py-2">
+                                    <div class="small text-muted">Sản phẩm</div>
+                                    <div class="fw-bold fs-5">@wh.ProductCount</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (wh.ExpiringBatchCount > 0)
+                        {
+                            <div class="alert alert-warning py-1 px-2 small mb-3">
+                                <i class="fa fa-triangle-exclamation me-1"></i> @wh.ExpiringBatchCount lô sắp hết hạn (≤ 90 ngày)
+                            </div>
+                        }
+
+                        <a href="/AdminInventory?warehouseId=@wh.WarehouseId" class="btn btn-outline-primary btn-sm w-100">
+                            <i class="fa fa-boxes-stacked me-1"></i> Xem chi tiết tồn kho
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

@@ -1,4 +1,4 @@
-﻿@model web_ban_thuoc.Models.HomeViewModel
+@model web_ban_thuoc.Models.HomeViewModel
 
 @{
     ViewData["Title"] = "Nhà Thuốc Long Châu - Trang chủ";
@@ -7,7 +7,7 @@
 <!-- Full-Width Carousel -->
 @if (Model.Banners.Any())
 {
-    var fullWidthBanners = Model.Banners.Where(b => b.BannerType == "FullWidth").ToList();
+    var fullWidthBanners = Model.Banners.Where(b => b.BannerType != null && b.BannerType.Equals("FullWidth", StringComparison.OrdinalIgnoreCase)).ToList();
     if (fullWidthBanners.Any())
     {
         <div id="fullWidthCarousel" class="carousel slide" data-bs-ride="carousel">
@@ -20,13 +20,13 @@
                         {
                             <a href="@banner.LinkUrl" target="_blank">
                                 <img src="@banner.ImageUrl" class="d-block w-100" alt="@banner.Title"
-                                    style="object-fit: cover;" />
+                                    style="object-fit: cover; min-height: 240px; background: #e9ecef;" />
                             </a>
                         }
                         else
                         {
                             <img src="@banner.ImageUrl" class="d-block w-100" alt="@banner.Title"
-                                style="object-fit: cover;" />
+                                style="object-fit: cover; min-height: 240px; background: #e9ecef;" />
                         }
                     </div>
                 }
@@ -54,87 +54,87 @@
     }
 }
 
-<!-- Slider -->
-<div class="mx-auto pt-4">
-    <div class="row g-4 align-items-center">
-        <div class="col-12 col-md-8">
-            @{
-                var mainBanners = Model.Banners.Where(b => b.BannerType == "Main").ToList();
-            }
-            @if (mainBanners.Any())
-            {
-                <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel">
-                    <div class="carousel-inner">
-                        @for (int i = 0; i < mainBanners.Count; i++)
-                        {
-                            var banner = mainBanners[i];
-                            <div class="carousel-item @(i == 0 ? "active" : "")">
-                                @if (!string.IsNullOrEmpty(banner.LinkUrl))
+<!-- TwoThirds + OneThird Banners -->
+@if (Model.Banners.Any())
+{
+    var twoThirdsBanners = Model.Banners.Where(b => b.BannerType != null && b.BannerType.Equals("TwoThirds", StringComparison.OrdinalIgnoreCase)).ToList();
+    var oneThirdBanners = Model.Banners.Where(b => b.BannerType != null && b.BannerType.Equals("OneThird", StringComparison.OrdinalIgnoreCase)).ToList();
+    if (twoThirdsBanners.Any() || oneThirdBanners.Any())
+    {
+        <div class="mx-auto pt-4">
+            <div class="row g-4 align-items-start">
+                <div class="col-12 col-lg-8">
+                    @if (twoThirdsBanners.Any())
+                    {
+                        <div id="twoThirdsCarousel" class="carousel slide" data-bs-ride="carousel">
+                            <div class="carousel-inner">
+                                @for (int i = 0; i < twoThirdsBanners.Count; i++)
                                 {
-                                    <a href="@banner.LinkUrl" target="_blank">
-                                        <img src="@banner.ImageUrl" class="d-block w-100 rounded-3" alt="@banner.Title"
-                                            style="object-fit: cover;" />
-                                    </a>
-                                }
-                                else
-                                {
-                                    <img src="@banner.ImageUrl" class="d-block w-100 rounded-3" alt="@banner.Title"
-                                        style="object-fit: cover;" />
+                                    var banner = twoThirdsBanners[i];
+                                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                                        @if (!string.IsNullOrEmpty(banner.LinkUrl))
+                                        {
+                                            <a href="@banner.LinkUrl" target="_blank">
+                                                <img src="@banner.ImageUrl" class="d-block w-100 rounded-3" alt="@banner.Title"
+                                                    style="object-fit: cover;" />
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <img src="@banner.ImageUrl" class="d-block w-100 rounded-3" alt="@banner.Title"
+                                                style="object-fit: cover;" />
+                                        }
+                                    </div>
                                 }
                             </div>
-                        }
-                    </div>
-                    @if (mainBanners.Count > 1)
-                    {
-                        <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Previous</span>
-                        </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Next</span>
-                        </button>
-                        <div class="carousel-indicators">
-                            @for (int i = 0; i < mainBanners.Count; i++)
+                            @if (twoThirdsBanners.Count > 1)
                             {
-                                <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="@i" 
-                                    class="@(i == 0 ? "active" : "")" aria-current="@(i == 0 ? "true" : "false")" 
-                                    aria-label="Slide @(i + 1)"></button>
+                                <button class="carousel-control-prev" type="button" data-bs-target="#twoThirdsCarousel" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Previous</span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#twoThirdsCarousel" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Next</span>
+                                </button>
+                                <div class="carousel-indicators">
+                                    @for (int i = 0; i < twoThirdsBanners.Count; i++)
+                                    {
+                                        <button type="button" data-bs-target="#twoThirdsCarousel" data-bs-slide-to="@i" 
+                                            class="@(i == 0 ? "active" : "")" aria-current="@(i == 0 ? "true" : "false")" 
+                                            aria-label="Slide @(i + 1)"></button>
+                                    }
+                                </div>
                             }
                         </div>
                     }
                 </div>
-            }
-        </div>
-        <div class="col-12 col-md-4">
-            @{
-                var sideBanners = Model.Banners.Where(b => b.BannerType == "Side").ToList();
-            }
-            @if (sideBanners.Any())
-            {
-                <div class="row g-3">
-                    @foreach (var banner in sideBanners.Take(2))
+                <div class="col-12 col-lg-4">
+                    @if (oneThirdBanners.Any())
                     {
-                        <div class="col-12">
-                            @if (!string.IsNullOrEmpty(banner.LinkUrl))
+                        <div class="d-flex flex-column gap-2">
+                            @foreach (var banner in oneThirdBanners)
                             {
-                                <a href="@banner.LinkUrl" target="_blank">
-                                    <img src="@banner.ImageUrl" class="w-100 rounded-3" alt="@banner.Title"
-                                        style="object-fit: cover;" />
-                                </a>
-                            }
-                            else
-                            {
-                                <img src="@banner.ImageUrl" class="w-100 rounded-3" alt="@banner.Title"
-                                    style="object-fit: cover;" />
+                                <div class="one-third-banner-item">
+                                    @if (!string.IsNullOrEmpty(banner.LinkUrl))
+                                    {
+                                        <a href="@banner.LinkUrl" target="_blank">
+                                            <img src="@banner.ImageUrl" class="d-block w-100 rounded-3" alt="@banner.Title" />
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <img src="@banner.ImageUrl" class="d-block w-100 rounded-3" alt="@banner.Title" />
+                                    }
+                                </div>
                             }
                         </div>
                     }
                 </div>
-            }
+            </div>
         </div>
-    </div>
-</div>
+    }
+}
 
 <!-- Feature Categories -->
 <div class="mx-auto pt-4">
@@ -205,19 +205,120 @@
 </div>
 
 <!-- Doctor Section -->
-<div class="mx-auto mt-4 pb-4">
-    <div class="position-relative bg-image"
-        style="background-image: url('/images/home_bgdoctor.png'); height: 276px; border-radius: 1.5rem; overflow: hidden;">
-        <img src="/images/home_bgdoctor2.png" class="position-absolute bottom-0 end-0" width="350" alt="Doctor" />
-        <div class="pt-4 ps-4 text-white">
-            <h3 class="text-xl font-medium">Chuyên trang bệnh & sức khỏe</h3>
-            <p class="text-base">Tổng hợp thông tin và kiến thức chuyên sâu về các lĩnh vực sức khỏe</p>
-            <a href="/doctor"
-                class="mt-3 d-inline-block px-4 py-2 bg-white text-primary rounded-pill text-sm text-decoration-none">Tìm
-                hiểu thêm</a>
+@if (Model.FeaturedNews.Any())
+{
+    var mainNews = Model.FeaturedNews.First();
+    <div class="mx-auto mt-4 pb-4">
+        <div class="d-flex align-items-center mb-3">
+            <img src="/images/danh_muc_noi_bat.png" width="24" height="24" class="me-2" alt="Góc sức khỏe" />
+            <span class="fw-semibold text-dark" style="font-size: 1.125rem;">Góc sức khỏe</span>
+        </div>
+
+        <!-- Featured article -->
+        <a href="/News/Details/@mainNews.NewsId" class="text-decoration-none d-block mb-3">
+            <div class="position-relative overflow-hidden rounded-4 health-featured border shadow-sm"
+                 style="background: white; min-height: 280px;">
+                <div class="row g-0 h-100">
+                    @if (!string.IsNullOrEmpty(mainNews.ImageUrl))
+                    {
+                        <div class="col-md-5">
+                            <img src="@mainNews.ImageUrl" class="w-100 h-100"
+                                 alt="@mainNews.Title" style="object-fit: cover; min-height: 280px;" />
+                        </div>
+                        <div class="col-md-7 d-flex align-items-center p-4">
+                            <div class="text-dark">
+                                @if (!string.IsNullOrEmpty(mainNews.Category))
+                                {
+                                    <span class="badge bg-light text-primary mb-2" style="font-size: 0.75rem;">@mainNews.Category</span>
+                                }
+                                <h3 class="fw-bold mb-2" style="font-size: 1.3rem; line-height: 1.3;">@mainNews.Title</h3>
+                                @if (!string.IsNullOrEmpty(mainNews.Summary))
+                                {
+                                    <p class="mb-3 text-muted" style="font-size: 0.9rem; line-height: 1.6;">@mainNews.Summary</p>
+                                }
+                                <div class="d-flex align-items-center gap-3 small text-muted">
+                                    @if (!string.IsNullOrEmpty(mainNews.Author))
+                                    {
+                                        <span><i class="fa fa-user me-1"></i>@mainNews.Author</span>
+                                    }
+                                    <span><i class="fa fa-eye me-1"></i>@mainNews.ViewCount lượt xem</span>
+                                    <span><i class="fa fa-calendar me-1"></i>@((mainNews.PublishedAt ?? mainNews.CreatedAt).ToString("dd/MM/yyyy"))</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-12 d-flex align-items-center p-4">
+                            <div class="text-dark">
+                                @if (!string.IsNullOrEmpty(mainNews.Category))
+                                {
+                                    <span class="badge bg-light text-primary mb-2" style="font-size: 0.75rem;">@mainNews.Category</span>
+                                }
+                                <h3 class="fw-bold mb-2" style="font-size: 1.3rem; line-height: 1.3;">@mainNews.Title</h3>
+                                @if (!string.IsNullOrEmpty(mainNews.Summary))
+                                {
+                                    <p class="mb-3 text-muted" style="font-size: 0.9rem; line-height: 1.6;">@mainNews.Summary</p>
+                                }
+                                <div class="d-flex align-items-center gap-3 small text-muted">
+                                    @if (!string.IsNullOrEmpty(mainNews.Author))
+                                    {
+                                        <span><i class="fa fa-user me-1"></i>@mainNews.Author</span>
+                                    }
+                                    <span><i class="fa fa-calendar me-1"></i>@((mainNews.PublishedAt ?? mainNews.CreatedAt).ToString("dd/MM/yyyy"))</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </a>
+
+        <!-- Side articles -->
+        @{
+            var sideNews = Model.FeaturedNews.Skip(1).ToList();
+        }
+        @if (sideNews.Any())
+        {
+            <div class="row g-3">
+                @foreach (var item in sideNews)
+                {
+                    <div class="col-md-4">
+                        <a href="/News/Details/@item.NewsId" class="text-decoration-none">
+                            <div class="card border-0 shadow-sm rounded-3 h-100 health-card">
+                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                {
+                                    <img src="@item.ImageUrl" class="card-img-top" alt="@item.Title"
+                                         style="height: 160px; object-fit: cover;" />
+                                }
+                                <div class="card-body">
+                                    @if (!string.IsNullOrEmpty(item.Category))
+                                    {
+                                        <span class="badge bg-primary-subtle text-primary mb-2" style="font-size: 0.7rem;">@item.Category</span>
+                                    }
+                                    <h6 class="fw-semibold text-dark line-clamp-2" style="font-size: 0.95rem;">@item.Title</h6>
+                                    <p class="card-text small text-muted line-clamp-2">@item.Summary</p>
+                                </div>
+                                <div class="card-footer bg-transparent border-0 pt-0">
+                                    <small class="text-muted">
+                                        <i class="fa fa-calendar me-1"></i>@((item.PublishedAt ?? item.CreatedAt).ToString("dd/MM/yyyy"))
+                                    </small>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- View all link -->
+        <div class="text-center mt-3">
+            <a href="/News" class="btn btn-outline-primary rounded-pill px-4">
+                <i class="fa fa-newspaper-o me-1"></i>Xem tất cả bài viết
+            </a>
         </div>
     </div>
-</div>
+}
 
 @if (ViewBag.ShowGiftPopup == true)
 {
@@ -260,6 +361,41 @@
         -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
         overflow: hidden;
+    }
+
+    /* Layout OneThird: 2 ảnh xếp dọc, sát nhau, giữ tỉ lệ ảnh gốc */
+    .one-third-banner-item {
+        width: 100%;
+        overflow: hidden;
+    }
+    .one-third-banner-item img {
+        width: 100%;
+        height: auto;
+        display: block;
+        transition: transform 0.3s ease;
+    }
+    .one-third-banner-item:hover img {
+        transform: scale(1.03);
+    }
+    .one-third-banner-item a {
+        display: block;
+        width: 100%;
+    }
+
+    .health-featured {
+        transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .health-featured:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+    }
+
+    .health-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .health-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1) !important;
     }
 </style>
 @section Scripts {

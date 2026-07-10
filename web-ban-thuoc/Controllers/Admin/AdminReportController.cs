@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +24,8 @@ public class AdminReportController : Controller
     public async Task<IActionResult> Index(
         [FromQuery] string period = "thisMonth",
         [FromQuery] DateTime? startDate = null,
-        [FromQuery] DateTime? endDate = null)
+        [FromQuery] DateTime? endDate = null,
+        [FromQuery] int? warehouseId = null)
     {
         var today = DateTime.Today;
         DateTime calculatedStart;
@@ -58,6 +58,18 @@ public class AdminReportController : Controller
                 calculatedStart = firstOfThisMonth.AddMonths(-1);
                 calculatedEnd = firstOfThisMonth.AddTicks(-1);
                 break;
+            case "thisquarter":
+                var currentQuarterStartMonth = ((today.Month - 1) / 3) * 3 + 1;
+                calculatedStart = new DateTime(today.Year, currentQuarterStartMonth, 1);
+                calculatedEnd = calculatedStart.AddMonths(3).AddTicks(-1);
+                break;
+            case "lastquarter":
+                var lastQuarterStartMonth = (((today.Month - 1) / 3) * 3 + 1) - 3;
+                var lastQuarterStartYear = today.Year;
+                if (lastQuarterStartMonth <= 0) { lastQuarterStartMonth += 12; lastQuarterStartYear--; }
+                calculatedStart = new DateTime(lastQuarterStartYear, lastQuarterStartMonth, 1);
+                calculatedEnd = calculatedStart.AddMonths(3).AddTicks(-1);
+                break;
             case "thisyear":
                 calculatedStart = new DateTime(today.Year, 1, 1);
                 calculatedEnd = new DateTime(today.Year + 1, 1, 1).AddTicks(-1);
@@ -75,13 +87,18 @@ public class AdminReportController : Controller
                 break;
         }
 
-        // Keep variables for UI display
         ViewBag.Period = period;
         ViewBag.StartDateStr = calculatedStart.ToString("yyyy-MM-dd");
         ViewBag.EndDateStr = calculatedEnd.ToString("yyyy-MM-dd");
         ViewBag.RangeText = $"{calculatedStart:dd/MM/yyyy} - {calculatedEnd:dd/MM/yyyy}";
+        ViewBag.SelectedWarehouseId = warehouseId;
+        ViewBag.Warehouses = await _context.Warehouses
+            .Where(w => w.IsActive)
+            .OrderBy(w => w.Name)
+            .ToListAsync();
 
-        // --- 1. DELIVERED ORDERS IN RANGE ---
+        var selectedWarehouseId = warehouseId;
+
         var deliveredOrders = await _context.Orders
             .Where(o => o.Status == OrderStatuses.Delivered && o.OrderDate >= calculatedStart && o.OrderDate <= calculatedEnd)
             .Select(o => new { o.OrderId, o.TotalAmount, o.VoucherDiscount, o.UserId, o.FullName, o.OrderDate })
@@ -90,7 +107,6 @@ public class AdminReportController : Controller
         var totalRevenue = deliveredOrders.Sum(o => o.TotalAmount ?? 0);
         var totalVoucherDiscount = deliveredOrders.Sum(o => o.VoucherDiscount ?? 0);
 
-        // --- 2. DYNAMIC COGS CALCULATION (FEFO BATCH AND FALLBACK) ---
         var orderIds = deliveredOrders.Select(o => o.OrderId).ToList();
 
         var batchSales = await (
@@ -164,27 +180,25 @@ public class AdminReportController : Controller
         var grossProfit = totalRevenue - totalCogs;
         var grossMargin = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
 
-        // --- 3. CASH INFLOW & OUTFLOW ---
         var cashInflow = await _context.Payments
             .Where(p => p.PaymentStatus == PaymentStatuses.Paid && p.PaymentDate >= calculatedStart && p.PaymentDate <= calculatedEnd)
             .SumAsync(p => p.Amount ?? 0);
 
         var cashOutflow = await _context.GoodsReceiptLines
-            .Where(l => l.GoodsReceipt.ReceiptDate >= calculatedStart && l.GoodsReceipt.ReceiptDate <= calculatedEnd)
+            .Where(l => l.GoodsReceipt.ReceiptDate >= calculatedStart && l.GoodsReceipt.ReceiptDate <= calculatedEnd && !selectedWarehouseId.HasValue || l.GoodsReceipt.WarehouseId == selectedWarehouseId)
             .SumAsync(l => l.Quantity * l.UnitCost);
 
-        // --- 4. INVENTORY PERFORMANCE METRICS ---
         var currentStockValue = await _context.ProductBatches
-            .Where(pb => pb.QuantityOnHand > 0 && pb.Product.IsActive)
+            .Where(pb => pb.QuantityOnHand > 0 && pb.Product.IsActive && (!selectedWarehouseId.HasValue || pb.WarehouseId == selectedWarehouseId))
             .SumAsync(pb => pb.QuantityOnHand * (pb.UnitCost ?? pb.Product.CostPrice ?? 0));
 
         var writeOffTransactions = await _context.InventoryTransactions
-            .Where(t => t.TransactionType == "Adjustment" && t.QuantityAfter < t.QuantityBefore && t.TransactionDate >= calculatedStart && t.TransactionDate <= calculatedEnd)
+            .Where(t => t.TransactionType == "Adjustment" && t.QuantityAfter < t.QuantityBefore && t.TransactionDate >= calculatedStart && t.TransactionDate <= calculatedEnd && (!selectedWarehouseId.HasValue || t.WarehouseId == selectedWarehouseId))
             .Select(t => new { t.QuantityBefore, t.QuantityAfter, Cost = t.Product.CostPrice ?? 0 })
             .ToListAsync();
         var writeOffLoss = writeOffTransactions.Sum(x => (x.QuantityBefore - x.QuantityAfter) * x.Cost);
 
-        var totalImportsValue = cashOutflow; // equals the completed receipts cost
+        var totalImportsValue = cashOutflow;
         var beginningStockValue = currentStockValue - totalImportsValue + totalCogs + writeOffLoss;
         if (beginningStockValue < 0) beginningStockValue = currentStockValue;
 
@@ -196,10 +210,9 @@ public class AdminReportController : Controller
         if (daysInPeriod < 1) daysInPeriod = 1;
         var dio = turnoverRatio > 0 ? daysInPeriod / (double)turnoverRatio : 0;
 
-        // --- 5. EXPIRED & NEAR EXPIRY WARNINGS (CRITICAL PHARMACY BUSINESS) ---
         var activeBatches = await _context.ProductBatches
             .Include(pb => pb.Product)
-            .Where(pb => pb.QuantityOnHand > 0 && pb.Product.IsActive)
+            .Where(pb => pb.QuantityOnHand > 0 && pb.Product.IsActive && (!selectedWarehouseId.HasValue || pb.WarehouseId == selectedWarehouseId))
             .Select(pb => new
             {
                 pb.Product.ProductName,
@@ -207,6 +220,7 @@ public class AdminReportController : Controller
                 pb.BatchNo,
                 pb.ExpiryDate,
                 pb.QuantityOnHand,
+                pb.WarehouseId,
                 Cost = pb.UnitCost ?? pb.Product.CostPrice ?? 0
             })
             .ToListAsync();
@@ -266,7 +280,11 @@ public class AdminReportController : Controller
         }
         expiringRows = expiringRows.OrderBy(x => x.ExpiryDate).ToList();
 
-        // --- 6. PRODUCT SALES PERFORMANCE LIST ---
+        var warehouseName = selectedWarehouseId.HasValue
+            ? (ViewBag.Warehouses as List<Warehouse>)?.FirstOrDefault(w => w.WarehouseId == selectedWarehouseId.Value)?.Name
+            : "Tất cả kho";
+        ViewBag.WarehouseLabel = string.IsNullOrWhiteSpace(warehouseName) ? "Tất cả kho" : warehouseName;
+
         var pidsInItems = orderItems.Where(oi => oi.ProductId.HasValue).Select(oi => oi.ProductId!.Value).Distinct().ToList();
         var productInfo = await _context.Products
             .Where(p => pidsInItems.Contains(p.ProductId))
@@ -309,7 +327,23 @@ public class AdminReportController : Controller
             .OrderByDescending(x => x.QuantitySold)
             .ToList();
 
-        // --- 7. PAYMENT METHOD BREAKDOWN ---
+        var importStats = await _context.GoodsReceiptLines
+            .Where(l => l.GoodsReceipt.ReceiptDate >= calculatedStart && l.GoodsReceipt.ReceiptDate <= calculatedEnd && (!selectedWarehouseId.HasValue || l.GoodsReceipt.WarehouseId == selectedWarehouseId))
+            .GroupBy(l => new { l.GoodsReceipt.WarehouseId, WarehouseName = l.GoodsReceipt.Warehouse.Name })
+            .Select(g => new ImportStatRow
+            {
+                WarehouseId = g.Key.WarehouseId,
+                WarehouseName = g.Key.WarehouseName,
+                ReceiptCount = g.Select(x => x.GoodsReceiptId).Distinct().Count(),
+                LineCount = g.Count(),
+                Quantity = g.Sum(x => x.Quantity),
+                Value = g.Sum(x => x.Quantity * x.UnitCost)
+            })
+            .OrderByDescending(x => x.Value)
+            .ToListAsync();
+
+        ViewBag.ImportStats = importStats;
+
         var paymentBreakdown = await (
             from o in _context.Orders
             where o.Status == OrderStatuses.Delivered && o.OrderDate >= calculatedStart && o.OrderDate <= calculatedEnd
@@ -334,7 +368,6 @@ public class AdminReportController : Controller
             .OrderByDescending(x => x.TotalAmount)
             .ToList();
 
-        // --- 8. TOP SPENDING CUSTOMERS ---
         var userIdsInOrders = deliveredOrders.Where(o => o.UserId != null).Select(o => o.UserId!).Distinct().ToList();
         var userEmails = await _context.Users
             .Where(u => userIdsInOrders.Contains(u.Id))
@@ -363,7 +396,6 @@ public class AdminReportController : Controller
             .Take(10)
             .ToList();
 
-        // --- 9. DYNAMIC TREND CHART DATA ---
         var chartPoints = new List<ChartPoint>();
         var totalDays = (calculatedEnd - calculatedStart).TotalDays;
 
@@ -451,7 +483,6 @@ public class AdminReportController : Controller
             }
         }
 
-        // Pack values into ViewBag
         ViewBag.Revenue = totalRevenue;
         ViewBag.Cogs = totalCogs;
         ViewBag.GrossProfit = grossProfit;
@@ -474,7 +505,6 @@ public class AdminReportController : Controller
         ViewBag.CustomerRows = customerRows;
         ViewBag.ChartData = chartPoints;
 
-        // Legacy values for safety / sidebar alerts count
         var monthStart = new DateTime(today.Year, today.Month, 1);
         ViewBag.VoucherRedemptionsMonth = await _context.VoucherRedemptions
             .CountAsync(r => !r.IsReverted && r.RedeemedAt >= monthStart);
@@ -495,7 +525,8 @@ public class AdminReportController : Controller
     public async Task<IActionResult> Export(
         [FromQuery] string period = "thisMonth",
         [FromQuery] DateTime? startDate = null,
-        [FromQuery] DateTime? endDate = null)
+        [FromQuery] DateTime? endDate = null,
+        [FromQuery] int? warehouseId = null)
     {
         var today = DateTime.Today;
         DateTime calculatedStart;
@@ -545,7 +576,8 @@ public class AdminReportController : Controller
                 break;
         }
 
-        // Load data queries exactly like Index to ensure parity
+        var selectedWarehouseId = warehouseId;
+
         var deliveredOrders = await _context.Orders
             .Where(o => o.Status == OrderStatuses.Delivered && o.OrderDate >= calculatedStart && o.OrderDate <= calculatedEnd)
             .Select(o => new { o.OrderId, o.TotalAmount, o.VoucherDiscount, o.UserId, o.FullName, o.OrderDate })
@@ -629,15 +661,15 @@ public class AdminReportController : Controller
             .SumAsync(p => p.Amount ?? 0);
 
         var cashOutflow = await _context.GoodsReceiptLines
-            .Where(l => l.GoodsReceipt.ReceiptDate >= calculatedStart && l.GoodsReceipt.ReceiptDate <= calculatedEnd)
+            .Where(l => l.GoodsReceipt.ReceiptDate >= calculatedStart && l.GoodsReceipt.ReceiptDate <= calculatedEnd && (!selectedWarehouseId.HasValue || l.GoodsReceipt.WarehouseId == selectedWarehouseId))
             .SumAsync(l => l.Quantity * l.UnitCost);
 
         var currentStockValue = await _context.ProductBatches
-            .Where(pb => pb.QuantityOnHand > 0 && pb.Product.IsActive)
+            .Where(pb => pb.QuantityOnHand > 0 && pb.Product.IsActive && (!selectedWarehouseId.HasValue || pb.WarehouseId == selectedWarehouseId))
             .SumAsync(pb => pb.QuantityOnHand * (pb.UnitCost ?? pb.Product.CostPrice ?? 0));
 
         var writeOffTransactions = await _context.InventoryTransactions
-            .Where(t => t.TransactionType == "Adjustment" && t.QuantityAfter < t.QuantityBefore && t.TransactionDate >= calculatedStart && t.TransactionDate <= calculatedEnd)
+            .Where(t => t.TransactionType == "Adjustment" && t.QuantityAfter < t.QuantityBefore && t.TransactionDate >= calculatedStart && t.TransactionDate <= calculatedEnd && (!selectedWarehouseId.HasValue || t.WarehouseId == selectedWarehouseId))
             .Select(t => new { t.QuantityBefore, t.QuantityAfter, Cost = t.Product.CostPrice ?? 0 })
             .ToListAsync();
         var writeOffLoss = writeOffTransactions.Sum(x => (x.QuantityBefore - x.QuantityAfter) * x.Cost);
@@ -684,10 +716,25 @@ public class AdminReportController : Controller
             .OrderByDescending(x => x.QuantitySold)
             .ToList();
 
-        // Generate CSV File
+        var importStats = await _context.GoodsReceiptLines
+            .Where(l => l.GoodsReceipt.ReceiptDate >= calculatedStart && l.GoodsReceipt.ReceiptDate <= calculatedEnd && (!selectedWarehouseId.HasValue || l.GoodsReceipt.WarehouseId == selectedWarehouseId))
+            .GroupBy(l => new { l.GoodsReceipt.WarehouseId, WarehouseName = l.GoodsReceipt.Warehouse.Name })
+            .Select(g => new ImportStatRow
+            {
+                WarehouseId = g.Key.WarehouseId,
+                WarehouseName = g.Key.WarehouseName,
+                ReceiptCount = g.Select(x => x.GoodsReceiptId).Distinct().Count(),
+                LineCount = g.Count(),
+                Quantity = g.Sum(x => x.Quantity),
+                Value = g.Sum(x => x.Quantity * x.UnitCost)
+            })
+            .OrderByDescending(x => x.Value)
+            .ToListAsync();
+
         var sb = new StringBuilder();
         sb.AppendLine("BÁO CÁO TÀI CHÍNH VÀ VẬN HÀNH CHI TIẾT");
         sb.AppendLine($"Khoảng thời gian: {calculatedStart:dd/MM/yyyy HH:mm:ss} - {calculatedEnd:dd/MM/yyyy HH:mm:ss}");
+        sb.AppendLine($"Kho: {(selectedWarehouseId.HasValue ? $"Kho #{selectedWarehouseId.Value}" : "Tất cả kho")}");
         sb.AppendLine();
 
         sb.AppendLine("1. CHỈ SỐ TÀI CHÍNH CHỦ CHỐT");
@@ -708,7 +755,15 @@ public class AdminReportController : Controller
         sb.AppendLine($"Thất thoát do điều chỉnh kho,{writeOffLoss:F0} VNĐ");
         sb.AppendLine();
 
-        sb.AppendLine("3. HIỆU SUẤT DOANH SỐ THEO SẢN PHẨM");
+        sb.AppendLine("3. THỐNG KÊ NHẬP KHO THEO KHO");
+        sb.AppendLine("Kho,Số phiếu nhập,Số dòng nhập,Tổng SL nhập,Tổng giá trị nhập (VNĐ)");
+        foreach (var row in importStats)
+        {
+            sb.AppendLine($"\"{row.WarehouseName}\",{row.ReceiptCount},{row.LineCount},{row.Quantity},{row.Value:F0}");
+        }
+
+        sb.AppendLine();
+        sb.AppendLine("4. HIỆU SUẤT DOANH SỐ THEO SẢN PHẨM");
         sb.AppendLine("Mã SKU,Tên sản phẩm,Số lượng bán,Doanh thu (VNĐ),Giá vốn (VNĐ),Lợi nhuận gộp (VNĐ),Biên lợi nhuận gộp (%)");
         foreach (var r in productRows)
         {
@@ -716,7 +771,7 @@ public class AdminReportController : Controller
         }
         sb.AppendLine();
 
-        sb.AppendLine("4. CHI TIẾT CÁC ĐƠN HÀNG HOÀN THÀNH");
+        sb.AppendLine("5. CHI TIẾT CÁC ĐƠN HÀNG HOÀN THÀNH");
         sb.AppendLine("Mã đơn,Ngày hoàn thành,Khách hàng,Tổng tiền (VNĐ),Khấu trừ Voucher (VNĐ)");
         foreach (var o in deliveredOrders.OrderBy(x => x.OrderDate))
         {
@@ -729,9 +784,142 @@ public class AdminReportController : Controller
 
         return File(bytes, "text/csv", $"BaoCao_QuanLy_{calculatedStart:yyyyMMdd}_{calculatedEnd:yyyyMMdd}.csv");
     }
-}
 
-// --- HELPER REPORT MODEL CLASSES ---
+    [HttpGet("Print")]
+    public async Task<IActionResult> Print(
+        [FromQuery] string period = "thisMonth",
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null,
+        [FromQuery] int? warehouseId = null)
+    {
+        var today = DateTime.Today;
+        DateTime calculatedStart;
+        DateTime calculatedEnd;
+
+        switch (period?.ToLower())
+        {
+            case "today":
+                calculatedStart = today; calculatedEnd = today.AddDays(1).AddTicks(-1); break;
+            case "yesterday":
+                calculatedStart = today.AddDays(-1); calculatedEnd = today.AddTicks(-1); break;
+            case "last7days":
+                calculatedStart = today.AddDays(-6); calculatedEnd = today.AddDays(1).AddTicks(-1); break;
+            case "last30days":
+                calculatedStart = today.AddDays(-29); calculatedEnd = today.AddDays(1).AddTicks(-1); break;
+            case "thismonth":
+                calculatedStart = new DateTime(today.Year, today.Month, 1); calculatedEnd = calculatedStart.AddMonths(1).AddTicks(-1); break;
+            case "lastmonth":
+                var firstOfThisMonth = new DateTime(today.Year, today.Month, 1);
+                calculatedStart = firstOfThisMonth.AddMonths(-1); calculatedEnd = firstOfThisMonth.AddTicks(-1); break;
+            case "thisquarter":
+                var currentQuarterStartMonth = ((today.Month - 1) / 3) * 3 + 1;
+                calculatedStart = new DateTime(today.Year, currentQuarterStartMonth, 1);
+                calculatedEnd = calculatedStart.AddMonths(3).AddTicks(-1); break;
+            case "lastquarter":
+                var lastQuarterStartMonth = (((today.Month - 1) / 3) * 3 + 1) - 3;
+                var lastQuarterStartYear = today.Year;
+                if (lastQuarterStartMonth <= 0) { lastQuarterStartMonth += 12; lastQuarterStartYear--; }
+                calculatedStart = new DateTime(lastQuarterStartYear, lastQuarterStartMonth, 1);
+                calculatedEnd = calculatedStart.AddMonths(3).AddTicks(-1); break;
+            case "thisyear":
+                calculatedStart = new DateTime(today.Year, 1, 1); calculatedEnd = new DateTime(today.Year + 1, 1, 1).AddTicks(-1); break;
+            case "custom":
+                calculatedStart = startDate ?? new DateTime(today.Year, today.Month, 1);
+                calculatedEnd = endDate ?? today;
+                if (calculatedEnd < calculatedStart) calculatedEnd = calculatedStart;
+                calculatedEnd = calculatedEnd.Date.AddDays(1).AddTicks(-1); break;
+            default:
+                period = "thisMonth";
+                calculatedStart = new DateTime(today.Year, today.Month, 1); calculatedEnd = calculatedStart.AddMonths(1).AddTicks(-1); break;
+        }
+
+        var warehouse = warehouseId.HasValue
+            ? await _context.Warehouses.FindAsync(warehouseId.Value)
+            : null;
+
+        var deliveredOrders = await _context.Orders
+            .Where(o => o.Status == OrderStatuses.Delivered && o.OrderDate >= calculatedStart && o.OrderDate <= calculatedEnd)
+            .ToListAsync();
+
+        var totalRevenue = deliveredOrders.Sum(o => o.TotalAmount ?? 0);
+        var totalVoucherDiscount = deliveredOrders.Sum(o => o.VoucherDiscount ?? 0);
+        var orderIds = deliveredOrders.Select(o => o.OrderId).ToList();
+
+        var batchSales = await (
+            from t in _context.InventoryTransactions
+            where t.TransactionType == "BatchSale" && t.OrderId.HasValue && orderIds.Contains(t.OrderId ?? 0)
+            join b in _context.ProductBatches on t.ProductBatchId equals b.ProductBatchId
+            select new { OrderId = t.OrderId ?? 0, t.ProductId, t.Quantity, UnitCost = b.UnitCost ?? t.Product.CostPrice ?? 0 }
+        ).ToListAsync();
+
+        var orderItems = await (
+            from o in _context.Orders
+            where o.Status == OrderStatuses.Delivered && o.OrderDate >= calculatedStart && o.OrderDate <= calculatedEnd
+            join oi in _context.OrderItems on o.OrderId equals oi.OrderId
+            join p in _context.Products on oi.ProductId equals p.ProductId
+            select new { oi.OrderId, oi.ProductId, oi.Quantity, oi.Price, FallbackCost = p.CostPrice ?? (p.Price * 0.6m) }
+        ).ToListAsync();
+
+        var batchSalesLookup = batchSales.ToLookup(x => (x.OrderId, x.ProductId));
+        decimal totalCogs = 0;
+        foreach (var item in orderItems)
+        {
+            if (!item.ProductId.HasValue) continue;
+            var key = (item.OrderId!.Value, item.ProductId!.Value);
+            decimal itemCogs = 0;
+            if (batchSalesLookup.Contains(key))
+            {
+                var sales = batchSalesLookup[key];
+                var totalQtyDeducted = sales.Sum(s => s.Quantity);
+                var costFromBatches = sales.Sum(s => s.Quantity * s.UnitCost);
+                itemCogs = totalQtyDeducted >= item.Quantity ? costFromBatches : costFromBatches + ((item.Quantity - totalQtyDeducted) * item.FallbackCost);
+            }
+            else itemCogs = item.Quantity * item.FallbackCost;
+            totalCogs += itemCogs;
+        }
+
+        var cashInflow = await _context.Payments
+            .Where(p => p.PaymentStatus == PaymentStatuses.Paid && p.PaymentDate >= calculatedStart && p.PaymentDate <= calculatedEnd)
+            .SumAsync(p => p.Amount ?? 0);
+
+        var cashOutflow = await _context.GoodsReceiptLines
+            .Where(l => l.GoodsReceipt.ReceiptDate >= calculatedStart && l.GoodsReceipt.ReceiptDate <= calculatedEnd && (!warehouseId.HasValue || l.GoodsReceipt.WarehouseId == warehouseId))
+            .SumAsync(l => l.Quantity * l.UnitCost);
+
+        var currentStockValue = await _context.ProductBatches
+            .Where(pb => pb.QuantityOnHand > 0 && pb.Product.IsActive && (!warehouseId.HasValue || pb.WarehouseId == warehouseId))
+            .SumAsync(pb => pb.QuantityOnHand * (pb.UnitCost ?? pb.Product.CostPrice ?? 0));
+
+        var writeOffTransactions = await _context.InventoryTransactions
+            .Where(t => t.TransactionType == "Adjustment" && t.QuantityAfter < t.QuantityBefore && t.TransactionDate >= calculatedStart && t.TransactionDate <= calculatedEnd && (!warehouseId.HasValue || t.WarehouseId == warehouseId))
+            .Select(t => new { t.QuantityBefore, t.QuantityAfter, Cost = t.Product.CostPrice ?? 0 })
+            .ToListAsync();
+        var writeOffLoss = writeOffTransactions.Sum(x => (x.QuantityBefore - x.QuantityAfter) * x.Cost);
+
+        var grossProfit = totalRevenue - totalCogs;
+        var grossMargin = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
+
+        ViewBag.Period = period;
+        ViewBag.StartDate = calculatedStart;
+        ViewBag.EndDate = calculatedEnd;
+        ViewBag.WarehouseName = warehouse?.Name ?? "Tất cả kho";
+        ViewBag.SelectedWarehouseId = warehouseId;
+        ViewBag.Revenue = totalRevenue;
+        ViewBag.VoucherDiscount = totalVoucherDiscount;
+        ViewBag.Cogs = totalCogs;
+        ViewBag.GrossProfit = grossProfit;
+        ViewBag.GrossMargin = grossMargin;
+        ViewBag.CashInflow = cashInflow;
+        ViewBag.CashOutflow = cashOutflow;
+        ViewBag.NetCashFlow = cashInflow - cashOutflow;
+        ViewBag.CurrentStockValue = currentStockValue;
+        ViewBag.WriteOffLoss = writeOffLoss;
+        ViewBag.OrderCount = deliveredOrders.Count;
+        ViewBag.PrintedAt = DateTime.Now;
+
+        return View("~/Views/Admin/Report/Print.cshtml");
+    }
+}
 
 public class TopProductReportRow
 {
@@ -749,7 +937,7 @@ public class ExpiringBatchRow
     public int QuantityOnHand { get; set; }
     public decimal Cost { get; set; }
     public decimal TotalValue => QuantityOnHand * Cost;
-    public string Status { get; set; } = ""; // "Expired" | "Near30" | "Near90" | "Near180"
+    public string Status { get; set; } = "";
 }
 
 public class ExpiryWarningSummary
@@ -805,4 +993,14 @@ public class ChartPoint
     public decimal Revenue { get; set; }
     public decimal Cogs { get; set; }
     public decimal Profit { get; set; }
+}
+
+public class ImportStatRow
+{
+    public int WarehouseId { get; set; }
+    public string WarehouseName { get; set; } = "";
+    public int ReceiptCount { get; set; }
+    public int LineCount { get; set; }
+    public int Quantity { get; set; }
+    public decimal Value { get; set; }
 }

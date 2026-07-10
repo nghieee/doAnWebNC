@@ -31,14 +31,14 @@
                     {
                         @switch (Model.BannerType)
                         {
-                            case "main":
-                                <span class="badge bg-primary">Banner chính</span>
+                            case "FullWidth":
+                                <span class="badge bg-primary">Full Width</span>
                                 break;
-                            case "sub":
-                                <span class="badge bg-info">Banner phụ</span>
+                            case "TwoThirds":
+                                <span class="badge bg-info">Two Thirds (2/3)</span>
                                 break;
-                            case "promotion":
-                                <span class="badge bg-warning">Khuyến mãi</span>
+                            case "OneThird":
+                                <span class="badge bg-warning">One Third (1/3)</span>
                                 break;
                             default:
                                 <span class="badge bg-secondary">@Model.BannerType</span>

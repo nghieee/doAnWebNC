@@ -1,0 +1,37 @@
+@model web_ban_thuoc.Models.WarehouseCreateViewModel
+@{
+    ViewData["Title"] = "Thêm kho mới";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+<div class="container py-3" style="max-width:600px">
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white fw-semibold rounded-top-4">
+            <i class="fa fa-plus text-primary me-1"></i> Thêm kho mới
+        </div>
+        <div class="card-body">
+            <form method="post" action="/AdminWarehouse/Create">
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Tên kho <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="Name" value="@Model.Name" placeholder="VD: Kho Quận 1, Kho Tổng" required />
+                    @Html.ValidationMessage("Name", "", new { @class = "text-danger small" })
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Địa chỉ</label>
+                    <input type="text" class="form-control" name="Address" value="@Model.Address" placeholder="VD: 123 Nguyễn Trãi, Q1, TP.HCM" />
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="IsDefault" name="IsDefault" value="true" @(Model.IsDefault ? "checked" : "") />
+                        <label class="form-check-label" for="IsDefault">Đặt làm kho mặc định</label>
+                    </div>
+                    <div class="form-text">Chỉ một kho được đặt làm mặc định.</div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save me-1"></i> Lưu kho</button>
+                    <a href="/AdminWarehouse" class="btn btn-outline-secondary">Quay lại</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

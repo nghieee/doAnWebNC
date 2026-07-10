@@ -147,6 +147,110 @@ public class AdminPurchaseController : Controller
         return View("~/Views/Admin/Purchase/Details.cshtml", po);
     }
 
+    [HttpGet]
+    [Route("Print/{id}")]
+    public async Task<IActionResult> Print(int id)
+    {
+        var po = await _context.PurchaseOrders
+            .Include(p => p.Supplier)
+            .Include(p => p.Warehouse)
+            .Include(p => p.Lines)
+            .ThenInclude(l => l.Product)
+            .Include(p => p.GoodsReceipts)
+            .ThenInclude(r => r.Lines)
+            .ThenInclude(rl => rl.Product)
+            .FirstOrDefaultAsync(p => p.PurchaseOrderId == id);
+
+        if (po == null) return NotFound();
+
+        var model = new PurchaseOrderPrintViewModel
+        {
+            OrderCode = po.OrderCode,
+            Status = po.Status,
+            OrderDate = po.OrderDate,
+            ExpectedDate = po.ExpectedDate,
+            Note = po.Note,
+            SupplierCode = po.Supplier.Code,
+            SupplierName = po.Supplier.Name,
+            SupplierPhone = po.Supplier.Phone,
+            SupplierEmail = po.Supplier.Email,
+            SupplierAddress = po.Supplier.Address,
+            SupplierTaxCode = po.Supplier.TaxCode,
+            WarehouseName = po.Warehouse.Name,
+            WarehouseAddress = po.Warehouse.Address,
+            TotalOrdered = po.Lines.Sum(l => l.QuantityOrdered),
+            TotalReceived = po.Lines.Sum(l => l.QuantityReceived),
+            TotalRemaining = po.Lines.Sum(l => l.RemainingQuantity),
+            Lines = po.Lines.Select(l => new PurchaseOrderLinePrintViewModel
+            {
+                ProductName = l.Product.ProductName,
+                Sku = l.Product.Sku,
+                QuantityOrdered = l.QuantityOrdered,
+                QuantityReceived = l.QuantityReceived,
+                RemainingQuantity = l.RemainingQuantity,
+                UnitCost = l.UnitCost
+            }).ToList(),
+            Receipts = po.GoodsReceipts.OrderBy(r => r.ReceiptDate).Select(r => new GoodsReceiptPrintViewModel
+            {
+                ReceiptCode = r.ReceiptCode,
+                ReceiptDate = r.ReceiptDate,
+                Note = r.Note,
+                TotalQuantity = r.Lines.Sum(x => x.Quantity),
+                TotalValue = r.Lines.Sum(x => x.Quantity * x.UnitCost),
+                Lines = r.Lines.Select(rl => new GoodsReceiptLinePrintViewModel
+                {
+                    ProductName = rl.Product.ProductName,
+                    Sku = rl.Product.Sku,
+                    BatchNo = rl.BatchNo,
+                    ExpiryDate = rl.ExpiryDate,
+                    Quantity = rl.Quantity,
+                    UnitCost = rl.UnitCost
+                }).ToList()
+            }).ToList()
+        };
+
+        model.TotalValue = model.Lines.Sum(l => l.LineValue);
+        ViewBag.PrintedAt = DateTime.Now;
+        return View("~/Views/Admin/Purchase/Print.cshtml", model);
+    }
+
+    [HttpGet]
+    [Route("PrintReceipt/{receiptCode}")]
+    public async Task<IActionResult> PrintReceipt(string receiptCode)
+    {
+        var receipt = await _context.GoodsReceipts
+            .Include(r => r.Supplier)
+            .Include(r => r.Warehouse)
+            .Include(r => r.Lines)
+            .ThenInclude(l => l.Product)
+            .FirstOrDefaultAsync(r => r.ReceiptCode == receiptCode);
+
+        if (receipt == null) return NotFound();
+
+        var model = new GoodsReceiptPrintViewModel
+        {
+            ReceiptCode = receipt.ReceiptCode,
+            ReceiptDate = receipt.ReceiptDate,
+            Note = receipt.Note,
+            TotalQuantity = receipt.Lines.Sum(x => x.Quantity),
+            TotalValue = receipt.Lines.Sum(x => x.Quantity * x.UnitCost),
+            Lines = receipt.Lines.Select(rl => new GoodsReceiptLinePrintViewModel
+            {
+                ProductName = rl.Product.ProductName,
+                Sku = rl.Product.Sku,
+                BatchNo = rl.BatchNo,
+                ExpiryDate = rl.ExpiryDate,
+                Quantity = rl.Quantity,
+                UnitCost = rl.UnitCost
+            }).ToList()
+        };
+
+        ViewBag.PrintedAt = DateTime.Now;
+        ViewBag.SupplierName = receipt.Supplier.Name;
+        ViewBag.WarehouseName = receipt.Warehouse.Name;
+        return View("~/Views/Admin/Purchase/PrintReceipt.cshtml", model);
+    }
+
     [HttpPost]
     [Route("Confirm/{id}")]
     [ValidateAntiForgeryToken]

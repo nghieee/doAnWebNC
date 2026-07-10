@@ -1,243 +1,254 @@
 @model web_ban_thuoc.Models.InventoryIndexViewModel
 @using web_ban_thuoc.Models
 @{
-    ViewData["Title"] = "Quản lý kho";
+    ViewData["Title"] = "Tồn kho & Lô";
     Layout = "~/Views/Admin/_Layout.cshtml";
-    var showHub = ViewBag.ShowHub == true;
+    var allWarehouses = ViewBag.AllWarehouses as List<Warehouse> ?? new List<Warehouse>();
+    var selectedWarehouseId = ViewBag.SelectedWarehouseId as int?;
 }
+<div class="container-fluid py-3">
 
-@if (showHub)
-{
-    <div class="alert alert-primary border-0 shadow-sm rounded-4 mb-4">
-        <h5 class="fw-bold mb-2"><i class="fa fa-warehouse me-2"></i>Trung tâm vận hành kho</h5>
-        <p class="mb-3 small">Luồng chuẩn: <strong>NCC → Đặt hàng → Nhập kho (lô/HSD) → Bán hàng → Xuất FEFO khi xác nhận đơn</strong></p>
-        <div class="row g-2">
-            <div class="col-md-3">
-                <a href="/AdminSupplier" class="btn btn-outline-primary w-100 text-start">
-                    <i class="fa fa-truck me-2"></i>1. Nhà cung cấp
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a href="/AdminPurchase/Create" class="btn btn-outline-primary w-100 text-start">
-                    <i class="fa fa-file-invoice me-2"></i>2. Tạo đơn đặt hàng
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a href="/AdminPurchase" class="btn btn-outline-success w-100 text-start">
-                    <i class="fa fa-arrow-down me-2"></i>3. Nhập kho từ đơn
-                    @if (Model.PendingPurchaseOrders > 0)
-                    {
-                        <span class="badge bg-danger ms-1">@Model.PendingPurchaseOrders</span>
-                    }
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a href="/AdminOrder" class="btn btn-outline-warning w-100 text-start">
-                    <i class="fa fa-cart-shopping me-2"></i>4. Xử lý đơn bán
-                    @if (Model.PendingOrderConfirmations > 0)
-                    {
-                        <span class="badge bg-danger ms-1">@Model.PendingOrderConfirmations</span>
-                    }
-                </a>
-            </div>
-        </div>
-    </div>
-}
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success border-0 shadow-sm rounded-4">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger border-0 shadow-sm rounded-4">@TempData["ErrorMessage"]</div>
+    }
 
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="text-muted small">Tổng dòng tồn kho</div>
-                <div class="fs-4 fw-bold text-primary">@Model.WarehouseStocks.Count</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="text-muted small">Lô đang còn hàng</div>
-                <div class="fs-4 fw-bold text-success">@Model.Batches.Count</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="text-muted small">Cảnh báo tồn thấp</div>
-                <div class="fs-4 fw-bold text-danger">@Model.LowStockAlerts.Count</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="text-muted small">Đơn NCC chờ nhập</div>
-                <div class="fs-4 fw-bold text-warning">@Model.PendingPurchaseOrders</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<ul class="nav nav-tabs mb-4" role="tablist">
-    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabStock">Tồn theo kho</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabBatch">Lô & HSD (FEFO)</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabHistory">Lịch sử phiếu</button></li>
-</ul>
-
-<div class="tab-content">
-    <div class="tab-pane fade show active" id="tabStock">
-        <div class="row g-3 mb-4">
-            <div class="col-lg-8">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle table-bordered bg-white shadow-sm mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width: 80px;" class="text-center">Ảnh</th>
-                                <th>Sản phẩm</th>
-                                <th>SKU</th>
-                                <th>Kho</th>
-                                <th>Tồn thực</th>
-                                <th>Đang giữ</th>
-                                <th>Khả dụng</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var ws in Model.WarehouseStocks)
-                            {
-                                var imgUrl = string.IsNullOrEmpty(ws.ProductImageUrl) ? "/images/products/default.png" : (ws.ProductImageUrl == "default.png" ? "/images/products/default.png" : $"/images/products/{ws.ProductImageUrl}");
-                                <tr>
-                                    <td class="text-center">
-                                        <img src="@imgUrl" alt="Ảnh" class="rounded-3 border shadow-sm" style="width: 50px; height: 50px; object-fit: cover; background: #f4f6fb;" />
-                                    </td>
-                                    <td><strong class="text-dark">@ws.ProductName</strong></td>
-                                    <td><span class="font-monospace text-secondary">@(ws.Sku ?? "—")</span></td>
-                                    <td>@ws.WarehouseName</td>
-                                    <td>@ws.QuantityOnHand</td>
-                                    <td>@ws.QuantityReserved</td>
-                                    <td><span class="badge @(ws.Available <= 10 ? "bg-danger" : "bg-success") px-3 py-2 fs-6">@ws.Available</span></td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+    <!-- Tổng quan -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Tổng dòng tồn kho</div>
+                    <div class="fs-4 fw-bold text-primary">@Model.WarehouseStocks.Count</div>
                 </div>
             </div>
-            <div class="col-lg-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white fw-semibold text-danger">Cảnh báo tồn thấp (≤ 10)</div>
-                    <div class="card-body">
-                        @if (Model.LowStockAlerts.Any())
-                        {
-                            <ul class="list-group list-group-flush">
-                                @foreach (var p in Model.LowStockAlerts)
-                                {
-                                    <li class="list-group-item d-flex justify-content-between px-0">
-                                        <span>@p.ProductName</span>
-                                        <span class="badge bg-danger">@p.Available</span>
-                                    </li>
-                                }
-                            </ul>
-                        }
-                        else
-                        {
-                            <p class="text-muted mb-0">Không có sản phẩm sắp hết hàng.</p>
-                        }
-                    </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Lô đang còn hàng</div>
+                    <div class="fs-4 fw-bold text-success">@Model.Batches.Count</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Cảnh báo tồn thấp</div>
+                    <div class="fs-4 fw-bold text-danger">@Model.LowStockAlerts.Count</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Đơn NCC chờ nhập</div>
+                    <div class="fs-4 fw-bold text-warning">@Model.PendingPurchaseOrders</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="tab-pane fade" id="tabBatch">
-        <p class="small text-muted">Khi admin <strong>xác nhận đơn bán</strong>, hệ thống tự xuất theo FEFO — lô hết hạn sớm nhất trước.</p>
-        <div class="table-responsive mb-4">
-            <table class="table table-hover align-middle table-bordered bg-white shadow-sm">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width: 80px;" class="text-center">Ảnh</th>
-                        <th>Sản phẩm</th>
-                        <th>Mã lô</th>
-                        <th>HSD</th>
-                        <th>Kho</th>
-                        <th>Tồn lô</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var b in Model.Batches)
-                    {
-                        var imgUrl = string.IsNullOrEmpty(b.ProductImageUrl) ? "/images/products/default.png" : (b.ProductImageUrl == "default.png" ? "/images/products/default.png" : $"/images/products/{b.ProductImageUrl}");
-                        var expiringSoon = b.ExpiryDate.HasValue && b.ExpiryDate.Value <= DateTime.Today.AddDays(90);
-                        <tr class="@(expiringSoon ? "table-warning" : "")">
-                            <td class="text-center">
-                                <img src="@imgUrl" alt="Ảnh" class="rounded-3 border shadow-sm" style="width: 50px; height: 50px; object-fit: cover; background: #f4f6fb;" />
-                            </td>
-                            <td><strong class="text-dark">@b.ProductName</strong></td>
-                            <td><span class="font-monospace text-secondary">@b.BatchNo</span></td>
-                            <td>@(b.ExpiryDate?.ToString("dd/MM/yyyy") ?? "—")</td>
-                            <td>@b.WarehouseName</td>
-                            <td>@b.QuantityOnHand</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+    <!-- Quick actions -->
+    <div class="row g-2 mb-4">
+        <div class="col-md-3">
+            <a href="/AdminSupplier" class="btn btn-outline-primary w-100 text-start">
+                <i class="fa fa-truck me-2"></i>Nhà cung cấp
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="/AdminPurchase/Create" class="btn btn-outline-primary w-100 text-start">
+                <i class="fa fa-file-invoice me-2"></i>Tạo đơn đặt hàng NCC
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="/AdminPurchase" class="btn btn-outline-success w-100 text-start">
+                <i class="fa fa-arrow-down me-2"></i>Nhập kho từ đơn NCC
+                @if (Model.PendingPurchaseOrders > 0)
+                {
+                    <span class="badge bg-danger ms-1">@Model.PendingPurchaseOrders</span>
+                }
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="/AdminOrder" class="btn btn-outline-warning w-100 text-start">
+                <i class="fa fa-cart-shopping me-2"></i>Xử lý đơn bán
+                @if (Model.PendingOrderConfirmations > 0)
+                {
+                    <span class="badge bg-danger ms-1">@Model.PendingOrderConfirmations</span>
+                }
+            </a>
         </div>
     </div>
 
-    <div class="tab-pane fade" id="tabHistory">
-        <form method="get" class="row g-3 align-items-end mb-3 bg-white shadow-sm rounded-4 px-4 py-3">
-            <div class="col-md-4">
-                <input type="text" class="form-control" name="search" value="@Model.Search" placeholder="Tên SP, ghi chú..." />
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabStock"><i class="fa fa-boxes-stacked me-1"></i> Tồn theo kho</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabBatch"><i class="fa fa-layer-group me-1"></i> Lô & HSD (FEFO)</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabHistory"><i class="fa fa-clock-rotate-left me-1"></i> Lịch sử phiếu</button></li>
+
+    </ul>
+
+    <div class="tab-content">
+        <!-- TAB: Tồn theo kho -->
+        <div class="tab-pane fade show active" id="tabStock">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <form method="get" class="d-flex gap-2">
+                    <input type="hidden" name="search" value="@Model.Search" />
+                    <input type="hidden" name="type" value="@Model.Type" />
+                    <select class="form-select" name="warehouseId" onchange="this.form.submit()" style="min-width:200px">
+                        <option value="">Tất cả kho</option>
+                        @foreach (var wh in allWarehouses)
+                        {
+                            <option value="@wh.WarehouseId" selected="@(selectedWarehouseId == wh.WarehouseId)">@wh.Name</option>
+                        }
+                    </select>
+                </form>
+                <div class="small text-muted">
+                    Tổng: <strong>@Model.WarehouseStocks.Sum(w => w.QuantityOnHand).ToString("N0")</strong> tồn ·
+                    <strong>@Model.WarehouseStocks.Sum(w => w.Available).ToString("N0")</strong> khả dụng
+                </div>
             </div>
-            <div class="col-md-3">
-                <select class="form-select" name="type">
-                    @{
-                        var types = new[] { "Tất cả", "Import", "Sale", "BatchSale", "Return", "Adjustment" };
-                    }
-                    @foreach (var t in types)
-                    {
-                        <option value="@t" selected="@(Model.Type == t)">@t</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">Lọc</button>
-            </div>
-        </form>
-        <div class="table-responsive">
-            <table class="table table-hover table-bordered bg-white shadow-sm">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Thời gian</th>
-                        <th>SP</th>
-                        <th>Kho</th>
-                        <th>Loại</th>
-                        <th>SL</th>
-                        <th>Lô</th>
-                        <th>Đơn</th>
-                        <th>NCC</th>
-                        <th>Ghi chú</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model.Transactions)
-                    {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle table-bordered bg-white shadow-sm mb-0">
+                    <thead class="table-light">
                         <tr>
-                            <td>#@item.TransactionId</td>
-                            <td>@item.TransactionDate.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td>@item.ProductName</td>
-                            <td>@item.WarehouseName</td>
-                            <td><span class="badge bg-secondary">@item.TransactionType</span></td>
-                            <td>@item.Quantity</td>
-                            <td>@(item.BatchNo ?? "—")</td>
-                            <td>@(item.OrderId.HasValue ? $"#{item.OrderId}" : "—")</td>
-                            <td>@(item.SupplierName ?? "—")</td>
-                            <td>@(item.Note ?? "—")</td>
+                            <th style="width: 80px;" class="text-center">Ảnh</th>
+                            <th>Sản phẩm</th>
+                            <th>SKU</th>
+                            <th>Kho</th>
+                            <th>Tồn thực</th>
+                            <th>Chuẩn bị xuất kho</th>
+                            <th>Khả dụng</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var ws in Model.WarehouseStocks)
+                        {
+                            var imgUrl = string.IsNullOrEmpty(ws.ProductImageUrl) ? "/images/products/default.png" : (ws.ProductImageUrl == "default.png" ? "/images/products/default.png" : $"/images/products/{ws.ProductImageUrl}");
+                            <tr>
+                                <td class="text-center">
+                                    <img src="@imgUrl" alt="Ảnh" class="rounded-3 border shadow-sm" style="width: 50px; height: 50px; object-fit: cover; background: #f4f6fb;" />
+                                </td>
+                                <td><strong class="text-dark">@ws.ProductName</strong></td>
+                                <td><span class="font-monospace text-secondary">@(ws.Sku ?? "—")</span></td>
+                                <td><span class="badge bg-light text-dark border">@ws.WarehouseName</span></td>
+                                <td>@ws.QuantityOnHand</td>
+                                <td>@ws.QuantityReserved</td>
+                                <td><span class="badge @(ws.Available <= 10 ? "bg-danger" : "bg-success") px-3 py-2 fs-6">@ws.Available</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
+
+        <!-- TAB: Lô & HSD -->
+        <div class="tab-pane fade" id="tabBatch">
+            <p class="small text-muted">Khi admin <strong>xác nhận đơn bán</strong>, hệ thống tự xuất theo FEFO — lô hết hạn sớm nhất trước.</p>
+            <div class="table-responsive mb-4">
+                <table class="table table-hover align-middle table-bordered bg-white shadow-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 80px;" class="text-center">Ảnh</th>
+                            <th>Sản phẩm</th>
+                            <th>Mã lô</th>
+                            <th>HSD</th>
+                            <th>Kho</th>
+                            <th>Tồn lô</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var b in Model.Batches)
+                        {
+                            var imgUrl = string.IsNullOrEmpty(b.ProductImageUrl) ? "/images/products/default.png" : (b.ProductImageUrl == "default.png" ? "/images/products/default.png" : $"/images/products/{b.ProductImageUrl}");
+                            var expiringSoon = b.ExpiryDate.HasValue && b.ExpiryDate.Value <= DateTime.Today.AddDays(90);
+                            <tr class="@(expiringSoon ? "table-warning" : "")">
+                                <td class="text-center">
+                                    <img src="@imgUrl" alt="Ảnh" class="rounded-3 border shadow-sm" style="width: 50px; height: 50px; object-fit: cover; background: #f4f6fb;" />
+                                </td>
+                                <td><strong class="text-dark">@b.ProductName</strong></td>
+                                <td><span class="font-monospace text-secondary">@b.BatchNo</span></td>
+                                <td>
+                                    @(b.ExpiryDate?.ToString("dd/MM/yyyy") ?? "—")
+                                    @if (expiringSoon && b.ExpiryDate.HasValue)
+                                    {
+                                        var daysLeft = (b.ExpiryDate.Value - DateTime.Today).TotalDays;
+                                        <span class="badge @(daysLeft < 0 ? "bg-danger" : daysLeft <= 30 ? "bg-danger" : "bg-warning text-dark") ms-1">
+                                            @(daysLeft < 0 ? "Đã hết" : $"{daysLeft:0} ngày")
+                                        </span>
+                                    }
+                                </td>
+                                <td><span class="badge bg-light text-dark border">@b.WarehouseName</span></td>
+                                <td>@b.QuantityOnHand</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB: Lịch sử phiếu -->
+        <div class="tab-pane fade" id="tabHistory">
+            <form method="get" class="row g-3 align-items-end mb-3 bg-white shadow-sm rounded-4 px-4 py-3">
+                <div class="col-md-3">
+                    <input type="text" class="form-control" name="search" value="@Model.Search" placeholder="Tên SP, ghi chú..." />
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="type">
+                        @{
+                            var types = new[] { "Tất cả", "Import", "Sale", "BatchSale", "Return", "Adjustment" };
+                        }
+                        @foreach (var t in types)
+                        {
+                            <option value="@t" selected="@(Model.Type == t)">@t</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Lọc</button>
+                </div>
+            </form>
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered bg-white shadow-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Thời gian</th>
+                            <th>SP</th>
+                            <th>Kho</th>
+                            <th>Loại</th>
+                            <th>SL</th>
+                            <th>Lô</th>
+                            <th>Đơn</th>
+                            <th>NCC</th>
+                            <th>Ghi chú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Transactions)
+                        {
+                            <tr>
+                                <td>#@item.TransactionId</td>
+                                <td>@item.TransactionDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@item.ProductName</td>
+                                <td><span class="badge bg-light text-dark border">@item.WarehouseName</span></td>
+                                <td><span class="badge bg-secondary">@item.TransactionType</span></td>
+                                <td>@item.Quantity</td>
+                                <td>@(item.BatchNo ?? "—")</td>
+                                <td>@(item.OrderId.HasValue ? $"#{item.OrderId}" : "—")</td>
+                                <td>@(item.SupplierName ?? "—")</td>
+                                <td>@(item.Note ?? "—")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 </div>
 

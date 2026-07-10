@@ -9,6 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<LongChauDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddHttpContextAccessor();
+
 // Thêm cấu hình Identity
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
@@ -205,7 +207,7 @@ app.UseSession();
 
 app.UseEndpoints(endpoints =>
 {
-    // Route cho admin
+    // Route cho admin mặc định
     endpoints.MapControllerRoute(
         name: "admin",
         pattern: "admin/{action=Index}/{id?}",

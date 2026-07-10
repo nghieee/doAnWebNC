@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 480" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="s1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f59e0b"/>
+      <stop offset="1" stop-color="#ef4444"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="480" fill="url(#s1)"/>
+  <g font-family="Inter, Arial, sans-serif" fill="#ffffff">
+    <text x="40" y="100" font-size="16" font-weight="700" letter-spacing="2" opacity="0.9">FREESHIP �N T� 299K</text>
+    <text x="40" y="170" font-size="38" font-weight="800" letter-spacing="-1">Giao nhanh</text>
+    <text x="40" y="215" font-size="38" font-weight="800" letter-spacing="-1">2h n�i th�nh</text>
+  </g>
+  <g transform="translate(40,260)">
+    <rect width="180" height="48" rx="24" fill="#ffffff"/>
+    <text x="90" y="30" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" fill="#ef4444" text-anchor="middle">�t h�ng �</text>
+  </g>
+  <g transform="translate(420,360)" fill="#ffffff" opacity="0.35">
+    <circle r="60"/>
+    <text font-family="Inter, Arial, sans-serif" font-size="32" font-weight="900" text-anchor="middle" y="10" opacity="1" fill="#f59e0b">2H</text>
+  </g>
+</svg>

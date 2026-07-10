@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 500" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d6efd"/>
+      <stop offset="0.55" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="r1" cx="0.2" cy="0.5" r="0.4">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="500" fill="url(#g1)"/>
+  <rect width="1600" height="500" fill="url(#r1)"/>
+  <g fill="#ffffff" opacity="0.12">
+    <circle cx="220" cy="430" r="120"/>
+    <circle cx="1380" cy="80" r="90"/>
+    <circle cx="1200" cy="430" r="60"/>
+  </g>
+  <g font-family="Inter, Arial, sans-serif" fill="#ffffff">
+    <text x="80" y="200" font-size="58" font-weight="800" letter-spacing="-1">S�c kh�e c�a b�n</text>
+    <text x="80" y="270" font-size="58" font-weight="800" letter-spacing="-1">l� �u ti�n h�ng �u</text>
+    <text x="80" y="320" font-size="22" font-weight="400" opacity="0.85">Thu�c ch�nh h�ng � Giao nhanh to�n qu�c � T� v�n d��c s) mi�n ph�</text>
+  </g>
+  <g transform="translate(80,360)">
+    <rect width="220" height="60" rx="30" fill="#ffffff"/>
+    <text x="110" y="38" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700" fill="#0d6efd" text-anchor="middle">Mua s�m ngay �</text>
+  </g>
+  <rect x="0" y="0" width="1600" height="500" fill="url(#g2)"/>
+</svg>

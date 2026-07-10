@@ -22,18 +22,6 @@ public class InventoryImportViewModel
     public int? WarehouseId { get; set; }
 }
 
-public class InventoryAdjustViewModel
-{
-    [Required]
-    public int ProductId { get; set; }
-
-    [Range(0, int.MaxValue)]
-    public int NewQuantity { get; set; }
-
-    public string? Note { get; set; }
-    public int? WarehouseId { get; set; }
-}
-
 public class InventoryTransactionViewModel
 {
     public int TransactionId { get; set; }
@@ -56,6 +44,7 @@ public class WarehouseStockViewModel
     public string ProductName { get; set; } = string.Empty;
     public string? Sku { get; set; }
     public string WarehouseName { get; set; } = string.Empty;
+    public int WarehouseId { get; set; }
     public int QuantityOnHand { get; set; }
     public int QuantityReserved { get; set; }
     public int Available => Math.Max(0, QuantityOnHand - QuantityReserved);
@@ -198,4 +187,109 @@ public class ReplenishmentItemViewModel
     public string ImageUrl { get; set; } = string.Empty;
     /// <summary>Số lượng đề xuất nhập để đạt mức tối thiểu * 3.</summary>
     public int SuggestedOrderQty => Math.Max(1, (MinStockLevel * 3) - StockQuantity);
+}
+
+public class PurchaseOrderPrintViewModel
+{
+    public string OrderCode { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public DateTime OrderDate { get; set; }
+    public DateTime? ExpectedDate { get; set; }
+    public string? Note { get; set; }
+    public string SupplierCode { get; set; } = string.Empty;
+    public string SupplierName { get; set; } = string.Empty;
+    public string? SupplierPhone { get; set; }
+    public string? SupplierEmail { get; set; }
+    public string? SupplierAddress { get; set; }
+    public string? SupplierTaxCode { get; set; }
+    public string WarehouseName { get; set; } = string.Empty;
+    public string? WarehouseAddress { get; set; }
+    public decimal TotalValue { get; set; }
+    public int TotalOrdered { get; set; }
+    public int TotalReceived { get; set; }
+    public int TotalRemaining { get; set; }
+    public List<PurchaseOrderLinePrintViewModel> Lines { get; set; } = new();
+    public List<GoodsReceiptPrintViewModel> Receipts { get; set; } = new();
+}
+
+public class PurchaseOrderLinePrintViewModel
+{
+    public string ProductName { get; set; } = string.Empty;
+    public string? Sku { get; set; }
+    public int QuantityOrdered { get; set; }
+    public int QuantityReceived { get; set; }
+    public int RemainingQuantity { get; set; }
+    public decimal UnitCost { get; set; }
+    public decimal LineValue => QuantityOrdered * UnitCost;
+}
+
+public class GoodsReceiptPrintViewModel
+{
+    public string ReceiptCode { get; set; } = string.Empty;
+    public DateTime ReceiptDate { get; set; }
+    public string? Note { get; set; }
+    public int TotalQuantity { get; set; }
+    public decimal TotalValue { get; set; }
+    public List<GoodsReceiptLinePrintViewModel> Lines { get; set; } = new();
+}
+
+public class GoodsReceiptLinePrintViewModel
+{
+    public string ProductName { get; set; } = string.Empty;
+    public string? Sku { get; set; }
+    public string BatchNo { get; set; } = string.Empty;
+    public DateTime? ExpiryDate { get; set; }
+    public int Quantity { get; set; }
+    public decimal UnitCost { get; set; }
+    public decimal LineValue => Quantity * UnitCost;
+}
+
+public class ImportStatRow
+{
+    public int WarehouseId { get; set; }
+    public string WarehouseName { get; set; } = string.Empty;
+    public int ReceiptCount { get; set; }
+    public int LineCount { get; set; }
+    public int Quantity { get; set; }
+    public decimal Value { get; set; }
+}
+
+// ─── Warehouse ViewModels ────────────────────────────────────────────────────
+
+public class WarehouseListViewModel
+{
+    public int WarehouseId { get; set; }
+    public string Name { get; set; } = "";
+    public string? Address { get; set; }
+    public bool IsDefault { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class WarehouseSummaryViewModel
+{
+    public int WarehouseId { get; set; }
+    public string Name { get; set; } = "";
+    public string? Address { get; set; }
+    public bool IsDefault { get; set; }
+    public int TotalOnHand { get; set; }
+    public int TotalReserved { get; set; }
+    public int Available { get; set; }
+    public decimal StockValue { get; set; }
+    public int ActiveBatchCount { get; set; }
+    public int ExpiringBatchCount { get; set; }
+    public int ProductCount { get; set; }
+}
+
+public class WarehouseIndexViewModel
+{
+    public List<WarehouseSummaryViewModel> Warehouses { get; set; } = new();
+    public int LowStockCount { get; set; }
+    public int OutOfStockCount { get; set; }
+}
+
+public class WarehouseCreateViewModel
+{
+    public string Name { get; set; } = "";
+    public string? Address { get; set; }
+    public bool IsDefault { get; set; }
 }

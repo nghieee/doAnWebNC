@@ -28,14 +28,14 @@ ScaffoldingReadMe.txt
 Thumbs.db
 # Publish
 publish/
-# Secret config
+# Secret config — NEVER commit these
+appsettings.json
+appsettings.Development.json
 appsettings.Production.json
 appsettings.Staging.json
 appsettings.*.local.json
+appsettings.*.example.json
 secrets.json
-# Do not commit sensitive dev config (optional, nếu bạn muốn)
-# appsettings.Development.json
-# Nếu dùng môi trường dev cá nhân, có thể bỏ comment dòng trên
 .env
 .env.*
 # VS Code
@@ -48,7 +48,7 @@ yarn.lock
 # Others
 *.swp
 *.bak
-*.tmp 
+*.tmp
 changes.patch
 *.patch
 *.msi

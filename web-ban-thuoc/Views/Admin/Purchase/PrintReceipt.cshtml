@@ -1,0 +1,230 @@
+@model web_ban_thuoc.Models.GoodsReceiptPrintViewModel
+@{
+    ViewData["Title"] = "In phiếu nhập kho";
+    Layout = null;
+    var printedAt = ViewBag.PrintedAt ?? DateTime.Now;
+    var supplierName = ViewBag.SupplierName as string ?? string.Empty;
+    var warehouseName = ViewBag.WarehouseName as string ?? string.Empty;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@Model.ReceiptCode</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --brand: #1250dc;
+            --brand-light: #e7eefc;
+        }
+        body {
+            background: #f3f4f6;
+            color: #111827;
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+        }
+        .paper {
+            max-width: 900px;
+            margin: 24px auto;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .print-header {
+            background: var(--brand);
+            color: #fff;
+        }
+        .header-brand {
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+        }
+        .header-brand img {
+            height: 42px;
+        }
+        .header-contact {
+            text-align: right;
+            font-size: 0.82rem;
+            line-height: 1.7;
+            opacity: 0.9;
+        }
+        .header-info {
+            padding: 10px 24px;
+            font-size: 0.8rem;
+            opacity: 0.8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.10);
+        }
+        .header-doc {
+            padding: 10px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Content */
+        .section-title {
+            color: #1f2937;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--brand-light);
+        }
+        .muted { color: #6b7280; }
+        .table th {
+            background: #f1f5f9;
+            color: #374151;
+            font-weight: 600;
+        }
+        .table td, .table th {
+            padding: 8px 12px;
+        }
+
+        /* Footer */
+        .footer-bar {
+            background: #f8fafc;
+            border-top: 1px solid #e3e9f7;
+            padding: 12px 24px;
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+
+        /* Print */
+        @@media print {
+            body { background: #fff; }
+            .no-print { display: none !important; }
+            .paper { margin: 0; box-shadow: none; border-radius: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="paper">
+        <!-- Header -->
+        <div class="print-header">
+            <div class="header-brand">
+                <img src="/images/default/header_logo_brand.png" alt="Long Châu Logo" />
+                <div class="header-contact">
+                    <div><i class="fa fa-phone me-1"></i>1900 1234</div>
+                    <div><i class="fa fa-globe me-1"></i>longchau.vn</div>
+                    <div><i class="fa fa-envelope me-1"></i>cskh@longchau.vn</div>
+                </div>
+            </div>
+            <div class="header-info">
+                <div>
+                    <i class="fa fa-building me-1"></i> Nhà Thuốc Long Châu
+                    <span class="mx-2">·</span>
+                    <i class="fa fa-map-marker-alt me-1"></i>123 Đường ABC, Quận 1, TP.HCM
+                </div>
+                <div>
+                    <i class="fa fa-clock me-1"></i>In lúc: @printedAt.ToString("dd/MM/yyyy HH:mm")
+                </div>
+            </div>
+            <div class="header-doc">
+                <div>
+                    <h1 class="h4 fw-bold mb-0"><i class="fa fa-dolly me-2"></i>Phiếu nhập kho</h1>
+                    <div class="small opacity-75 mt-1">Mã phiếu: <strong>@Model.ReceiptCode</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="p-4">
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="section-title"><i class="fa fa-truck me-1" style="color:var(--brand)"></i> Nhà cung cấp</div>
+                            <div class="fw-semibold">@supplierName</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="section-title"><i class="fa fa-warehouse me-1" style="color:var(--brand)"></i> Kho nhận</div>
+                            <div class="fw-semibold">@warehouseName</div>
+                            <div class="small text-muted">Ngày nhập: @Model.ReceiptDate.ToString("dd/MM/yyyy HH:mm")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.Note))
+            {
+                <div class="alert alert-light border mb-3"><strong>Ghi chú:</strong> @Model.Note</div>
+            }
+
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white fw-semibold"><i class="fa fa-list-ul me-1" style="color:var(--brand)"></i> Chi tiết nhập kho</div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Sản phẩm</th>
+                                <th>Lô</th>
+                                <th>HSD</th>
+                                <th class="text-end">SL</th>
+                                <th class="text-end">Giá nhập</th>
+                                <th class="text-end">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var line in Model.Lines.Select((value, idx) => new { value, idx }))
+                            {
+                                <tr>
+                                    <td>@(line.idx + 1)</td>
+                                    <td>
+                                        <div class="fw-semibold">@line.value.ProductName</div>
+                                        <div class="small muted">SKU: @(line.value.Sku ?? "—")</div>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border">@line.value.BatchNo</span></td>
+                                    <td>@(line.value.ExpiryDate?.ToString("dd/MM/yyyy") ?? "—")</td>
+                                    <td class="text-end">@line.value.Quantity</td>
+                                    <td class="text-end">@line.value.UnitCost.ToString("N0")đ</td>
+                                    <td class="text-end fw-semibold">@line.value.LineValue.ToString("N0")đ</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr class="fw-semibold">
+                                <td colspan="4">Tổng</td>
+                                <td class="text-end">@Model.TotalQuantity</td>
+                                <td class="text-end"></td>
+                                <td class="text-end">@Model.TotalValue.ToString("N0")đ</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center no-print">
+                <button onclick="window.print()" class="btn btn-dark"><i class="fa fa-print me-1"></i> In phiếu</button>
+                <a href="/AdminPurchase" class="btn btn-outline-secondary">Quay lại</a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-bar d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fa fa-building me-1"></i> Nhà Thuốc Long Châu
+                <span class="mx-2">·</span>
+                <i class="fa fa-globe me-1"></i>longchau.vn
+                <span class="mx-2">·</span>
+                <i class="fa fa-envelope me-1"></i>cskh@longchau.vn
+            </div>
+            <div>Trang 1 / 1</div>
+        </div>
+    </div>
+</body>
+</html>

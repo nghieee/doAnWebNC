@@ -4,202 +4,377 @@
     var categories = Model ?? new List<web_ban_thuoc.Models.CategoryMenuViewModel>();
 }
 
-@if (!categories.Any())
-{
-    <div class="alert alert-warning text-center my-2">Không có dữ liệu danh mục cha để hiển thị menu. Hãy kiểm tra lại dữ
-        liệu hoặc logic lấy danh mục cha trong NavbarFilter/ViewComponent.</div>
-}
-else
-{
-    <nav class="navbar-categories d-flex align-items-center justify-content-center position-relative gap-4"
-        role="navigation">
-        @foreach (var parent in categories)
-        {
-            <div class="nav-item-parent position-relative" data-parent-id="@parent.CategoryId"
-                onmouseenter="showMenu('@parent.CategoryId')" onmouseleave="hideMenu('@parent.CategoryId')">
-                <button class="nav-btn btn btn-link text-dark text-decoration-none d-flex align-items-center gap-2 py-3"
-                    type="button" aria-expanded="false">
-                    <span class="text-sm fw-medium">@parent.CategoryName</span>
-                    <i class="fas fa-chevron-down nav-arrow" aria-hidden="true"></i>
-                    <span class="nav-underline position-absolute start-0 bottom-0"></span>
-                </button>
-                <div class="menu-container position-absolute start-50 translate-middle-x border shadow-lg rounded-bottom-4 bg-white"
-                    style="display: none; z-index: 1000; min-width: 800px; top: 100%;">
-                    <div class="d-flex">
-                        <div class="children-list w-33 border-end p-0" id="children-@parent.CategoryId"></div>
-                        <div class="grandchildren-list w-67 p-4">
-                            <div class="row row-cols-3 g-3" id="grandchildren-@parent.CategoryId"></div>
-                        </div>
+<nav class="navbar-categories" role="navigation">
+    @foreach (var parent in categories)
+    {
+        <div class="nm-parent"
+             data-parent-id="@parent.CategoryId"
+             onmouseenter="nmShow('@parent.CategoryId')"
+             onmouseleave="nmHide('@parent.CategoryId')">
+            <button class="nm-btn" type="button" aria-expanded="false">
+                <span>@parent.CategoryName</span>
+                <i class="fas fa-chevron-down nm-arrow"></i>
+                <span class="nm-underline"></span>
+            </button>
+
+            <div class="nm-dropdown" id="nm-@parent.CategoryId">
+                <div class="nm-inner">
+                    <div class="nm-left" id="nm-children-@parent.CategoryId"></div>
+                    <div class="nm-right">
+                        <div class="nm-grandchildren-grid" id="nm-grandchildren-@parent.CategoryId"></div>
                     </div>
                 </div>
             </div>
-        }
-    </nav>
-}
+        </div>
+    }
+</nav>
 
 <style>
-    .w-33 {
-        width: 33.3333%;
+    /* === NAVBAR WRAPPER === */
+    .navbar-categories {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0;
     }
 
-    .w-67 {
-        width: 66.6667%;
+    /* === PARENT ITEM === */
+    .nm-parent {
+        position: relative;
     }
 
-    .hover-bg-light:hover {
-        background-color: #f1f5f9;
-    }
-
-    .cursor-pointer {
-        cursor: pointer;
-    }
-
-    .transition {
-        transition: all 0.2s ease-in-out;
-    }
-
-    .text-sm {
-        font-size: 0.875rem;
-    }
-
-    .nav-btn {
-        border-radius: 8px;
-        min-width: 90px;
+    .nm-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.75rem 1rem;
         background: transparent;
         border: none;
         outline: none;
         box-shadow: none;
+        cursor: pointer;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #1e293b;
+        transition: color 0.2s, background-color 0.2s;
+        white-space: nowrap;
         position: relative;
-        overflow: visible;
     }
 
-    .nav-underline {
-        position: absolute;
-        left: 0;
-        bottom: 0;
-        height: 2px;
-        width: 0;
-        background: #2563eb;
-        transition: width 0.3s cubic-bezier(.4, 0, .2, 1);
-        opacity: 1;
+    .nm-btn:hover {
+        color: #2563eb;
+        background-color: #f1f5f9;
     }
 
-    .nav-item-parent:hover .nav-underline {
-        width: 100%;
+    .nm-arrow {
+        font-size: 0.7rem;
+        transition: transform 0.25s cubic-bezier(.4, 0, .2, 1), color 0.2s;
+        color: #94a3b8;
     }
 
-    .nav-item-parent:hover .nav-btn .nav-arrow {
+    .nm-parent:hover .nm-arrow {
         color: #2563eb;
         transform: rotate(180deg);
     }
 
-    .nav-arrow {
-        font-size: 0.9em;
-        transition: color 0.2s, transform 0.3s;
+    .nm-underline {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        height: 2px;
+        width: 0;
+        background: #2563eb;
+        border-radius: 1px;
+        transition: width 0.3s cubic-bezier(.4, 0, .2, 1);
     }
 
-    .nav-item-parent:hover .menu-container {
-        display: block !important;
+    .nm-parent:hover .nm-underline {
+        width: calc(100% - 1rem);
     }
 
-    .child-item {
-        padding: 0.75rem 1rem;
+    /* === DROPDOWN === */
+    .nm-dropdown {
+        position: absolute;
+        left: 50%;
+        top: calc(100% + 0.5rem);
+        transform: translateX(-50%);
+        width: 860px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.10), 0 4px 16px rgba(0, 0, 0, 0.06);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+        transform: translateX(-50%) translateY(-8px);
+        z-index: 1000;
+        overflow: hidden;
     }
 
-    .grandchild-item {
-        padding: 0.5rem;
+    .nm-parent:hover .nm-dropdown,
+    .nm-parent:focus-within .nm-dropdown {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0);
     }
 
-    .object-contain {
+    .nm-inner {
+        display: flex;
+        min-height: 320px;
+    }
+
+    /* === LEFT COLUMN: CHILDREN === */
+    .nm-left {
+        width: 260px;
+        border-right: 1px solid #f1f5f9;
+        padding: 1.25rem 0;
+        flex-shrink: 0;
+        background: #fafbfc;
+        border-radius: 15px 0 0 15px;
+    }
+
+    .nm-child-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.625rem 1.25rem;
+        cursor: pointer;
+        transition: background-color 0.15s, color 0.15s;
+        border-left: 3px solid transparent;
+        color: #475569;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        border-radius: 0 8px 8px 0;
+        margin: 1px 6px;
+        width: calc(100% - 12px);
+    }
+
+    .nm-child-item:hover,
+    .nm-child-item.is-active {
+        background-color: #eef2ff;
+        border-left-color: #2563eb;
+        color: #2563eb;
+    }
+
+    .nm-child-item img {
+        width: 28px;
+        height: 28px;
         object-fit: contain;
+        border-radius: 6px;
+        background: #fff;
+        flex-shrink: 0;
+    }
+
+    .nm-child-item img:not([src]), .nm-child-item img[src=""] {
+        display: none;
+    }
+
+    .nm-child-name {
+        flex: 1;
+    }
+
+    .nm-child-arrow {
+        font-size: 0.7rem;
+        color: #cbd5e1;
+        transition: color 0.15s, transform 0.15s;
+    }
+
+    .nm-child-item:hover .nm-child-arrow,
+    .nm-child-item.is-active .nm-child-arrow {
+        color: #2563eb;
+        transform: translateX(2px);
+    }
+
+    /* === RIGHT COLUMN: GRANDCHILDREN === */
+    .nm-right {
+        flex: 1;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .nm-grandchildren-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-auto-rows: 1fr;
+        gap: 0.625rem;
+    }
+
+    .nm-grandchild-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 1rem 0.625rem 0.875rem;
+        border-radius: 14px;
+        text-decoration: none;
+        transition: background-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+        border: 1px solid transparent;
+    }
+
+    .nm-grandchild-card:hover {
+        background-color: #f8fafc;
+        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+        border-color: #e0e7ff;
+        transform: translateY(-2px);
+    }
+
+    .nm-grandchild-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: #2563eb;
+        overflow: hidden;
+        flex-shrink: 0;
+        margin-bottom: 0.625rem;
+        transition: background 0.18s ease;
+    }
+
+    .nm-grandchild-card:hover .nm-grandchild-icon {
+        background: #eef2ff;
+    }
+
+    .nm-grandchild-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 14px;
+    }
+
+    .nm-grandchild-name {
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: #475569;
+        line-height: 1.4;
+    }
+
+    /* === EMPTY STATE === */
+    .nm-empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        font-size: 0.875rem;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    /* === RESPONSIVE === */
+    @@media (max-width: 768px) {
+        .nm-dropdown {
+            width: 90vw;
+            min-width: unset;
+        }
+        .nm-inner {
+            flex-direction: column;
+        }
+        .nm-left {
+            width: 100%;
+            border-right: none;
+            border-bottom: 1px solid #f1f5f9;
+            border-radius: 0;
+        }
+        .nm-grandchildren-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
     }
 </style>
 
 <script>
-    const categories = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model));
-    let currentParentId = null;
+    const nmCategories = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model));
 
-    function showMenu(parentId) {
-        hideAllMenus();
-        const parent = document.querySelector(`[data-parent-id="${parentId}"]`);
-        if (parent) {
-            parent.querySelector('.menu-container').style.display = 'block';
-            currentParentId = parentId;
-            renderChildren(parentId);
-        }
+    function nmShow(parentId) {
+        nmHideAll();
+        const panel = document.getElementById('nm-' + parentId);
+        if (panel) panel.style.visibility = 'visible';
+        nmRenderChildren(parentId);
     }
 
-    function hideMenu(parentId) {
-        const parent = document.querySelector(`[data-parent-id="${parentId}"]`);
-        if (parent) parent.querySelector('.menu-container').style.display = 'none';
-        currentParentId = null;
+    function nmHide(parentId) {
+        const panel = document.getElementById('nm-' + parentId);
+        if (panel) panel.style.visibility = 'hidden';
     }
 
-    function hideAllMenus() {
-        document.querySelectorAll('.menu-container').forEach(menu => menu.style.display = 'none');
+    function nmHideAll() {
+        document.querySelectorAll('.nm-dropdown').forEach(p => p.style.visibility = 'hidden');
     }
 
-    function renderChildren(parentId) {
-        const parentCat = categories.find(p => p.CategoryId.toString() === parentId);
-        const childrenContainer = document.getElementById(`children-${parentId}`);
-        const grandchildrenContainer = document.getElementById(`grandchildren-${parentId}`);
+    function nmRenderChildren(parentId) {
+        const parent = nmCategories.find(p => p.categoryId.toString() === parentId);
+        const childrenContainer = document.getElementById('nm-children-' + parentId);
+        const grandchildrenContainer = document.getElementById('nm-grandchildren-' + parentId);
         if (!childrenContainer || !grandchildrenContainer) return;
 
-        const children = parentCat?.Children || [];
+        const children = parent?.children || [];
         if (!children.length) {
-            childrenContainer.innerHTML = '<div class="p-3 text-muted">Không có danh mục con</div>';
-            grandchildrenContainer.innerHTML = '<div class="col-12 text-muted">Không có danh mục cháu</div>';
+            childrenContainer.innerHTML = '<div class="nm-empty">Không có danh mục con</div>';
+            grandchildrenContainer.innerHTML = '<div class="nm-empty" style="grid-column:1/-1">Không có danh mục cháu</div>';
             return;
         }
 
-        childrenContainer.innerHTML = children.map(child => `
-            <div class="child-item d-flex align-items-center gap-2 hover-bg-light transition cursor-pointer" 
-                 data-child-id="${child.CategoryId}" 
-                 onmouseenter="renderGrandChildren('${parentId}', '${child.CategoryId}')">
-                <a href="/Categories/${child.CategoryId}" class="d-flex align-items-center gap-2 text-decoration-none text-dark w-100">
-                <img src="${getImageUrl(child.ImageUrl, 'level_2')}" alt="${child.CategoryName}" width="24" height="24" class="object-contain" />
-                <span class="text-sm fw-medium">${child.CategoryName}</span>
+        childrenContainer.innerHTML = children.map(child => {
+            const imgSrc = child.imageUrl
+                ? (child.imageUrl.startsWith('/images/') ? child.imageUrl : '/images/categories/' + child.imageUrl)
+                : '';
+            return `
+                <a href="/Categories/${child.categoryId}" class="nm-child-item" data-child-id="${child.categoryId}">
+                    ${imgSrc ? `<img src="${imgSrc}" alt="${child.categoryName}" />` : ''}
+                    <span class="nm-child-name">${child.categoryName}</span>
+                    <i class="fas fa-angle-right nm-child-arrow"></i>
                 </a>
-            </div>
-        `).join('');
+            `;
+        }).join('');
 
-        renderGrandChildren(parentId, children[0].CategoryId.toString());
+        childrenContainer.querySelectorAll('.nm-child-item').forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                nmHighlightChild(childrenContainer, item.dataset.childId);
+                nmRenderGrandchildren(parentId, item.dataset.childId);
+            });
+        });
+
+        nmRenderGrandchildren(parentId, children[0].categoryId.toString());
     }
 
-    function renderGrandChildren(parentId, childId) {
-        const parentCat = categories.find(p => p.CategoryId.toString() === parentId);
-        const childCat = parentCat?.Children?.find(c => c.CategoryId.toString() === childId);
-        const container = document.getElementById(`grandchildren-${parentId}`);
+    function nmRenderGrandchildren(parentId, childId) {
+        const parent = nmCategories.find(p => p.categoryId.toString() === parentId);
+        const child = parent?.children?.find(c => c.categoryId.toString() === childId);
+        const container = document.getElementById('nm-grandchildren-' + parentId);
         if (!container) return;
 
-        const grandchildren = childCat?.Children || [];
-        container.innerHTML = grandchildren.length
-            ? grandchildren.map(grandchild => `
-                <div class="col">
-                    <a href="/Categories/${grandchild.CategoryId}" class="text-decoration-none">
-                        <div class="d-flex align-items-center gap-2 p-2 rounded hover-bg-light transition grandchild-item">
-                            <img src="${getImageUrl(grandchild.ImageUrl, 'level_3')}" alt="${grandchild.CategoryName}" width="40" height="40" class="object-contain" />
-                            <span class="text-sm text-dark">${grandchild.CategoryName}</span>
-                        </div>
-                    </a>
-                </div>
-            `).join('')
-            : '<div class="col-12 text-muted">Không có danh mục cháu</div>';
-
-        highlightActiveChild(parentId, childId);
-    }
-
-    function getImageUrl(imageUrl, level) {
-        if (!imageUrl) return '/images/placeholder.png';
-        return imageUrl.startsWith('/images/') ? imageUrl : `/images/categories/${imageUrl}`;
-    }
-
-    function highlightActiveChild(parentId, childId) {
-        const childrenContainer = document.getElementById(`children-${parentId}`);
-        if (childrenContainer) {    
-            childrenContainer.querySelectorAll('.child-item').forEach(item =>
-                item.classList.toggle('bg-light', item.dataset.childId === childId)
-            );
+        const grandchildren = child?.children || [];
+        if (!grandchildren.length) {
+            container.innerHTML = '<div class="nm-empty" style="grid-column:1/-1">Không có danh mục cháu</div>';
+            return;
         }
+
+        container.innerHTML = grandchildren.map(gc => {
+            const imgSrc = gc.imageUrl
+                ? (gc.imageUrl.startsWith('/images/') ? gc.imageUrl : '/images/categories/' + gc.imageUrl)
+                : '';
+            return `
+                <a href="/Categories/${gc.categoryId}" class="nm-grandchild-card">
+                    <div class="nm-grandchild-icon">
+                        ${imgSrc ? `<img src="${imgSrc}" alt="${gc.categoryName}" />` : ''}
+                    </div>
+                    <span class="nm-grandchild-name">${gc.categoryName}</span>
+                </a>
+            `;
+        }).join('');
+    }
+
+    function nmHighlightChild(container, childId) {
+        container.querySelectorAll('.nm-child-item').forEach(item =>
+            item.classList.toggle('is-active', item.dataset.childId === childId)
+        );
     }
 </script>

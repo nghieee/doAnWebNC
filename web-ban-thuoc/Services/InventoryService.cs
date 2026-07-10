@@ -17,6 +17,12 @@ public interface IInventoryService
     Task ReturnStockForOrderAsync(int orderId, string? createdByUserId);
     Task<InventoryTransaction> AdjustStockAsync(int productId, int newQuantity, string? note, string? createdByUserId, int? warehouseId = null);
     Task<bool> HasExportedOrderAsync(int orderId);
+
+    // StockAdjustment – phiếu điều chỉnh tồn kho thủ công (FEFO)
+    Task<StockAdjustment> CreateStockAdjustmentAsync(CreateStockAdjustmentViewModel model, string? createdByUserId);
+    Task ApproveStockAdjustmentAsync(int adjustmentId, string? approvedByUserId);
+    Task RejectStockAdjustmentAsync(int adjustmentId, string? rejectedByUserId, string? reason);
+    Task<List<FefoBatchViewModel>> GetFefoBatchesAsync(int productId, int warehouseId, int? excludeBatchId = null);
 }
 
 public class GoodsReceiptLineInput
@@ -678,6 +684,286 @@ public class InventoryService : IInventoryService
     {
         var prefix = $"GR{DateTime.Now:yyyyMMdd}";
         var count = await _context.GoodsReceipts.CountAsync(r => r.ReceiptCode.StartsWith(prefix));
+        return $"{prefix}-{(count + 1):D4}";
+    }
+
+    // ─── StockAdjustment – Phiếu điều chỉnh tồn kho thủ công ─────────────────
+
+    public async Task<StockAdjustment> CreateStockAdjustmentAsync(CreateStockAdjustmentViewModel model, string? createdByUserId)
+    {
+        if (model.Lines == null || model.Lines.Count == 0)
+            throw new InvalidOperationException("Phiếu điều chỉnh phải có ít nhất một dòng sản phẩm.");
+
+        if (model.Lines.Any(l => l.Quantity <= 0))
+            throw new InvalidOperationException("Số lượng phải lớn hơn 0.");
+
+        // Bỏ qua dòng rỗng (chưa chọn sản phẩm) để tránh lỗi "Tồn lô - SL: -10"
+        model.Lines = model.Lines
+            .Where(l => l.ProductId > 0 && l.Quantity > 0)
+            .ToList();
+        if (model.Lines.Count == 0)
+            throw new InvalidOperationException("Phiếu điều chỉnh phải có ít nhất một dòng sản phẩm hợp lệ.");
+
+        var warehouse = await _context.Warehouses.FirstOrDefaultAsync(w => w.WarehouseId == model.WarehouseId && w.IsActive)
+            ?? throw new InvalidOperationException("Không tìm thấy kho.");
+
+        var adjustmentCode = await GenerateStockAdjustmentCodeAsync();
+
+        var adjustment = new StockAdjustment
+        {
+            AdjustmentCode = adjustmentCode,
+            AdjustmentType = model.AdjustmentType,
+            Reason = model.Reason,
+            Note = model.Note,
+            RequestedBy = model.RequestedBy,
+            WarehouseId = warehouse.WarehouseId,
+            Status = StockAdjustmentStatuses.Pending,
+            CreatedByUserId = createdByUserId,
+            CreatedAt = DateTime.Now
+        };
+        _context.StockAdjustments.Add(adjustment);
+        await _context.SaveChangesAsync();
+
+        foreach (var line in model.Lines)
+        {
+            var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == line.ProductId && p.IsActive)
+                ?? throw new InvalidOperationException($"Sản phẩm #{line.ProductId} không tồn tại.");
+
+            // Validate batch nếu có
+            ProductBatch? batch = null;
+            if (line.ProductBatchId.HasValue)
+            {
+                batch = await _context.ProductBatches
+                    .FirstOrDefaultAsync(b => b.ProductBatchId == line.ProductBatchId.Value && b.ProductId == line.ProductId);
+                if (batch == null)
+                    throw new InvalidOperationException($"Lô hàng #{line.ProductBatchId} không tồn tại cho sản phẩm này.");
+
+                // Kiểm tra SL ngay khi tạo phiếu cho loại xuất/giảm
+                if ((model.AdjustmentType == StockAdjustmentTypes.Export
+                     || model.AdjustmentType == StockAdjustmentTypes.Negative)
+                    && batch.QuantityOnHand < line.Quantity)
+                {
+                    var verb = model.AdjustmentType == StockAdjustmentTypes.Export ? "xuất" : "giảm";
+                    throw new InvalidOperationException(
+                        $"Lô '{batch.BatchNo}' của '{product.ProductName}' chỉ còn {batch.QuantityOnHand} — không đủ để {verb} {line.Quantity}.");
+                }
+            }
+            else if (model.AdjustmentType == StockAdjustmentTypes.Export
+                  || model.AdjustmentType == StockAdjustmentTypes.Negative
+                  || model.AdjustmentType == StockAdjustmentTypes.Positive)
+            {
+                var action = model.AdjustmentType == StockAdjustmentTypes.Export ? "xuất" : (model.AdjustmentType == StockAdjustmentTypes.Negative ? "giảm" : "tăng");
+                throw new InvalidOperationException(
+                    $"Vui lòng chọn lô cho sản phẩm '{product.ProductName}' (loại {action} yêu cầu chỉ định lô).");
+            }
+
+            var detail = new StockAdjustmentDetail
+            {
+                StockAdjustmentId = adjustment.StockAdjustmentId,
+                ProductId = line.ProductId,
+                ProductBatchId = line.ProductBatchId,
+                Quantity = line.Quantity,
+                UnitCost = batch?.UnitCost ?? product.CostPrice,
+                Note = null
+            };
+            _context.StockAdjustmentDetails.Add(detail);
+        }
+
+        await _context.SaveChangesAsync();
+        return adjustment;
+    }
+
+    public async Task ApproveStockAdjustmentAsync(int adjustmentId, string? approvedByUserId)
+    {
+        var adjustment = await _context.StockAdjustments
+            .Include(sa => sa.Details)
+            .FirstOrDefaultAsync(sa => sa.StockAdjustmentId == adjustmentId)
+            ?? throw new InvalidOperationException("Không tìm thấy phiếu điều chỉnh.");
+
+        if (adjustment.Status != StockAdjustmentStatuses.Pending)
+            throw new InvalidOperationException("Phiếu đã được xử lý, không thể duyệt lại.");
+
+        var warehouse = await _context.Warehouses.FindAsync(adjustment.WarehouseId)
+            ?? throw new InvalidOperationException("Không tìm thấy kho.");
+
+        // Cập nhật tồn kho theo từng dòng
+        foreach (var detail in adjustment.Details)
+        {
+            var stock = await GetOrCreateWarehouseStockAsync(warehouse.WarehouseId, detail.ProductId);
+            var before = stock.QuantityOnHand;
+            int delta = detail.Quantity;
+
+            if (adjustment.AdjustmentType == StockAdjustmentTypes.Export
+                || adjustment.AdjustmentType == StockAdjustmentTypes.Negative)
+            {
+                // ── Xuất: trừ theo FEFO batch ──
+                if (detail.ProductBatchId.HasValue)
+                {
+                    // Xuất đúng lô được chỉ định
+                    var batch = await _context.ProductBatches.FindAsync(detail.ProductBatchId.Value);
+                    if (batch != null && batch.QuantityOnHand < detail.Quantity)
+                        throw new InvalidOperationException($"Lô '{batch.BatchNo}' chỉ còn {batch.QuantityOnHand} — không đủ để xuất {detail.Quantity}.");
+
+                    if (batch != null)
+                    {
+                        batch.QuantityOnHand -= detail.Quantity;
+                        await RecordInventoryTransactionAsync(detail.ProductId, warehouse.WarehouseId, "Export",
+                            detail.Quantity, before, stock.QuantityOnHand, adjustment.AdjustmentCode,
+                            adjustment.Reason, approvedByUserId, detail.ProductBatchId, adjustmentId);
+                    }
+                }
+                else
+                {
+                    // Xuất tự động FEFO
+                    await DeductFromBatchesFefoManualAsync(detail.ProductId, warehouse.WarehouseId,
+                        detail.Quantity, adjustment.AdjustmentCode, adjustment.Reason, approvedByUserId, adjustmentId);
+                }
+
+                stock.QuantityOnHand -= delta;
+                await RecordInventoryTransactionAsync(detail.ProductId, warehouse.WarehouseId,
+                    adjustment.AdjustmentType == StockAdjustmentTypes.Negative ? "Adjustment" : "Export",
+                    delta, before, stock.QuantityOnHand, adjustment.AdjustmentCode,
+                    adjustment.Reason, approvedByUserId, null, adjustmentId);
+            }
+            else
+            {
+                // ── Nhập / Positive: cộng vào WarehouseStock ──
+                stock.QuantityOnHand += delta;
+                await RecordInventoryTransactionAsync(detail.ProductId, warehouse.WarehouseId,
+                    adjustment.AdjustmentType == StockAdjustmentTypes.Positive ? "Adjustment" : "Import",
+                    delta, before, stock.QuantityOnHand, adjustment.AdjustmentCode,
+                    adjustment.Reason, approvedByUserId, null, adjustmentId);
+            }
+
+            stock.UpdatedAt = DateTime.Now;
+            await SyncProductStockQuantityAsync(detail.ProductId);
+        }
+
+        adjustment.Status = StockAdjustmentStatuses.Approved;
+        adjustment.ApprovedBy = approvedByUserId;
+        adjustment.ProcessedAt = DateTime.Now;
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task RejectStockAdjustmentAsync(int adjustmentId, string? rejectedByUserId, string? reason)
+    {
+        var adjustment = await _context.StockAdjustments.FindAsync(adjustmentId)
+            ?? throw new InvalidOperationException("Không tìm thây phiếu điều chỉnh.");
+
+        if (adjustment.Status != StockAdjustmentStatuses.Pending)
+            throw new InvalidOperationException("Phiếu đã được xử lý, không thể từ chối.");
+
+        adjustment.Status = StockAdjustmentStatuses.Rejected;
+        adjustment.ApprovedBy = rejectedByUserId; // ghi nhận ai từ chối
+        adjustment.Note = string.IsNullOrEmpty(adjustment.Note)
+            ? $"Từ chối: {reason}"
+            : $"{adjustment.Note}\nTừ chối: {reason}";
+        adjustment.ProcessedAt = DateTime.Now;
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<FefoBatchViewModel>> GetFefoBatchesAsync(int productId, int warehouseId, int? excludeBatchId = null)
+    {
+        var today = DateTime.Today;
+        var query = _context.ProductBatches
+            .Where(b => b.ProductId == productId
+                && b.WarehouseId == warehouseId
+                && b.QuantityOnHand > 0
+                && (b.ExpiryDate == null || b.ExpiryDate >= today));
+
+        if (excludeBatchId.HasValue)
+            query = query.Where(b => b.ProductBatchId != excludeBatchId.Value);
+
+        return await query
+            .OrderBy(b => b.ExpiryDate == null)
+            .ThenBy(b => b.ExpiryDate)
+            .Select(b => new FefoBatchViewModel
+            {
+                ProductBatchId = b.ProductBatchId,
+                BatchNo = b.BatchNo,
+                ExpiryDate = b.ExpiryDate,
+                QuantityOnHand = b.QuantityOnHand,
+                UnitCost = b.UnitCost
+            })
+            .ToListAsync();
+    }
+
+    private async Task RecordInventoryTransactionAsync(
+        int productId, int warehouseId, string transactionType,
+        int quantity, int before, int after,
+        string? referenceCode, string? note,
+        string? createdByUserId, int? productBatchId, int? stockAdjustmentId)
+    {
+        _context.InventoryTransactions.Add(new InventoryTransaction
+        {
+            ProductId = productId,
+            WarehouseId = warehouseId,
+            TransactionType = transactionType,
+            Quantity = quantity,
+            QuantityBefore = before,
+            QuantityAfter = after,
+            ProductBatchId = productBatchId,
+            Note = string.IsNullOrEmpty(referenceCode)
+                ? note
+                : $"{referenceCode}" + (string.IsNullOrEmpty(note) ? "" : $" — {note}"),
+            CreatedByUserId = createdByUserId,
+            TransactionDate = DateTime.Now
+        });
+        await Task.CompletedTask; // giữ async signature nhất quán
+    }
+
+    private async Task DeductFromBatchesFefoManualAsync(
+        int productId, int warehouseId, int quantity,
+        string referenceCode, string? note,
+        string? createdByUserId, int stockAdjustmentId)
+    {
+        var today = DateTime.Today;
+        var batches = await _context.ProductBatches
+            .Where(b => b.ProductId == productId
+                && b.WarehouseId == warehouseId
+                && b.QuantityOnHand > 0
+                && (b.ExpiryDate == null || b.ExpiryDate >= today))
+            .OrderBy(b => b.ExpiryDate == null)
+            .ThenBy(b => b.ExpiryDate)
+            .ThenBy(b => b.CreatedAt)
+            .ToListAsync();
+
+        if (batches.Count == 0)
+            throw new InvalidOperationException($"Không có lô hàng nào cho sản phẩm này tại kho. Vui lòng nhập kho trước.");
+
+        var remaining = quantity;
+        foreach (var batch in batches)
+        {
+            if (remaining <= 0) break;
+            var take = Math.Min(batch.QuantityOnHand, remaining);
+            batch.QuantityOnHand -= take;
+            remaining -= take;
+
+            _context.InventoryTransactions.Add(new InventoryTransaction
+            {
+                ProductId = productId,
+                WarehouseId = warehouseId,
+                ProductBatchId = batch.ProductBatchId,
+                TransactionType = "Export",
+                Quantity = take,
+                QuantityBefore = batch.QuantityOnHand + take,
+                QuantityAfter = batch.QuantityOnHand,
+                Note = $"Xuất FEFO lô {batch.BatchNo} — {referenceCode}" + (string.IsNullOrEmpty(note) ? "" : $" ({note})"),
+                CreatedByUserId = createdByUserId,
+                TransactionDate = DateTime.Now
+            });
+        }
+
+        if (remaining > 0)
+            throw new InvalidOperationException($"Không đủ lô hàng để xuất (thiếu {remaining} đơn vị). Vui lòng kiểm tra lại số lượng.");
+    }
+
+    private async Task<string> GenerateStockAdjustmentCodeAsync()
+    {
+        var prefix = $"SA{DateTime.Now:yyyyMMdd}";
+        var count = await _context.StockAdjustments.CountAsync(sa => sa.AdjustmentCode.StartsWith(prefix));
         return $"{prefix}-{(count + 1):D4}";
     }
 }

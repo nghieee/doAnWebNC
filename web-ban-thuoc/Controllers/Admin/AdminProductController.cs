@@ -280,6 +280,73 @@ namespace web_ban_thuoc.Controllers.Admin
             return PartialView("~/Views/Admin/Product/_ProductDetailPartial.cshtml", product);
         }
 
+        [HttpGet]
+        public IActionResult Price(int? categoryId = null, int page = 1, string? searchName = null)
+        {
+            int pageSize = 12;
+            var products = _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Supplier)
+                .Include(p => p.ProductImages)
+                .OrderByDescending(p => p.ProductId)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchName))
+            {
+                products = products.Where(p => p.ProductName.ToLower().Contains(searchName.ToLower()));
+            }
+            if (categoryId.HasValue)
+            {
+                products = products.Where(p => p.CategoryId == categoryId);
+            }
+
+            int totalProducts = products.Count();
+            int totalPages = (int)Math.Ceiling((double)totalProducts / pageSize);
+            var pagedProducts = products.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            ViewBag.Categories = _context.Categories.OrderBy(c => c.CategoryName).ToList();
+            ViewBag.SelectedCategory = categoryId;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalProducts;
+            ViewBag.SearchName = searchName;
+
+            return View("~/Views/Admin/Product/Price.cshtml", pagedProducts);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult UpdateProductPrice(int productId, decimal price, decimal? costPrice)
+        {
+            var product = _context.Products.Find(productId);
+            if (product == null)
+            {
+                return Json(new { success = false, message = "Không tìm thấy sản phẩm!" });
+            }
+
+            if (price <= 0)
+            {
+                return Json(new { success = false, message = "Giá bán phải lớn hơn 0 VNĐ" });
+            }
+
+            if (costPrice.HasValue && costPrice.Value <= 0)
+            {
+                return Json(new { success = false, message = "Giá vốn phải lớn hơn 0 VNĐ" });
+            }
+
+            if (costPrice.HasValue && price < costPrice.Value)
+            {
+                return Json(new { success = false, message = "Giá bán không được nhỏ hơn giá vốn" });
+            }
+
+            product.Price = price;
+            product.CostPrice = costPrice;
+
+            _context.SaveChanges();
+
+            return Json(new { success = true, message = "Cập nhật giá thành công!" });
+        }
+
         private void LoadFormViewBag()
         {
             ViewBag.Categories = _context.Categories.Where(c => c.CategoryLevel == "3").OrderBy(c => c.CategoryName).ToList();

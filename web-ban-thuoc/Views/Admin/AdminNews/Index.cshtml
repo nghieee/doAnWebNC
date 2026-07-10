@@ -1,0 +1,316 @@
+@model IEnumerable<web_ban_thuoc.Models.News>
+@{
+    ViewData["Title"] = "Quản lý bài viết";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Quản lý bài viết</h4>
+        <p class="text-muted small mb-0">Tạo, chỉnh sửa và quản lý nội dung tin tức</p>
+    </div>
+    <a href="/AdminNews/Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
+        <i class="fa fa-plus me-2"></i>Viết bài mới
+    </a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert">
+        <i class="fa fa-check-circle me-2"></i>
+        @TempData["Success"]
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+    <div class="card-body py-3">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-lg-5">
+                <label class="form-label small text-muted fw-medium mb-1">Tìm kiếm</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fa fa-search text-muted"></i>
+                    </span>
+                    <input type="text" name="search" class="form-control border-start-0 ps-0"
+                           placeholder="Tìm tiêu đề, mô tả..." value="@ViewBag.Search" />
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <label class="form-label small text-muted fw-medium mb-1">Danh mục</label>
+                <select name="category" class="form-select">
+                    <option value="">-- Tất cả --</option>
+                    @foreach (var cat in (List<string>)ViewBag.Categories)
+                    {
+                        <option value="@cat" selected="@(ViewBag.Category?.ToString() == cat)">@cat</option>
+                    }
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="fa fa-filter me-1"></i>Lọc
+                </button>
+            </div>
+            @if (!string.IsNullOrEmpty(ViewBag.Search) || !string.IsNullOrEmpty(ViewBag.Category))
+            {
+                <div class="col-lg-2">
+                    <a href="/AdminNews/Index" class="btn btn-outline-secondary w-100">
+                        <i class="fa fa-times me-1"></i>Xóa lọc
+                    </a>
+                </div>
+            }
+        </form>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
+            <div class="card-body d-flex align-items-center py-3">
+                <div class="rounded-3 bg-primary bg-opacity-10 p-3 me-3">
+                    <i class="fa fa-newspaper-o text-primary fa-lg"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Tổng bài viết</div>
+                    <div class="fw-bold fs-4 mb-0">@Model.Count()</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
+            <div class="card-body d-flex align-items-center py-3">
+                <div class="rounded-3 bg-success bg-opacity-10 p-3 me-3">
+                    <i class="fa fa-eye text-success fa-lg"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Đã xuất bản</div>
+                    <div class="fw-bold fs-4 mb-0">@Model.Count(n => n.IsPublished)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
+            <div class="card-body d-flex align-items-center py-3">
+                <div class="rounded-3 bg-warning bg-opacity-10 p-3 me-3">
+                    <i class="fa fa-star text-warning fa-lg"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">Nổi bật</div>
+                    <div class="fw-bold fs-4 mb-0">@Model.Count(n => n.IsFeature)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <tr>
+                    <th class="border-0 py-3" style="width: 50px;">#</th>
+                    <th class="border-0 py-3" style="width: 90px;">Ảnh bìa</th>
+                    <th class="border-0 py-3">Tiêu đề</th>
+                    <th class="border-0 py-3" style="width: 140px;">Danh mục</th>
+                    <th class="border-0 py-3 text-center" style="width: 100px;">Nổi bật</th>
+                    <th class="border-0 py-3 text-center" style="width: 100px;">Hiển thị</th>
+                    <th class="border-0 py-3" style="width: 110px;">Ngày tạo</th>
+                    <th class="border-0 py-3 text-center" style="width: 150px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var index = ((int)ViewBag.CurrentPage - 1) * 15 + 1;
+                }
+                @foreach (var item in Model)
+                {
+                    <tr class="border-bottom" style="border-color: #f1f1f1 !important;">
+                        <td class="text-muted small fw-medium">@(index++)</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl" class="rounded-3 shadow-sm" alt="@item.Title"
+                                     style="width: 70px; height: 50px; object-fit: cover;" />
+                            }
+                            else
+                            {
+                                <div class="rounded-3 bg-light d-flex align-items-center justify-content-center shadow-sm"
+                                     style="width: 70px; height: 50px;">
+                                    <i class="fa fa-image text-muted"></i>
+                                </div>
+                            }
+                        </td>
+                        <td>
+                            <a href="/AdminNews/Edit/@item.NewsId" class="text-decoration-none">
+                                <div class="fw-semibold text-dark mb-1 hover-primary">@item.Title</div>
+                            </a>
+                            @if (!string.IsNullOrEmpty(item.Summary))
+                            {
+                                <div class="text-muted small" style="max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    @item.Summary
+                                </div>
+                            }
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(item.Category))
+                            {
+                                <span class="badge rounded-pill px-3 py-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">@item.Category</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <div class="form-check form-switch d-flex justify-content-center mb-0">
+                                <input type="checkbox" class="form-check-input toggle-feature"
+                                       data-id="@item.NewsId" @(item.IsFeature ? "checked" : "") 
+                                       style="width: 42px; height: 22px; cursor: pointer;" />
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <div class="form-check form-switch d-flex justify-content-center mb-0">
+                                <input type="checkbox" class="form-check-input toggle-publish"
+                                       data-id="@item.NewsId" @(item.IsPublished ? "checked" : "")
+                                       style="width: 42px; height: 22px; cursor: pointer;" />
+                            </div>
+                        </td>
+                        <td class="small text-muted">@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <div class="d-flex gap-1 justify-content-center">
+                                <a href="/News/Details/@item.NewsId" target="_blank" class="btn btn-light btn-sm rounded-circle" title="Xem trước">
+                                    <i class="fa fa-external-link text-muted"></i>
+                                </a>
+                                <a href="/AdminNews/Edit/@item.NewsId" class="btn btn-light btn-sm rounded-circle" title="Chỉnh sửa">
+                                    <i class="fa fa-pencil text-primary"></i>
+                                </a>
+                                <button type="button" class="btn btn-light btn-sm rounded-circle" title="Xóa"
+                                        onclick="confirmDelete('@item.NewsId', '@item.Title')">
+                                    <i class="fa fa-trash text-danger"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fa fa-newspaper-o fa-3x mb-3 opacity-25"></i>
+                                <div class="fw-medium">Chưa có bài viết nào</div>
+                                <div class="small">Bắt đầu bằng cách tạo bài viết đầu tiên</div>
+                                <a href="/AdminNews/Create" class="btn btn-primary btn-sm mt-3 rounded-pill">
+                                    <i class="fa fa-plus me-1"></i>Viết bài mới
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if ((int)ViewBag.TotalPages > 1)
+    {
+        <div class="card-footer bg-white border-0">
+            <nav>
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item @(1 == (int)ViewBag.CurrentPage ? "disabled" : "")">
+                        <a class="page-link rounded-pill mx-1" href="?page=@((int)ViewBag.CurrentPage - 1)&search=@ViewBag.Search&category=@ViewBag.Category">
+                            <i class="fa fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    @{
+                        int startPage = Math.Max(1, (int)ViewBag.CurrentPage - 2);
+                        int endPage = Math.Min((int)ViewBag.TotalPages, startPage + 4);
+                        if (endPage - startPage < 4) startPage = Math.Max(1, endPage - 4);
+                    }
+                    @for (int i = startPage; i <= endPage; i++)
+                    {
+                        <li class="page-item @(i == (int)ViewBag.CurrentPage ? "active" : "")">
+                            <a class="page-link rounded-pill mx-1 @(i == (int)ViewBag.CurrentPage ? "text-white" : "")" 
+                               style="@(i == (int)ViewBag.CurrentPage ? "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;" : "")"
+                               href="?page=@i&search=@ViewBag.Search&category=@ViewBag.Category">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @((int)ViewBag.TotalPages == (int)ViewBag.CurrentPage ? "disabled" : "")">
+                        <a class="page-link rounded-pill mx-1" href="?page=@((int)ViewBag.CurrentPage + 1)&search=@ViewBag.Search&category=@ViewBag.Category">
+                            <i class="fa fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fa fa-exclamation-triangle text-warning me-2"></i>Xác nhận xóa
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p>Bạn có chắc chắn muốn xóa bài viết:</p>
+                <p class="fw-bold text-danger" id="deleteNewsTitle"></p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Hủy</button>
+                <form method="post" action="/AdminNews/Delete" id="deleteForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="deleteNewsId" />
+                    <button type="submit" class="btn btn-danger rounded-pill">
+                        <i class="fa fa-trash me-1"></i>Xóa
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-primary:hover {
+        color: #667eea !important;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        // Toggle Feature
+        document.querySelectorAll('.toggle-feature').forEach(function (sw) {
+            sw.addEventListener('change', function () {
+                var id = this.dataset.id;
+                fetch('/AdminNews/ToggleFeature/' + id, { method: 'POST' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (d) {
+                        if (!d.success) alert('Lỗi khi cập nhật.');
+                    });
+            });
+        });
+
+        // Toggle Publish
+        document.querySelectorAll('.toggle-publish').forEach(function (sw) {
+            sw.addEventListener('change', function () {
+                var id = this.dataset.id;
+                fetch('/AdminNews/TogglePublish/' + id, { method: 'POST' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (d) {
+                        if (!d.success) alert('Lỗi khi cập nhật.');
+                    });
+            });
+        });
+
+        // Delete confirmation
+        function confirmDelete(id, title) {
+            document.getElementById('deleteNewsId').value = id;
+            document.getElementById('deleteNewsTitle').textContent = title;
+            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+    </script>
+}

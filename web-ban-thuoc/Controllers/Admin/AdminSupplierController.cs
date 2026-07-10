@@ -124,4 +124,16 @@ public class AdminSupplierController : Controller
         TempData["SuccessMessage"] = "Đã cập nhật nhà cung cấp.";
         return RedirectToAction(nameof(Index));
     }
+
+    [HttpGet]
+    [Route("GetAll")]
+    public async Task<IActionResult> GetAll()
+    {
+        var suppliers = await _context.Suppliers
+            .Where(s => s.IsActive)
+            .OrderBy(s => s.Name)
+            .Select(s => new { s.SupplierId, s.Code, s.Name })
+            .ToListAsync();
+        return Json(suppliers);
+    }
 }

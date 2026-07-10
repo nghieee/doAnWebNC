@@ -1,0 +1,185 @@
+@model web_ban_thuoc.Models.StockAdjustmentDetailPageViewModel
+@using web_ban_thuoc.Models
+@{
+    Layout = null;
+    var sa = Model.Adjustment;
+    var reasonDisplay = StockAdjustmentReasons.All.TryGetValue(sa.Reason ?? "", out var r) ? r : (sa.Reason ?? "—");
+
+    string TypeLabel(string s) => s switch
+    {
+        StockAdjustmentTypes.Export => "PHIẾU XUẤT KHO",
+        StockAdjustmentTypes.Import => "PHIẾU NHẬP KHO",
+        StockAdjustmentTypes.Positive => "PHIẾU ĐIỀU CHỈNH TĂNG",
+        StockAdjustmentTypes.Negative => "PHIẾU ĐIỀU CHỈNH GIẢM",
+        _ => "PHIẾU ĐIỀU CHỈNH TỒN KHO"
+    };
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>@sa.AdjustmentCode – Phiếu điều chỉnh tồn kho</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1a1a2e; padding: 20px; }
+        .page { max-width: 900px; margin: 0 auto; background: #fff; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #1250dc; padding-bottom: 12px; margin-bottom: 16px; }
+        .company { font-size: 22px; font-weight: 800; color: #1250dc; letter-spacing: -0.5px; }
+        .company-sub { font-size: 11px; color: #6b7280; }
+        .doc-title { text-align: right; }
+        .doc-title h1 { font-size: 16px; font-weight: 700; color: #dc3535; letter-spacing: 0.5px; text-transform: uppercase; }
+        .doc-title .doc-code { font-size: 13px; font-weight: 600; color: #1a1a2e; }
+        .doc-title .doc-date { font-size: 11px; color: #6b7280; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; background: #f8faff; border: 1px solid #e7eefc; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+        .info-row { display: flex; gap: 8px; }
+        .info-label { font-weight: 600; color: #4b5563; min-width: 110px; }
+        .info-value { color: #1a1a2e; }
+        .reason-box { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 6px; padding: 8px 12px; margin-bottom: 16px; font-size: 12px; }
+        .reason-box strong { color: #c2410c; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 12px; }
+        thead { background: #1250dc; color: #fff; }
+        th { padding: 8px 10px; text-align: left; font-weight: 600; }
+        th:nth-child(n+4) { text-align: right; }
+        td { padding: 8px 10px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
+        td:nth-child(n+4) { text-align: right; }
+        tr:nth-child(even) td { background: #f9fafb; }
+        .badge-batch { display: inline-block; background: #e0e7ff; color: #3730a3; border-radius: 4px; padding: 1px 6px; font-size: 11px; font-weight: 600; font-family: monospace; }
+        .text-danger { color: #dc2626; }
+        .text-success { color: #16a34a; }
+        .text-muted { color: #6b7280; }
+        tfoot td { font-weight: 700; background: #f3f4f6; border-top: 2px solid #d1d5db; }
+        .signatures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 32px; }
+        .sign-box { text-align: center; border-top: 1px solid #1a1a2e; padding-top: 6px; font-size: 11px; color: #6b7280; min-height: 80px; }
+        .sign-box strong { display: block; font-weight: 700; color: #1a1a2e; font-size: 12px; }
+        .footer { margin-top: 24px; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 10px; color: #9ca3af; text-align: center; }
+        .page-break { page-break-after: always; }
+        @@media print {
+            body { padding: 0; }
+            .page { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <div class="company">Long Châu Pharmacy</div>
+                <div class="company-sub">Nhà thuốc Long Châu – Hệ thống quản lý bán thuốc</div>
+            </div>
+            <div class="doc-title">
+                <h1>@TypeLabel(sa.AdjustmentType)</h1>
+                <div class="doc-code">@sa.AdjustmentCode</div>
+                <div class="doc-date">Ngày: @sa.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+            </div>
+        </div>
+
+        <!-- Thông tin phiếu -->
+        <div class="info-grid">
+            <div class="info-row">
+                <span class="info-label">Kho:</span>
+                <span class="info-value">@sa.Warehouse.Name</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Người yêu cầu:</span>
+                <span class="info-value">@(sa.RequestedBy ?? "—")</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Trạng thái:</span>
+                <span class="info-value">@sa.Status</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Người xử lý:</span>
+                <span class="info-value">@(sa.ApprovedBy ?? "—")</span>
+            </div>
+        </div>
+
+        <!-- Lý do -->
+        @if (!string.IsNullOrEmpty(sa.Reason))
+        {
+            <div class="reason-box">
+                <strong>Lý do:</strong> @reasonDisplay
+                @if (!string.IsNullOrEmpty(sa.Note))
+                {
+                    <br /><span class="text-muted">Ghi chú: @sa.Note</span>
+                }
+            </div>
+        }
+
+        <!-- Bảng chi tiết -->
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Sản phẩm</th>
+                    <th>Mã lô</th>
+                    <th>HSD</th>
+                    <th>SL</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ var stt = 0; }
+                @foreach (var d in Model.Details)
+                {
+                    stt++;
+                    var isExport = sa.AdjustmentType == StockAdjustmentTypes.Export || sa.AdjustmentType == StockAdjustmentTypes.Negative;
+                    <tr>
+                        <td>@stt</td>
+                        <td>
+                            <strong>@d.ProductName</strong>
+                            @if (!string.IsNullOrEmpty(d.Sku))
+                            {
+                                <div class="text-muted" style="font-size:10px;">SKU: @d.Sku</div>
+                            }
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(d.BatchNo))
+                            {
+                                <span class="badge-batch">@d.BatchNo</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td>@(d.ExpiryDate?.ToString("dd/MM/yyyy") ?? "—")</td>
+                        <td class="@(isExport ? "text-danger" : "text-success")">
+                            @(isExport ? "-" : "+")@d.Quantity
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" style="text-align:right; font-weight:700;">TỔNG CỘNG:</td>
+                    <td>@(sa.AdjustmentType == StockAdjustmentTypes.Export || sa.AdjustmentType == StockAdjustmentTypes.Negative ? "-" : "+")@Model.Details.Sum(d => d.Quantity)</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Chữ ký -->
+        <div class="signatures">
+            <div class="sign-box">
+                <strong>Người lập phiếu</strong>
+                <br />@(sa.RequestedBy ?? ".............................")
+                <br /><span class="text-muted">@sa.CreatedAt.ToString("dd/MM/yyyy")</span>
+            </div>
+            <div class="sign-box">
+                <strong>Quản lý kho</strong>
+                <br />@(sa.ApprovedBy ?? ".............................")
+                <br /><span class="text-muted">@(sa.ProcessedAt?.ToString("dd/MM/yyyy") ?? "")</span>
+            </div>
+            <div class="sign-box">
+                <strong>Kế toán</strong>
+                <br />.............................
+                <br /><span class="text-muted">.............................</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            Phiếu điều chỉnh tồn kho số @sa.AdjustmentCode – Ngày in: @DateTime.Now.ToString("dd/MM/yyyy HH:mm") – Long Châu Pharmacy
+        </div>
+    </div>
+    <script>window.print();</script>
+</body>
+</html>

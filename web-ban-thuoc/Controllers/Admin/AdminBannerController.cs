@@ -37,17 +37,17 @@ public class AdminBannerController : Controller
         // Filter theo loại banner
         if (!string.IsNullOrEmpty(typeFilter))
         {
-            query = query.Where(b => b.BannerType == typeFilter);
+            query = query.Where(b => b.BannerType != null && b.BannerType.Equals(typeFilter, StringComparison.OrdinalIgnoreCase));
         }
 
         // Filter theo trạng thái
         if (!string.IsNullOrEmpty(statusFilter))
         {
-            if (statusFilter == "active")
+            if (statusFilter.Equals("active", StringComparison.OrdinalIgnoreCase))
             {
                 query = query.Where(b => b.IsActive);
             }
-            else if (statusFilter == "inactive")
+            else if (statusFilter.Equals("inactive", StringComparison.OrdinalIgnoreCase))
             {
                 query = query.Where(b => !b.IsActive);
             }
@@ -67,8 +67,8 @@ public class AdminBannerController : Controller
 
         // Pass filter values to view
         ViewBag.SearchTerm = searchTerm;
-        ViewBag.TypeFilter = typeFilter;
-        ViewBag.StatusFilter = statusFilter;
+        ViewBag.TypeFilter = !string.IsNullOrEmpty(typeFilter) ? typeFilter : null;
+        ViewBag.StatusFilter = !string.IsNullOrEmpty(statusFilter) ? statusFilter : null;
         ViewBag.CurrentPage = page;
         ViewBag.TotalPages = totalPages;
         ViewBag.TotalItems = totalItems;
@@ -134,10 +134,15 @@ public class AdminBannerController : Controller
 
                     banner.ImageUrl = "/images/banners/" + uniqueFileName;
                 }
-                else
+                else if (!string.IsNullOrEmpty(banner.ImageUrl))
                 {
-                    // Nếu không upload ảnh, set default image
-                    banner.ImageUrl = "/images/banners/default.png";
+                    // Nếu user nhập tay ImageUrl mà không phải URL tuyệt đối / không có / ở đầu
+                    // → coi như tên file nằm trong /images/banners/
+                    var url = banner.ImageUrl.Trim();
+                    if (!url.StartsWith("/") && !url.StartsWith("http://") && !url.StartsWith("https://"))
+                    {
+                        banner.ImageUrl = "/images/banners/" + url;
+                    }
                 }
 
                 banner.CreatedAt = DateTime.Now;
@@ -184,17 +189,14 @@ public class AdminBannerController : Controller
             return NotFound();
         }
 
-        // Lấy banner hiện tại từ database để giữ nguyên ImageUrl
         var existingBanner = await _context.Banners.FindAsync(id);
         if (existingBanner == null)
         {
             return NotFound();
         }
 
-        // Validate file upload if provided
         if (imageFile != null && imageFile.Length > 0)
         {
-            // Validate file type
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
             var fileExtension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
             if (!allowedExtensions.Contains(fileExtension))
@@ -202,14 +204,12 @@ public class AdminBannerController : Controller
                 ModelState.AddModelError("imageFile", "Chỉ chấp nhận file ảnh: JPG, PNG, GIF");
             }
 
-            // Validate file size (max 5MB)
             if (imageFile.Length > 5 * 1024 * 1024)
             {
                 ModelState.AddModelError("imageFile", "Kích thước file không được quá 5MB");
             }
         }
 
-        // Validate LinkUrl nếu có
         if (!string.IsNullOrEmpty(banner.LinkUrl) && !Uri.TryCreate(banner.LinkUrl, UriKind.Absolute, out _))
         {
             ModelState.AddModelError("LinkUrl", "Link không đúng định dạng");
@@ -219,7 +219,6 @@ public class AdminBannerController : Controller
         {
             try
             {
-                // Cập nhật từng field thay vì update toàn bộ object
                 existingBanner.Title = banner.Title;
                 existingBanner.Description = banner.Description;
                 existingBanner.LinkUrl = banner.LinkUrl;
@@ -227,10 +226,6 @@ public class AdminBannerController : Controller
                 existingBanner.SortOrder = banner.SortOrder;
                 existingBanner.IsActive = banner.IsActive;
                 
-                // Debug: Log để kiểm tra
-                Console.WriteLine($"Original ImageUrl: {existingBanner.ImageUrl}");
-
-                // Xử lý upload ảnh mới nếu có
                 if (imageFile != null && imageFile.Length > 0)
                 {
                     var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "banners");
@@ -248,14 +243,23 @@ public class AdminBannerController : Controller
                     }
 
                     existingBanner.ImageUrl = "/images/banners/" + uniqueFileName;
-                    Console.WriteLine($"New ImageUrl after upload: {existingBanner.ImageUrl}");
+                }
+                else if (!string.IsNullOrEmpty(banner.ImageUrl))
+                {
+                    // Nếu user nhập tay ImageUrl mà không phải URL tuyệt đối / không có / ở đầu
+                    // → coi như tên file nằm trong /images/banners/
+                    var url = banner.ImageUrl.Trim();
+                    if (!url.StartsWith("/") && !url.StartsWith("http://") && !url.StartsWith("https://"))
+                    {
+                        existingBanner.ImageUrl = "/images/banners/" + url;
+                    }
+                    else
+                    {
+                        existingBanner.ImageUrl = url;
+                    }
                 }
 
                 existingBanner.UpdatedAt = DateTime.Now;
-                
-                // Debug: Kiểm tra trước khi save
-                Console.WriteLine($"Final ImageUrl before save: {existingBanner.ImageUrl}");
-                
                 await _context.SaveChangesAsync();
                 
                 TempData["SuccessMessage"] = "Cập nhật banner thành công!";
@@ -279,7 +283,6 @@ public class AdminBannerController : Controller
         }
         else
         {
-            // Debug: Log ModelState errors
             foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
             {
                 Console.WriteLine($"ModelState Error: {error.ErrorMessage}");

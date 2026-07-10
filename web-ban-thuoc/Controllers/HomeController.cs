@@ -33,21 +33,23 @@ public class HomeController : Controller
                 .Where(p => p.IsFeature && p.IsActive && p.StockQuantity > 0)
                 .OrderBy(p => p.ProductName)
                 .Take(12)
+                .ToList(),
+            FeaturedNews = _context.News
+                .Where(n => n.IsPublished && n.IsFeature)
+                .OrderByDescending(n => n.PublishedAt ?? n.CreatedAt)
+                .Take(4)
                 .ToList()
         };
-        // Kiểm tra user đăng nhập và có voucher mới không
+
         if (User.Identity.IsAuthenticated)
         {
             var userId = _context.Users.FirstOrDefault(u => u.UserName == User.Identity.Name)?.Id;
-            if (!string.IsNullOrEmpty(userId))
+            if (!string.IsNullOrEmpty(userId) && _context.UserVouchers.Any(uv => uv.UserId == userId && uv.IsNew))
             {
-                bool hasNewGift = _context.UserVouchers.Any(uv => uv.UserId == userId && uv.IsNew);
-                if (hasNewGift)
-                {
-                    ViewBag.ShowGiftPopup = true;
-                }
+                ViewBag.ShowGiftPopup = true;
             }
         }
+
         return View(viewModel);
     }
 

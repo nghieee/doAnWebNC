@@ -31,11 +31,15 @@ namespace web_ban_thuoc.Services
             _configuration = configuration;
             _httpClient = httpClient;
 
-            // Lấy cấu hình từ appsettings.json
-            _clientId = _configuration["PayOS:ClientId"] ?? "adbf3b7a-17bd-4867-974e-6f1ddcc9ad6e";
-            _apiKey = _configuration["PayOS:ApiKey"] ?? "cf4608e4-eb83-4e25-8619-8d9b57a16314";
-            _checksumKey = _configuration["PayOS:ChecksumKey"] ?? "a94f6207b4e5d2311009fe88ff58a3aaa6a547795696cf1450e3003a552085b7";
-            _baseUrl = _configuration["PayOS:BaseUrl"] ?? "https://api-merchant.payos.vn";
+            // Lấy cấu hình từ appsettings.json (bắt buộc, không fallback)
+            _clientId   = _configuration["PayOS:ClientId"]
+                ?? throw new InvalidOperationException("Missing PayOS:ClientId in configuration");
+            _apiKey     = _configuration["PayOS:ApiKey"]
+                ?? throw new InvalidOperationException("Missing PayOS:ApiKey in configuration");
+            _checksumKey = _configuration["PayOS:ChecksumKey"]
+                ?? throw new InvalidOperationException("Missing PayOS:ChecksumKey in configuration");
+            _baseUrl    = _configuration["PayOS:BaseUrl"]
+                ?? throw new InvalidOperationException("Missing PayOS:BaseUrl in configuration");
 
             // Cấu hình HttpClient
             _httpClient.BaseAddress = new Uri(_baseUrl);
@@ -68,12 +72,8 @@ namespace web_ban_thuoc.Services
                 // ĐÚNG CHUẨN: amount=...&cancelUrl=...&description=...&orderCode=...&returnUrl=...
                 var dataToSign = $"amount={request.Amount}&cancelUrl={request.CancelUrl}&description={request.Description}&orderCode={request.OrderCode}&returnUrl={request.ReturnUrl}";
                 
-                // Log để debug
-                _logger.LogInformation($"PayOS data to sign: {dataToSign}");
-                _logger.LogInformation($"PayOS checksumKey: {_checksumKey}");
-                
                 request.Signature = GenerateSignature(dataToSign);
-                
+
                 _logger.LogInformation($"PayOS signature generated: {request.Signature}");
 
                 // Serialize request

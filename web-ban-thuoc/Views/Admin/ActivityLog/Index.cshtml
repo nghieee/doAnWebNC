@@ -1,0 +1,237 @@
+@model IEnumerable<web_ban_thuoc.Models.DbActivityLog>
+@{
+    ViewData["Title"] = "Lịch sử hoạt động hệ thống";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+
+    var selectedAction = ViewBag.ActionType as string;
+    var selectedEntity = ViewBag.EntityName as string;
+    var searchStr = ViewBag.Search as string ?? "";
+    var startDateStr = ViewBag.StartDate as string ?? "";
+    var endDateStr = ViewBag.EndDate as string ?? "";
+
+    string GetActionBadgeClass(string action)
+    {
+        return action switch
+        {
+            "Thêm" => "bg-success-subtle text-success border border-success",
+            "Sửa" => "bg-warning-subtle text-warning border border-warning",
+            "Xóa" => "bg-danger-subtle text-danger border border-danger",
+            _ => "bg-secondary-subtle text-secondary"
+        };
+    }
+}
+
+<div class="container-fluid py-4" id="logPageContainer">
+    <!-- Header Section (Hidden in print) -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 no-print" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h4 class="mb-1 text-primary fw-bold"><i class="fa-solid fa-clock-rotate-left me-2"></i>Lịch sử hoạt động hệ thống</h4>
+                <p class="text-muted small mb-0">Theo dõi lịch sử thay đổi cơ sở dữ liệu của nhà thuốc. Dữ liệu chỉ được lưu trữ trong vòng <strong class="text-danger">90 ngày</strong>.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button onclick="window.print()" class="btn btn-primary rounded-3 btn-sm d-flex align-items-center gap-2 px-3 py-2">
+                    <i class="fa-solid fa-print"></i> In lịch sử
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Card (Hidden in print) -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 no-print border border-light">
+        <form method="get" action="/AdminActivityLog" class="row g-3 align-items-end">
+            <div class="col-12 col-md-2">
+                <label class="form-label fw-semibold text-secondary small">Hành động</label>
+                <select name="actionType" class="form-select form-select-sm rounded-3">
+                    <option value="">Tất cả</option>
+                    @foreach (var act in (string[])ViewBag.ActionList)
+                    {
+                        var selected = act == selectedAction ? "selected" : "";
+                        @Html.Raw($"<option value='{act}' {selected}>{act}</option>")
+                    }
+                </select>
+            </div>
+            <div class="col-12 col-md-2.5">
+                <label class="form-label fw-semibold text-secondary small">Danh mục thực thể</label>
+                <select name="entityName" class="form-select form-select-sm rounded-3">
+                    <option value="">Tất cả danh mục</option>
+                    @foreach (var ent in (string[])ViewBag.EntityList)
+                    {
+                        var selected = ent == selectedEntity ? "selected" : "";
+                        @Html.Raw($"<option value='{ent}' {selected}>{ent}</option>")
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label fw-semibold text-secondary small">Từ ngày</label>
+                <input type="date" name="startDate" value="@startDateStr" class="form-control form-control-sm rounded-3" />
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label fw-semibold text-secondary small">Đến ngày</label>
+                <input type="date" name="endDate" value="@endDateStr" class="form-control form-control-sm rounded-3" />
+            </div>
+            <div class="col-12 col-md-3.5">
+                <label class="form-label fw-semibold text-secondary small">Từ khóa tìm kiếm</label>
+                <input type="text" name="search" value="@searchStr" class="form-control form-control-sm rounded-3" placeholder="Người dùng, ID, mô tả..." />
+            </div>
+            <div class="col-12 d-flex justify-content-end gap-2 mt-3">
+                <button type="submit" class="btn btn-primary btn-sm rounded-3 px-4 py-2"><i class="fa fa-filter me-1"></i> Lọc</button>
+                <a href="/AdminActivityLog" class="btn btn-outline-secondary btn-sm rounded-3 px-4 py-2">Xóa bộ lọc</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Print Header (Only visible in print) -->
+    <div class="print-header text-center my-4 d-none">
+        <h2 class="fw-bold mb-1">NHÀ THUỐC LONG CHÂU - LỊCH SỬ HOẠT ĐỘNG</h2>
+        <p class="mb-0 text-muted small">Thời gian in: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</p>
+        <hr style="border-top: 2px solid #333;" />
+    </div>
+
+    <!-- Table Section -->
+    <div class="table-responsive rounded-4 shadow-sm border border-light bg-white mb-4">
+        <table class="table table-hover align-middle mb-0" id="logTable">
+            <thead class="table-light">
+                <tr style="height: 50px;">
+                    <th class="text-center" style="width: 170px;">Thời gian</th>
+                    <th style="width: 180px;">Người thực hiện</th>
+                    <th class="text-center" style="width: 110px;">Hành động</th>
+                    <th class="text-center" style="width: 160px;">Danh mục</th>
+                    <th class="text-center" style="width: 100px;">ID thực thể</th>
+                    <th>Nội dung chi tiết sự thay đổi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">
+                            <i class="fa-regular fa-folder-open fa-3x mb-3 text-secondary"></i>
+                            <p class="mb-0">Không tìm thấy bản ghi lịch sử nào phù hợp.</p>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="text-center text-secondary small">
+                                @item.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")
+                            </td>
+                            <td class="fw-semibold">
+                                <div class="text-truncate" style="max-width: 170px;" title="@item.UserEmail">
+                                    @(item.UserEmail ?? "Hệ thống")
+                                </div>
+                                <span class="text-muted tiny text-secondary" style="font-size: 0.7rem;">ID: @(item.UserId ?? "SYSTEM")</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge @GetActionBadgeClass(item.Action) px-3 py-2 rounded fs-7">
+                                    @item.Action
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-secondary border border-light px-2.5 py-1.5 rounded-pill small">
+                                    @item.EntityName
+                                </span>
+                            </td>
+                            <td class="text-center fw-bold text-dark">
+                                #@item.EntityId
+                            </td>
+                            <td class="text-wrap text-dark" style="font-size: 0.9rem; line-height: 1.4;">
+                                @item.Description
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination (Hidden in print) -->
+    <div class="mt-4 no-print">
+        <partial name="_AdminPagination" />
+    </div>
+</div>
+
+<style>
+    /* Styling adjustments */
+    #logTable th {
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #5c6a85;
+    }
+    #logTable td {
+        color: #333f54;
+    }
+    .fs-7 {
+        font-size: 0.8rem;
+    }
+
+    /* Print styling rules */
+    @@media print {
+        body {
+            background-color: #fff !important;
+            color: #000 !important;
+            font-size: 11pt !important;
+        }
+
+        /* Hide entire admin wrapper navigation assets */
+        header, footer, nav, .sidebar, .admin-sidebar, .admin-header, .no-print, .pagination, .navbar, #sidebar-wrapper, .header-navbar {
+            display: none !important;
+        }
+
+        /* Expand content full-width */
+        #page-content-wrapper, .container-fluid, #logPageContainer {
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+        }
+
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+            background: none !important;
+            padding: 0 !important;
+        }
+
+        /* Table print optimization */
+        .table-responsive {
+            overflow: visible !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+        }
+
+        th, td {
+            border: 1px solid #ddd !important;
+            padding: 8px !important;
+            font-size: 10pt !important;
+            color: #000 !important;
+        }
+
+        th {
+            background-color: #f2f2f2 !important;
+            font-weight: bold !important;
+        }
+
+        .badge {
+            background: none !important;
+            color: #000 !important;
+            border: none !important;
+            padding: 0 !important;
+            font-weight: bold !important;
+        }
+
+        .print-header {
+            display: block !important;
+        }
+    }
+</style>

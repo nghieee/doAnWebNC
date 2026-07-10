@@ -50,6 +50,8 @@
                             <option value="last30days" selected="@(ViewBag.Period == "last30days")">30 ngày qua</option>
                             <option value="thisMonth" selected="@(ViewBag.Period == "thisMonth")">Tháng này</option>
                             <option value="lastMonth" selected="@(ViewBag.Period == "lastMonth")">Tháng trước</option>
+                            <option value="thisQuarter" selected="@(ViewBag.Period == "thisQuarter")">Quý này</option>
+                            <option value="lastQuarter" selected="@(ViewBag.Period == "lastQuarter")">Quý trước</option>
                             <option value="thisYear" selected="@(ViewBag.Period == "thisYear")">Năm nay</option>
                             <option value="custom" selected="@(ViewBag.Period == "custom")">Tùy chọn...</option>
                         </select>
@@ -65,12 +67,29 @@
                         <input type="date" name="endDate" id="endDate" class="form-control form-control-sm rounded-3" value="@ViewBag.EndDateStr" />
                     </div>
 
+                    <div class="col-6 col-sm-3 col-md-2.5">
+                        <label class="form-label small fw-bold text-secondary mb-1">Kho</label>
+                        <select name="warehouseId" class="form-select form-select-sm rounded-3">
+                            <option value="">Tất cả kho</option>
+                            @foreach (var w in ViewBag.Warehouses as IEnumerable<web_ban_thuoc.Models.Warehouse> ?? Enumerable.Empty<web_ban_thuoc.Models.Warehouse>())
+                            {
+                                <option value="@w.WarehouseId" selected="@(ViewBag.SelectedWarehouseId == w.WarehouseId)">@w.Name</option>
+                            }
+                        </select>
+                    </div>
+
                     <div class="col-12 col-sm-2 col-md-2">
                         <button type="submit" class="btn btn-primary btn-sm rounded-3 w-100"><i class="fa fa-filter me-1"></i> Lọc</button>
                     </div>
 
                     <div class="col-12 col-sm-3 col-md-2">
-                        <button type="button" onclick="exportReport()" class="btn btn-outline-success btn-sm rounded-3 w-100"><i class="fa fa-file-excel me-1"></i> Xuất Excel</button>
+                        <button type="button" onclick="exportReport()" class="btn btn-outline-success btn-sm rounded-3 w-100"><i class="fa fa-file-excel me-1"></i> Xuất CSV</button>
+                    </div>
+                    <div class="col-12 col-sm-3 col-md-2">
+                        <a href="/AdminReport/Print?period=@ViewBag.Period&startDate=@ViewBag.StartDateStr&endDate=@ViewBag.EndDateStr&warehouseId=@ViewBag.SelectedWarehouseId"
+                           target="_blank" class="btn btn-outline-dark btn-sm rounded-3 w-100">
+                            <i class="fa fa-print me-1"></i> In báo cáo
+                        </a>
                     </div>
                 </form>
             </div>

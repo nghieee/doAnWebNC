@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 500" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#10b981"/>
+      <stop offset="1" stop-color="#14b8a6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="500" fill="url(#g1)"/>
+  <g font-family="Inter, Arial, sans-serif" fill="#ffffff">
+    <text x="100" y="170" font-size="26" font-weight="600" opacity="0.9" letter-spacing="2">CH��NG TR�NH TH�NH VI�N</text>
+    <text x="100" y="250" font-size="62" font-weight="800" letter-spacing="-1">T�ch i�m �i qu�</text>
+    <text x="100" y="320" font-size="62" font-weight="800" letter-spacing="-1">t�i Nh� Thu�c Long Ch�u</text>
+    <text x="100" y="370" font-size="22" opacity="0.9">H�ng B�c � V�ng � B�ch Kim  �u �i c�ng l�n khi c�ng th�n thi�t</text>
+  </g>
+  <g transform="translate(100,400)">
+    <rect width="220" height="56" rx="28" fill="#ffffff"/>
+    <text x="110" y="36" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" fill="#10b981" text-anchor="middle">Tham gia ngay</text>
+  </g>
+  <g transform="translate(1080,90)" fill="#ffffff">
+    <rect x="0" y="0" width="420" height="320" rx="24" opacity="0.16"/>
+    <g font-family="Inter, Arial, sans-serif" text-anchor="middle">
+      <circle cx="210" cy="120" r="50" fill="#ffffff" opacity="0.4"/>
+      <text x="210" y="130" font-size="48"></text>
+      <text x="210" y="210" font-size="22" font-weight="700">M�i 1.000 = 1 i�m</text>
+      <text x="210" y="240" font-size="16" opacity="0.9">�i voucher � qu� t�ng h�p d�n</text>
+      <text x="210" y="270" font-size="16" opacity="0.9">Mi�n ph� v�n chuy�n cho h�ng V�ng</text>
+    </g>
+  </g>
+</svg>

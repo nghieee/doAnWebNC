@@ -90,6 +90,7 @@
                 {
                     <a href="/AdminPurchase/Receive/@Model.PurchaseOrderId" class="btn btn-success"><i class="fa fa-arrow-down me-1"></i> Nhận hàng / Nhập kho</a>
                 }
+                <a href="/AdminPurchase/Print/@Model.PurchaseOrderId" target="_blank" class="btn btn-outline-dark"><i class="fa fa-print me-1"></i> In phiếu</a>
                 <a href="/AdminPurchase" class="btn btn-outline-secondary"><i class="fa fa-arrow-left me-1"></i> Quay lại</a>
             </div>
         </div>
@@ -190,9 +191,14 @@
                                 <li class="po-timeline-item">
                                     <span class="po-timeline-dot"></span>
                                     <div class="po-timeline-card">
-                                        <div class="d-flex justify-content-between align-items-center">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
                                             <span class="fw-semibold">Đợt @idx · @r.ReceiptCode</span>
-                                            <span class="badge bg-success-subtle text-success">+@receiptQty SP</span>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <a href="/AdminPurchase/PrintReceipt/@r.ReceiptCode" target="_blank" class="btn btn-sm btn-outline-dark">
+                                                    <i class="fa fa-print"></i>
+                                                </a>
+                                                <span class="badge bg-success-subtle text-success">+@receiptQty SP</span>
+                                            </div>
                                         </div>
                                         <div class="small text-muted mb-2"><i class="fa fa-calendar me-1"></i> @r.ReceiptDate.ToString("dd/MM/yyyy HH:mm")</div>
                                         @if (!string.IsNullOrEmpty(r.Note))

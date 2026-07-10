@@ -16,9 +16,9 @@
             <label class="form-label fw-semibold">Loại Banner</label>
             <select name="typeFilter" class="form-select">
                 <option value="">Tất cả loại</option>
-                <option value="main" selected="@(ViewBag.TypeFilter == "main")">Banner chính</option>
-                <option value="sub" selected="@(ViewBag.TypeFilter == "sub")">Banner phụ</option>
-                <option value="promotion" selected="@(ViewBag.TypeFilter == "promotion")">Banner khuyến mãi</option>
+                <option value="FullWidth" selected="@(ViewBag.TypeFilter != null && ViewBag.TypeFilter.Equals("FullWidth", StringComparison.OrdinalIgnoreCase))">Full Width</option>
+                <option value="TwoThirds" selected="@(ViewBag.TypeFilter != null && ViewBag.TypeFilter.Equals("TwoThirds", StringComparison.OrdinalIgnoreCase))">Two Thirds (2/3)</option>
+                <option value="OneThird" selected="@(ViewBag.TypeFilter != null && ViewBag.TypeFilter.Equals("OneThird", StringComparison.OrdinalIgnoreCase))">One Third (1/3)</option>
             </select>
         </div>
         <div class="col-md-3">
@@ -106,21 +106,10 @@
                                 <td class="text-center">
                                     @if (!string.IsNullOrEmpty(item.BannerType))
                                     {
-                                        @switch (item.BannerType)
-                                        {
-                                            case "main":
-                                                <span class="badge bg-primary px-3 py-2 fs-6">Banner chính</span>
-                                                break;
-                                            case "sub":
-                                                <span class="badge bg-info px-3 py-2 fs-6">Banner phụ</span>
-                                                break;
-                                            case "promotion":
-                                                <span class="badge bg-warning px-3 py-2 fs-6">Khuyến mãi</span>
-                                                break;
-                                            default:
-                                                <span class="badge bg-secondary px-3 py-2 fs-6">@item.BannerType</span>
-                                                break;
-                                        }
+                                        var bannerTypeLower = item.BannerType.Trim().ToLowerInvariant();
+                                        <span class="badge px-3 py-2 fs-6 @(bannerTypeLower == "fullwidth" ? "bg-primary" : bannerTypeLower == "twothirds" ? "bg-info" : bannerTypeLower == "onethird" ? "bg-warning" : "bg-secondary")">
+                                            @(bannerTypeLower == "fullwidth" ? "Full Width" : bannerTypeLower == "twothirds" ? "Two Thirds (2/3)" : bannerTypeLower == "onethird" ? "One Third (1/3)" : item.BannerType)
+                                        </span>
                                     }
                                     else
                                     {

@@ -1,0 +1,186 @@
+@model IEnumerable<web_ban_thuoc.Models.News>
+
+@{
+    ViewData["Title"] = "Góc sức khỏe - Nhà Thuốc Long Châu";
+    var pageTitle = ViewBag.PageTitle as string ?? "Góc sức khỏe";
+}
+
+<!-- Header -->
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+            <li class="breadcrumb-item active">@pageTitle</li>
+        </ol>
+    </nav>
+
+    <div class="text-center mb-5">
+        <h1 class="fw-bold text-primary">@pageTitle</h1>
+        <p class="text-muted">Cập nhật kiến thức sức khỏe mỗi ngày</p>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <p>Chưa có bài viết nào.</p>
+        </div>
+    }
+    else
+    {
+        <!-- Featured (nếu có) -->
+        var featured = Model.Where(n => n.IsFeature).ToList();
+        @if (featured.Any())
+        {
+            var mainFeature = featured.First();
+            <div class="mb-5">
+                <a href="/News/Details/@mainFeature.NewsId" class="text-decoration-none text-dark">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden news-featured-card">
+                        <div class="row g-0">
+                            <div class="col-md-6">
+                                <img src="@(mainFeature.ImageUrl ?? "/images/placeholder.png")"
+                                     class="w-100 h-100" alt="@mainFeature.Title"
+                                     style="object-fit: cover; min-height: 280px;"
+                                     onerror="this.src='/images/placeholder.png'" />
+                            </div>
+                            <div class="col-md-6 d-flex align-items-center" style="background: linear-gradient(135deg, #eff6ff, #dbeafe);">
+                                <div class="p-4">
+                                    <span class="badge bg-primary mb-2">Nổi bật</span>
+                                    <h2 class="fw-bold mb-3">@mainFeature.Title</h2>
+                                    @if (!string.IsNullOrEmpty(mainFeature.Summary))
+                                    {
+                                        <p class="text-muted mb-3">@mainFeature.Summary</p>
+                                    }
+                                    <div class="d-flex align-items-center text-secondary small">
+                                        @if (!string.IsNullOrEmpty(mainFeature.Author))
+                                        {
+                                            <span class="me-3"><i class="fa fa-user me-1"></i>@mainFeature.Author</span>
+                                        }
+                                        <span><i class="fa fa-calendar me-1"></i>@((mainFeature.PublishedAt ?? mainFeature.CreatedAt).ToString("dd/MM/yyyy"))</span>
+                                        <span class="ms-3"><i class="fa fa-eye me-1"></i>@mainFeature.ViewCount lượt xem</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Grid 4 bài khác -->
+            var otherFeatured = featured.Skip(1).Take(4).ToList();
+            @if (otherFeatured.Any())
+            {
+                <div class="row g-3 mb-5">
+                    @foreach (var item in otherFeatured)
+                    {
+                        <div class="col-md-6 col-lg-3">
+                            <a href="/News/Details/@item.NewsId" class="text-decoration-none text-dark">
+                                <div class="card border-0 shadow-sm rounded-3 h-100 news-card">
+                                    <img src="@(item.ImageUrl ?? "/images/placeholder.png")"
+                                         class="card-img-top" alt="@item.Title"
+                                         style="height: 160px; object-fit: cover;"
+                                         onerror="this.src='/images/placeholder.png'" />
+                                    <div class="card-body">
+                                        @if (!string.IsNullOrEmpty(item.Category))
+                                        {
+                                            <span class="badge bg-primary-subtle text-primary mb-2" style="font-size: 0.7rem;">@item.Category</span>
+                                        }
+                                        <h6 class="card-title fw-semibold line-clamp-2">@item.Title</h6>
+                                        <p class="card-text small text-muted line-clamp-2">@item.Summary</p>
+                                    </div>
+                                    <div class="card-footer bg-transparent border-0 pt-0">
+                                        <small class="text-muted">@((item.PublishedAt ?? item.CreatedAt).ToString("dd/MM/yyyy"))</small>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+        }
+
+        <!-- Grid tất cả bài -->
+        var allNews = Model.Where(n => !n.IsFeature).ToList();
+        @if (allNews.Any())
+        {
+            <div class="row g-3">
+                @foreach (var item in allNews)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <a href="/News/Details/@item.NewsId" class="text-decoration-none text-dark">
+                            <div class="card border-0 shadow-sm rounded-3 h-100 news-card">
+                                <img src="@(item.ImageUrl ?? "/images/placeholder.png")"
+                                     class="card-img-top" alt="@item.Title"
+                                     style="height: 180px; object-fit: cover;"
+                                     onerror="this.src='/images/placeholder.png'" />
+                                <div class="card-body">
+                                    @if (!string.IsNullOrEmpty(item.Category))
+                                    {
+                                        <span class="badge bg-primary-subtle text-primary mb-2" style="font-size: 0.7rem;">@item.Category</span>
+                                    }
+                                    <h5 class="card-title fw-semibold line-clamp-2" style="font-size: 1rem;">@item.Title</h5>
+                                    <p class="card-text small text-muted line-clamp-3">@item.Summary</p>
+                                </div>
+                                <div class="card-footer bg-transparent border-0 pt-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">@((item.PublishedAt ?? item.CreatedAt).ToString("dd/MM/yyyy"))</small>
+                                        <small class="text-muted"><i class="fa fa-eye me-1"></i>@item.ViewCount</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Pagination -->
+        @if ((int)ViewBag.TotalPages > 1)
+        {
+            <nav class="mt-5" aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(1 == (int)ViewBag.CurrentPage ? "disabled" : "")">
+                        <a class="page-link" href="?page=@( (int)ViewBag.CurrentPage - 1 )">Trước</a>
+                    </li>
+                    @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == (int)ViewBag.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="?page=@i">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @((int)ViewBag.TotalPages == (int)ViewBag.CurrentPage ? "disabled" : "")">
+                        <a class="page-link" href="?page=@( (int)ViewBag.CurrentPage + 1 )">Sau</a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    }
+</div>
+
+<style>
+    .news-featured-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .news-featured-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+    }
+    .news-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .news-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.08) !important;
+    }
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>

@@ -1,0 +1,383 @@
+@{
+    ViewData["Title"] = "Báo cáo tổng hợp";
+    Layout = null;
+    var period = ViewBag.Period as string ?? "thisMonth";
+    var startDate = ViewBag.StartDate as DateTime? ?? DateTime.Today;
+    var endDate = ViewBag.EndDate as DateTime? ?? DateTime.Today;
+    var printedAt = ViewBag.PrintedAt as DateTime? ?? DateTime.Now;
+    var warehouseName = ViewBag.WarehouseName as string ?? "Tất cả kho";
+
+    decimal revenue = ViewBag.Revenue ?? 0m;
+    decimal voucherDiscount = ViewBag.VoucherDiscount ?? 0m;
+    decimal cogs = ViewBag.Cogs ?? 0m;
+    decimal grossProfit = ViewBag.GrossProfit ?? 0m;
+    decimal grossMargin = ViewBag.GrossMargin ?? 0m;
+    decimal cashInflow = ViewBag.CashInflow ?? 0m;
+    decimal cashOutflow = ViewBag.CashOutflow ?? 0m;
+    decimal netCashFlow = ViewBag.NetCashFlow ?? 0m;
+    decimal currentStockValue = ViewBag.CurrentStockValue ?? 0m;
+    decimal writeOffLoss = ViewBag.WriteOffLoss ?? 0m;
+    int orderCount = ViewBag.OrderCount ?? 0;
+
+    string PeriodLabel() => period switch
+    {
+        "today" => "Hôm nay",
+        "yesterday" => "Hôm qua",
+        "last7days" => "7 ngày qua",
+        "last30days" => "30 ngày qua",
+        "thismonth" => "Tháng này",
+        "lastmonth" => "Tháng trước",
+        "thisquarter" => "Quý này",
+        "lastquarter" => "Quý trước",
+        "thisyear" => "Năm nay",
+        _ => "Tùy chọn"
+    };
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Báo cáo tổng hợp — @PeriodLabel()</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --brand: #1250dc;
+            --brand-light: #e7eefc;
+        }
+        body {
+            background: #f3f4f6;
+            color: #111827;
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+        }
+        .paper {
+            max-width: 900px;
+            margin: 24px auto;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .print-header {
+            background: var(--brand);
+            color: #fff;
+        }
+        .header-brand {
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+        }
+        .header-brand img {
+            height: 42px;
+        }
+        .header-contact {
+            text-align: right;
+            font-size: 0.82rem;
+            line-height: 1.7;
+            opacity: 0.9;
+        }
+        .header-info {
+            padding: 10px 24px;
+            font-size: 0.8rem;
+            opacity: 0.8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.10);
+        }
+        .header-doc {
+            padding: 10px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Content */
+        .section-title {
+            color: #1f2937;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--brand-light);
+        }
+        .kpi-card {
+            background: #f8fafc;
+            border: 1px solid #e3e9f7;
+            border-radius: 10px;
+            padding: 14px 16px;
+        }
+        .kpi-label {
+            color: #6b7280;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .kpi-value {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #111827;
+        }
+        .kpi-value.positive { color: #059669; }
+        .kpi-value.negative { color: #dc2626; }
+        .table th {
+            background: #f1f5f9;
+            color: #374151;
+            font-weight: 600;
+        }
+        .table td, .table th {
+            padding: 8px 12px;
+        }
+        .positive-row { background-color: #f0fdf4 !important; }
+        .negative-row { background-color: #fef2f2 !important; }
+
+        /* Footer */
+        .footer-bar {
+            background: #f8fafc;
+            border-top: 1px solid #e3e9f7;
+            padding: 12px 24px;
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+
+        /* Print */
+        @@media print {
+            body { background: #fff; }
+            .no-print { display: none !important; }
+            .paper { margin: 0; box-shadow: none; border-radius: 0; }
+            .kpi-card { break-inside: avoid; }
+            .table { break-inside: auto; }
+            .table tr { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="paper">
+        <!-- Header -->
+        <div class="print-header">
+            <div class="header-brand">
+                <img src="/images/default/header_logo_brand.png" alt="Long Châu Logo" />
+                <div class="header-contact">
+                    <div><i class="fa fa-phone me-1"></i>1900 1234</div>
+                    <div><i class="fa fa-globe me-1"></i>longchau.vn</div>
+                    <div><i class="fa fa-envelope me-1"></i>cskh@longchau.vn</div>
+                </div>
+            </div>
+            <div class="header-info">
+                <div>
+                    <i class="fa fa-building me-1"></i> Nhà Thuốc Long Châu — Bộ phận Quản trị
+                    <span class="mx-2">·</span>
+                    <i class="fa fa-map-marker-alt me-1"></i>123 Đường ABC, Quận 1, TP.HCM
+                </div>
+                <div>
+                    <i class="fa fa-clock me-1"></i>In lúc: @printedAt.ToString("dd/MM/yyyy HH:mm")
+                </div>
+            </div>
+            <div class="header-doc">
+                <div>
+                    <h1 class="h4 fw-bold mb-0"><i class="fa fa-chart-line me-2"></i>Báo cáo tổng hợp</h1>
+                    <div class="small opacity-75 mt-1">
+                        Kỳ: <strong>@PeriodLabel()</strong>
+                        <span class="mx-2">·</span>
+                        Kho: <strong>@warehouseName</strong>
+                        <span class="mx-2">·</span>
+                        @startDate.ToString("dd/MM/yyyy") – @endDate.ToString("dd/MM/yyyy")
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="p-4">
+            <!-- KPI I: Tài chính -->
+            <div class="section-title"><i class="fa fa-calculator me-1" style="color:var(--brand)"></i> I. TÓM TẮT CHỈ SỐ TÀI CHÍNH</div>
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Doanh thu</div>
+                        <div class="kpi-value positive">@revenue.ToString("N0")đ</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Giá vốn (COGS)</div>
+                        <div class="kpi-value">@cogs.ToString("N0")đ</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Lợi nhuận gộp</div>
+                        <div class="kpi-value @(grossProfit >= 0 ? "positive" : "negative")">@grossProfit.ToString("N0")đ</div>
+                        <div class="small text-muted mt-1">Biên: @(grossMargin.ToString("F1"))%</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Giảm giá Voucher</div>
+                        <div class="kpi-value negative">-@voucherDiscount.ToString("N0")đ</div>
+                    </div>
+                </div>
+            </div>
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Đơn hoàn thành</div>
+                        <div class="kpi-value">@orderCount</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Tiền thu (Inflow)</div>
+                        <div class="kpi-value positive">@cashInflow.ToString("N0")đ</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Tiền chi NCC (Outflow)</div>
+                        <div class="kpi-value negative">-@cashOutflow.ToString("N0")đ</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Dòng tiền ròng</div>
+                        <div class="kpi-value @(netCashFlow >= 0 ? "positive" : "negative")">@netCashFlow.ToString("N0")đ</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI II: Kho hàng -->
+            <div class="section-title mt-4"><i class="fa fa-warehouse me-1" style="color:var(--brand)"></i> II. TÌNH TRẠNG KHO HÀNG</div>
+            <div class="row g-3 mb-3">
+                <div class="col-6 col-md-4">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Giá trị tồn kho hiện tại</div>
+                        <div class="kpi-value">@currentStockValue.ToString("N0")đ</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Chi phí kiểm kê (Write-off)</div>
+                        <div class="kpi-value negative">-@writeOffLoss.ToString("N0")đ</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- III: Dòng tiền -->
+            <div class="section-title mt-4"><i class="fa fa-money-bill me-1" style="color:var(--brand)"></i> III. BẢNG TỔNG HỢP DÒNG TIỀN</div>
+            <table class="table table-bordered mb-4">
+                <thead>
+                    <tr>
+                        <th>Chỉ số</th>
+                        <th class="text-end">Giá trị (VNĐ)</th>
+                        <th class="text-center">Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="positive-row">
+                        <td><i class="fa fa-arrow-up text-success me-1"></i> Tiền thu từ khách hàng</td>
+                        <td class="text-end fw-semibold text-success">@cashInflow.ToString("N0")đ</td>
+                        <td class="text-center text-muted small">Đơn đã giao</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fa fa-arrow-down text-danger me-1"></i> Chi trả nhà cung cấp</td>
+                        <td class="text-end fw-semibold text-danger">-@cashOutflow.ToString("N0")đ</td>
+                        <td class="text-center text-muted small">Phiếu nhập kho</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fa fa-minus text-warning me-1"></i> Chi phí Voucher</td>
+                        <td class="text-end fw-semibold text-warning">-@voucherDiscount.ToString("N0")đ</td>
+                        <td class="text-center text-muted small">Khấu trừ từ doanh thu</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fa fa-box text-secondary me-1"></i> Thất thoát kiểm kê</td>
+                        <td class="text-end fw-semibold text-secondary">-@writeOffLoss.ToString("N0")đ</td>
+                        <td class="text-center text-muted small">Điều chỉnh giảm tồn</td>
+                    </tr>
+                    <tr class="fw-semibold">
+                        <td>Dòng tiền ròng</td>
+                        <td class="text-end @(netCashFlow >= 0 ? "text-success" : "text-danger")">@netCashFlow.ToString("N0")đ</td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- IV: Biên lợi nhuận -->
+            <div class="section-title mt-4"><i class="fa fa-chart-bar me-1" style="color:var(--brand)"></i> IV. PHÂN TÍCH BIÊN LỢI NHUẬN</div>
+            <table class="table table-bordered mb-4">
+                <thead>
+                    <tr>
+                        <th>Chỉ số</th>
+                        <th class="text-end">Giá trị (VNĐ)</th>
+                        <th class="text-end">Tỷ lệ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Tổng doanh thu</td>
+                        <td class="text-end">@revenue.ToString("N0")đ</td>
+                        <td class="text-end">100%</td>
+                    </tr>
+                    <tr>
+                        <td>Giá vốn hàng bán (COGS)</td>
+                        <td class="text-end text-danger">-@cogs.ToString("N0")đ</td>
+                        <td class="text-end">@(revenue > 0 ? ((cogs / revenue) * 100).ToString("F1") : "0")%</td>
+                    </tr>
+                    <tr class="positive-row fw-semibold">
+                        <td>Lợi nhuận gộp</td>
+                        <td class="text-end text-success">@grossProfit.ToString("N0")đ</td>
+                        <td class="text-end text-success">@(grossMargin.ToString("F1"))%</td>
+                    </tr>
+                    <tr>
+                        <td>Chi phí Voucher</td>
+                        <td class="text-end text-warning">-@voucherDiscount.ToString("N0")đ</td>
+                        <td class="text-end">@(revenue > 0 ? ((voucherDiscount / revenue) * 100).ToString("F1") : "0")%</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- V: Ghi chú -->
+            <div class="section-title mt-4"><i class="fa fa-info-circle me-1" style="color:var(--brand)"></i> V. GHI CHÚ</div>
+            <div class="row">
+                <div class="col-md-6">
+                    <ul class="small text-muted mb-0">
+                        <li>DOANH THU = Tổng TotalAmount đơn <strong>Đã giao</strong> trong kỳ.</li>
+                        <li>COGS tính theo FEFO — giá vốn lô hàng thực tế xuất.</li>
+                        <li>Giá vốn fallback = CostPrice hoặc 60% giá bán nếu không có lô.</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul class="small text-muted mb-0">
+                        <li>Tiền thu = SUM(Payment.Amount) WHERE Paid.</li>
+                        <li>Tiền chi = SUM(GoodsReceiptLine.Qty × UnitCost).</li>
+                        <li>Báo cáo chỉ bao gồm dữ liệu <strong>Đã giao</strong>.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center no-print mt-4">
+                <button onclick="window.print()" class="btn btn-dark"><i class="fa fa-print me-1"></i> In báo cáo</button>
+                <a href="/AdminReport?period=@period&warehouseId=@ViewBag.SelectedWarehouseId" class="btn btn-outline-secondary"><i class="fa fa-arrow-left me-1"></i> Quay lại</a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-bar d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fa fa-building me-1"></i> Nhà Thuốc Long Châu
+                <span class="mx-2">·</span>
+                <i class="fa fa-globe me-1"></i>longchau.vn
+                <span class="mx-2">·</span>
+                <i class="fa fa-envelope me-1"></i>cskh@longchau.vn
+            </div>
+            <div>Trang 1 / 1</div>
+        </div>
+    </div>
+</body>
+</html>

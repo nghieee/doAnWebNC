@@ -21,22 +21,34 @@ namespace web_ban_thuoc.Controllers.Admin
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index(string? search, string? type, bool hub = false)
+        public async Task<IActionResult> Index(
+            string? search,
+            string? type,
+            int? warehouseId = null,
+            bool hub = false)
         {
-            var query = _context.InventoryTransactions
+            var allWarehouses = await _context.Warehouses
+                .Where(w => w.IsActive)
+                .OrderBy(w => w.Name)
+                .ToListAsync();
+
+            var transactionsQuery = _context.InventoryTransactions
                 .Include(t => t.Product)
                 .Include(t => t.Warehouse)
                 .Include(t => t.ProductBatch)
-                .OrderByDescending(t => t.TransactionDate)
                 .AsQueryable();
 
+            if (warehouseId.HasValue)
+                transactionsQuery = transactionsQuery.Where(t => t.WarehouseId == warehouseId.Value);
+
             if (!string.IsNullOrWhiteSpace(search))
-                query = query.Where(t => t.Product.ProductName.Contains(search) || (t.Note != null && t.Note.Contains(search)));
+                transactionsQuery = transactionsQuery.Where(t => t.Product.ProductName.Contains(search) || (t.Note != null && t.Note.Contains(search)));
 
             if (!string.IsNullOrWhiteSpace(type) && type != "Tất cả")
-                query = query.Where(t => t.TransactionType == type);
+                transactionsQuery = transactionsQuery.Where(t => t.TransactionType == type);
 
-            var transactions = await query
+            var transactions = await transactionsQuery
+                .OrderByDescending(t => t.TransactionDate)
                 .Take(200)
                 .Select(t => new InventoryTransactionViewModel
                 {
@@ -55,11 +67,17 @@ namespace web_ban_thuoc.Controllers.Admin
                 })
                 .ToListAsync();
 
-            var warehouseStocks = await _context.WarehouseStocks
+            var stockQuery = _context.WarehouseStocks
                 .Include(ws => ws.Product)
                     .ThenInclude(p => p.ProductImages)
                 .Include(ws => ws.Warehouse)
                 .Where(ws => ws.Product.IsActive)
+                .AsQueryable();
+
+            if (warehouseId.HasValue)
+                stockQuery = stockQuery.Where(ws => ws.WarehouseId == warehouseId.Value);
+
+            var warehouseStocks = await stockQuery
                 .OrderBy(ws => ws.Product.ProductName)
                 .Select(ws => new WarehouseStockViewModel
                 {
@@ -67,6 +85,7 @@ namespace web_ban_thuoc.Controllers.Admin
                     ProductName = ws.Product.ProductName,
                     Sku = ws.Product.Sku,
                     WarehouseName = ws.Warehouse.Name,
+                    WarehouseId = ws.WarehouseId,
                     QuantityOnHand = ws.QuantityOnHand,
                     QuantityReserved = ws.QuantityReserved,
                     ProductImageUrl = ws.Product.ProductImages.Where(pi => pi.IsMain == true).Select(pi => pi.ImageUrl).FirstOrDefault()
@@ -74,11 +93,17 @@ namespace web_ban_thuoc.Controllers.Admin
                 })
                 .ToListAsync();
 
-            var batches = await _context.ProductBatches
+            var batchQuery = _context.ProductBatches
                 .Include(b => b.Product)
                     .ThenInclude(p => p.ProductImages)
                 .Include(b => b.Warehouse)
                 .Where(b => b.QuantityOnHand > 0)
+                .AsQueryable();
+
+            if (warehouseId.HasValue)
+                batchQuery = batchQuery.Where(b => b.WarehouseId == warehouseId.Value);
+
+            var batches = await batchQuery
                 .OrderBy(b => b.ExpiryDate == null)
                 .ThenBy(b => b.ExpiryDate)
                 .Take(50)
@@ -122,8 +147,38 @@ namespace web_ban_thuoc.Controllers.Admin
             };
 
             ViewBag.ShowHub = hub;
+            ViewBag.AllWarehouses = allWarehouses;
+            ViewBag.SelectedWarehouseId = warehouseId;
 
             return View("~/Views/Admin/Inventory/Index.cshtml", model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetProductsForWarehouse(int? warehouseId = null, string? search = null)
+        {
+            var query = _context.Products
+                .Where(p => p.IsActive)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+                query = query.Where(p => p.ProductName.Contains(search) || (p.Sku != null && p.Sku.Contains(search)));
+
+            var products = await query
+                .Select(p => new
+                {
+                    id = p.ProductId,
+                    name = p.ProductName,
+                    sku = p.Sku,
+                    stockQty = warehouseId.HasValue
+                        ? _context.WarehouseStocks.Where(ws => ws.ProductId == p.ProductId && ws.WarehouseId == warehouseId.Value).Select(ws => (int?)ws.QuantityOnHand - ws.QuantityReserved).FirstOrDefault() ?? 0
+                        : _context.WarehouseStocks.Where(ws => ws.ProductId == p.ProductId).Sum(ws => ws.QuantityOnHand - ws.QuantityReserved),
+                    costPrice = p.CostPrice ?? 0
+                })
+                .OrderBy(p => p.name)
+                .Take(100)
+                .ToListAsync();
+
+            return Json(products);
         }
 
         [HttpPost]
@@ -155,23 +210,283 @@ namespace web_ban_thuoc.Controllers.Admin
             }
         }
 
+
+        // ═══════════════════════════════════════════════════════════════
+        // STOCK ADJUSTMENT – Phiếu điều chỉnh tồn kho thủ công (FEFO)
+        // ═══════════════════════════════════════════════════════════════
+
+        public async Task<IActionResult> StockAdjustments(
+            string? search,
+            string? status,
+            string? type,
+            int? warehouseId)
+        {
+            var warehouses = await _context.Warehouses
+                .Where(w => w.IsActive)
+                .OrderBy(w => w.Name)
+                .ToListAsync();
+
+            var query = _context.StockAdjustments
+                .Include(sa => sa.Warehouse)
+                .AsQueryable();
+
+            if (warehouseId.HasValue)
+                query = query.Where(sa => sa.WarehouseId == warehouseId.Value);
+
+            if (!string.IsNullOrWhiteSpace(search))
+                query = query.Where(sa => sa.AdjustmentCode.Contains(search)
+                    || (sa.Note != null && sa.Note.Contains(search))
+                    || (sa.RequestedBy != null && sa.RequestedBy.Contains(search)));
+
+            if (!string.IsNullOrWhiteSpace(status) && status != "Tất cả")
+                query = query.Where(sa => sa.Status == status);
+
+            if (!string.IsNullOrWhiteSpace(type) && type != "Tất cả")
+                query = query.Where(sa => sa.AdjustmentType == type);
+
+            var adjustments = await query
+                .OrderByDescending(sa => sa.CreatedAt)
+                .Select(sa => new StockAdjustmentListViewModel
+                {
+                    StockAdjustmentId = sa.StockAdjustmentId,
+                    AdjustmentCode = sa.AdjustmentCode,
+                    AdjustmentType = sa.AdjustmentType,
+                    Reason = sa.Reason,
+                    Status = sa.Status,
+                    WarehouseName = sa.Warehouse.Name,
+                    RequestedBy = sa.RequestedBy,
+                    ApprovedBy = sa.ApprovedBy,
+                    CreatedAt = sa.CreatedAt,
+                    ProcessedAt = sa.ProcessedAt,
+                    TotalLines = sa.Details.Count,
+                    TotalQuantity = sa.Details.Sum(d => d.Quantity)
+                })
+                .ToListAsync();
+
+            var pendingCount = await _context.StockAdjustments
+                .CountAsync(sa => sa.Status == StockAdjustmentStatuses.Pending);
+
+            var model = new StockAdjustmentIndexViewModel
+            {
+                Adjustments = adjustments,
+                Warehouses = warehouses,
+                SelectedWarehouseId = warehouseId,
+                Search = search,
+                StatusFilter = status,
+                TypeFilter = type,
+                PendingCount = pendingCount
+            };
+
+            return View("~/Views/Admin/Inventory/StockAdjustments.cshtml", model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> CreateStockAdjustment()
+        {
+            var warehouses = await _context.Warehouses
+                .Where(w => w.IsActive)
+                .OrderBy(w => w.Name)
+                .ToListAsync();
+
+            ViewBag.Warehouses = warehouses;
+            ViewBag.AdjustmentTypes = new[] {
+                StockAdjustmentTypes.Export,
+                StockAdjustmentTypes.Import,
+                StockAdjustmentTypes.Positive,
+                StockAdjustmentTypes.Negative
+            };
+            ViewBag.Reasons = StockAdjustmentReasons.All;
+
+            return View("~/Views/Admin/Inventory/CreateStockAdjustment.cshtml");
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Adjust(InventoryAdjustViewModel model)
+        public async Task<IActionResult> CreateStockAdjustment(CreateStockAdjustmentViewModel model)
         {
             if (!ModelState.IsValid)
-                return Json(new { success = false, message = "Dữ liệu điều chỉnh không hợp lệ!" });
+            {
+                TempData["ErrorMessage"] = "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.";
+                return RedirectToAction(nameof(CreateStockAdjustment));
+            }
+
+            if (model.Lines == null || model.Lines.Count == 0 || model.Lines.All(l => l.ProductId == 0))
+            {
+                TempData["ErrorMessage"] = "Phải thêm ít nhất một sản phẩm vào phiếu.";
+                return RedirectToAction(nameof(CreateStockAdjustment));
+            }
 
             try
             {
-                var adminId = _userManager.GetUserId(User);
-                await _inventoryService.AdjustStockAsync(model.ProductId, model.NewQuantity, model.Note, adminId, model.WarehouseId);
-                return Json(new { success = true, message = "Điều chỉnh tồn kho thành công!" });
+                var userId = _userManager.GetUserId(User);
+                var userName = User.Identity?.Name ?? "";
+                model.RequestedBy = userName;
+
+                var adjustment = await _inventoryService.CreateStockAdjustmentAsync(model, userId);
+
+                // Theo nghiệp vụ: WarehouseStaff chỉ "đề xuất" -> Status=Pending.
+                // Admin có quyền tạo và duyệt luôn trong cùng thao tác.
+                if (User.IsInRole("Admin"))
+                {
+                    await _inventoryService.ApproveStockAdjustmentAsync(adjustment.StockAdjustmentId, userName);
+                    TempData["SuccessMessage"] = $"Phiếu {adjustment.AdjustmentCode} đã được tạo và duyệt thành công! Tồn kho đã được cập nhật.";
+                }
+                else if (User.IsInRole("WarehouseStaff"))
+                {
+                    TempData["SuccessMessage"] = $"Phiếu {adjustment.AdjustmentCode} đã được tạo và đang chờ Admin duyệt.";
+                }
+                else
+                {
+                    TempData["SuccessMessage"] = $"Phiếu {adjustment.AdjustmentCode} đã được tạo và đang chờ duyệt.";
+                }
+
+                return RedirectToAction(nameof(StockAdjustments));
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+                return RedirectToAction(nameof(CreateStockAdjustment));
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message });
+                TempData["ErrorMessage"] = "Có lỗi xảy ra: " + ex.Message;
+                return RedirectToAction(nameof(CreateStockAdjustment));
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> StockAdjustmentDetails(int id)
+        {
+            var adjustment = await _context.StockAdjustments
+                .Include(sa => sa.Warehouse)
+                .Include(sa => sa.Details)
+                    .ThenInclude(d => d.Product)
+                .Include(sa => sa.Details)
+                    .ThenInclude(d => d.ProductBatch)
+                .FirstOrDefaultAsync(sa => sa.StockAdjustmentId == id);
+
+            if (adjustment == null)
+                return NotFound();
+
+            var details = adjustment.Details.Select(d => new StockAdjustmentDetailViewModel
+            {
+                StockAdjustmentDetailId = d.StockAdjustmentDetailId,
+                ProductId = d.ProductId,
+                ProductName = d.Product.ProductName,
+                Sku = d.Product.Sku,
+                ProductBatchId = d.ProductBatchId,
+                BatchNo = d.ProductBatch?.BatchNo,
+                ExpiryDate = d.ProductBatch?.ExpiryDate,
+                Quantity = d.Quantity,
+                UnitCost = d.UnitCost,
+                Note = d.Note
+            }).ToList();
+
+            var model = new StockAdjustmentDetailPageViewModel
+            {
+                Adjustment = adjustment,
+                Details = details
+            };
+
+            return View("~/Views/Admin/Inventory/StockAdjustmentDetails.cshtml", model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ApproveStockAdjustment(int id)
+        {
+            try
+            {
+                var userName = User.Identity?.Name ?? "";
+                await _inventoryService.ApproveStockAdjustmentAsync(id, userName);
+                TempData["SuccessMessage"] = "Phiếu đã được duyệt. Tồn kho đã được cập nhật.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+            return RedirectToAction(nameof(StockAdjustmentDetails), new { id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RejectStockAdjustment(int id, string? reason)
+        {
+            try
+            {
+                var userName = User.Identity?.Name ?? "";
+                await _inventoryService.RejectStockAdjustmentAsync(id, userName, reason);
+                TempData["SuccessMessage"] = "Phiếu đã bị từ chối.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+            return RedirectToAction(nameof(StockAdjustmentDetails), new { id });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetFefoBatches(int productId, int warehouseId, int? excludeBatchId = null)
+        {
+            var batches = await _inventoryService.GetFefoBatchesAsync(productId, warehouseId, excludeBatchId);
+            return Json(batches);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteStockAdjustment(int id)
+        {
+            var adjustment = await _context.StockAdjustments.FindAsync(id);
+            if (adjustment == null)
+                return Json(new { success = false, message = "Không tìm thấy phiếu." });
+
+            if (adjustment.Status != StockAdjustmentStatuses.Pending)
+                return Json(new { success = false, message = "Chỉ có thể xóa phiếu đang chờ duyệt." });
+
+            _context.StockAdjustmentDetails.RemoveRange(adjustment.Details);
+            _context.StockAdjustments.Remove(adjustment);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Đã xóa phiếu thành công." });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> PrintStockAdjustment(int id)
+        {
+            var adjustment = await _context.StockAdjustments
+                .Include(sa => sa.Warehouse)
+                .Include(sa => sa.Details)
+                    .ThenInclude(d => d.Product)
+                .Include(sa => sa.Details)
+                    .ThenInclude(d => d.ProductBatch)
+                .FirstOrDefaultAsync(sa => sa.StockAdjustmentId == id);
+
+            if (adjustment == null)
+                return NotFound();
+
+            var details = adjustment.Details.Select(d => new StockAdjustmentDetailViewModel
+            {
+                StockAdjustmentDetailId = d.StockAdjustmentDetailId,
+                ProductId = d.ProductId,
+                ProductName = d.Product.ProductName,
+                Sku = d.Product.Sku,
+                ProductBatchId = d.ProductBatchId,
+                BatchNo = d.ProductBatch?.BatchNo,
+                ExpiryDate = d.ProductBatch?.ExpiryDate,
+                Quantity = d.Quantity,
+                UnitCost = d.UnitCost,
+                Note = d.Note
+            }).ToList();
+
+            var model = new StockAdjustmentDetailPageViewModel
+            {
+                Adjustment = adjustment,
+                Details = details
+            };
+
+            return View("~/Views/Admin/Inventory/PrintStockAdjustment.cshtml", model);
         }
     }
 }

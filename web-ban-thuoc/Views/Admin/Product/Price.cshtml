@@ -1,0 +1,308 @@
+@model IEnumerable<web_ban_thuoc.Models.Product>
+@{
+    ViewData["Title"] = "Quản lý giá sản phẩm";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+
+    var categoryOptions = "";
+    foreach (var cat in (IEnumerable<dynamic>)ViewBag.Categories)
+    {
+        var selected = (ViewBag.SelectedCategory != null && ViewBag.SelectedCategory.ToString() == cat.CategoryId.ToString()) ? "selected" : "";
+        categoryOptions += $"<option value='{cat.CategoryId}' {selected}>{cat.CategoryName}</option>";
+    }
+    var searchName = ViewBag.SearchName as string ?? "";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header Page -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h4 class="mb-1 text-primary fw-bold"><i class="fa-solid fa-dollar-sign me-2"></i>Quản lý giá sản phẩm</h4>
+                <p class="text-muted small mb-0">Cập nhật nhanh giá bán, giá vốn và theo dõi biên lợi nhuận của nhà thuốc.</p>
+            </div>
+            <a href="@Url.Action("Index", "AdminProduct")" class="btn btn-outline-primary rounded-3 btn-sm">
+                <i class="fa fa-arrow-left me-1"></i> Về danh sách sản phẩm
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <form method="get" class="row g-3 align-items-end mb-4 bg-white shadow-sm rounded-4 px-4 py-3 border border-light mx-0">
+        <div class="col-md-4">
+            <label class="form-label fw-semibold text-secondary small">Danh mục</label>
+            <select class="form-select form-select-sm rounded-3" name="categoryId">
+                <option value="">Tất cả danh mục</option>
+                @Html.Raw(categoryOptions)
+            </select>
+        </div>
+        <div class="col-md-5">
+            <label class="form-label fw-semibold text-secondary small">Tìm theo tên sản phẩm</label>
+            <input type="text" class="form-control form-control-sm rounded-3" name="searchName" value="@searchName" placeholder="Nhập tên sản phẩm cần tìm..." />
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm rounded-3 w-100 py-2"><i class="fa fa-filter me-1"></i> Lọc</button>
+            <a href="@Url.Action("Price", "AdminProduct")" class="btn btn-outline-secondary btn-sm rounded-3 w-100 py-2">Xóa bộ lọc</a>
+        </div>
+    </form>
+
+    <!-- Table Section -->
+    <div class="table-responsive rounded-4 shadow-sm border border-light bg-white">
+        <table class="table table-hover align-middle mb-0" style="min-width: 1000px;">
+            <thead class="table-light">
+                <tr style="height: 55px;">
+                    <th class="text-center" style="width: 80px;">Mã SP</th>
+                    <th class="text-center" style="width: 80px;">Ảnh</th>
+                    <th>Tên sản phẩm</th>
+                    <th class="text-center" style="width: 180px;">Danh mục</th>
+                    <th class="text-center" style="width: 170px;">Giá vốn (đ)</th>
+                    <th class="text-center" style="width: 170px;">Giá bán (đ)</th>
+                    <th class="text-center" style="width: 170px;">Lợi nhuận gộp</th>
+                    <th class="text-center" style="width: 150px;">Lịch sử giá</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-5">
+                            <i class="fa-regular fa-folder-open fa-3x mb-3 text-secondary"></i>
+                            <p class="mb-0">Không tìm thấy sản phẩm nào phù hợp.</p>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in Model)
+                    {
+                        var mainImg = item.ProductImages?.FirstOrDefault(i => i.IsMain == true)?.ImageUrl
+                            ?? item.ProductImages?.FirstOrDefault()?.ImageUrl
+                            ?? "default.png";
+                        var mainImgPath = mainImg == "default.png" ? "/images/products/default.png" : $"/images/products/{mainImg}";
+                        
+                        decimal costVal = item.CostPrice ?? 0;
+                        decimal priceVal = item.Price;
+                        decimal profit = priceVal - costVal;
+                        double margin = priceVal > 0 ? (double)(profit / priceVal * 100) : 0;
+
+                        <tr style="height: 80px; vertical-align: middle;" id="row-@item.ProductId" data-id="@item.ProductId">
+                            <td class="text-center fw-bold text-secondary">#@item.ProductId</td>
+                            <td class="text-center">
+                                <img src="@mainImgPath" alt="Ảnh sản phẩm" class="rounded-3 border shadow-sm" style="width: 55px; height: 55px; object-fit: cover; background: #f4f6fb;" />
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-wrap text-dark" style="max-width: 300px;">@item.ProductName</div>
+                                <span class="text-muted small">SKU: @(item.Sku ?? "—")</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-secondary border border-light px-3 py-2 rounded-pill small">
+                                    @(item.Category?.CategoryName ?? "Không phân loại")
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="input-group input-group-sm px-2">
+                                    <input type="number" step="100" class="form-control rounded-3 text-end cost-price-input" 
+                                           value="@(item.CostPrice?.ToString("F0") ?? "0")" 
+                                           data-original="@(item.CostPrice?.ToString("F0") ?? "0")" />
+                                    <span class="input-group-text bg-light text-muted small border-start-0 rounded-end-3">đ</span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="input-group input-group-sm px-2">
+                                    <input type="number" step="100" class="form-control rounded-3 text-end selling-price-input" 
+                                           value="@item.Price.ToString("F0")" 
+                                           data-original="@item.Price.ToString("F0")" />
+                                    <span class="input-group-text bg-light text-muted small border-start-0 rounded-end-3">đ</span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="profit-container">
+                                    <div class="fw-bold text-success profit-text">@profit.ToString("N0")đ</div>
+                                    <span class="badge @(margin >= 20 ? "bg-success-subtle text-success" : (margin >= 10 ? "bg-warning-subtle text-warning" : "bg-danger-subtle text-danger")) px-2 py-1 rounded margin-badge">
+                                        Margin: @margin.ToString("F1")%
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex flex-column align-items-center gap-2">
+                                    <button class="btn btn-primary btn-sm rounded-3 px-3 py-1 btn-save-price" style="display:none;">
+                                        <i class="fa fa-save"></i> Lưu
+                                    </button>
+                                    <a href="/AdminActivityLog?search=@Uri.EscapeDataString(item.ProductName)" class="btn btn-outline-info btn-sm rounded-3 px-2 py-1" title="Xem lịch sử đổi giá">
+                                        <i class="fa-solid fa-clock-rotate-left"></i> Xem Log
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-4">
+        <partial name="_AdminPagination" />
+    </div>
+</div>
+
+@Html.AntiForgeryToken()
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const token = $('input[name="__RequestVerificationToken"]').val();
+
+            // Detect changes in inputs to show the save button
+            $(document).on('input', '.cost-price-input, .selling-price-input', function () {
+                const $row = $(this).closest('tr');
+                const $costInput = $row.find('.cost-price-input');
+                const $priceInput = $row.find('.selling-price-input');
+                const $saveBtn = $row.find('.btn-save-price');
+
+                const originalCost = parseFloat($costInput.data('original')) || 0;
+                const originalPrice = parseFloat($priceInput.data('original')) || 0;
+
+                const currentCost = parseFloat($costInput.val()) || 0;
+                const currentPrice = parseFloat($priceInput.val()) || 0;
+
+                // If values are modified, display the save button
+                if (currentCost !== originalCost || currentPrice !== originalPrice) {
+                    $saveBtn.fadeIn(200);
+                } else {
+                    $saveBtn.fadeOut(200);
+                }
+
+                // Recalculate profit and margin dynamically in client side
+                const profit = currentPrice - currentCost;
+                const margin = currentPrice > 0 ? (profit / currentPrice * 100) : 0;
+
+                const $profitText = $row.find('.profit-text');
+                const $marginBadge = $row.find('.margin-badge');
+
+                $profitText.text(new Intl.NumberFormat('vi-VN').format(profit) + 'đ');
+                $marginBadge.text('Margin: ' + margin.toFixed(1) + '%');
+
+                // Adjust badge colors
+                $marginBadge.removeClass('bg-success-subtle text-success bg-warning-subtle text-warning bg-danger-subtle text-danger');
+                if (margin >= 20) {
+                    $marginBadge.addClass('bg-success-subtle text-success');
+                } else if (margin >= 10) {
+                    $marginBadge.addClass('bg-warning-subtle text-warning');
+                } else {
+                    $marginBadge.addClass('bg-danger-subtle text-danger');
+                }
+            });
+
+            // Save price changes using AJAX
+            $(document).on('click', '.btn-save-price', function () {
+                const $btn = $(this);
+                const $row = $btn.closest('tr');
+                const productId = $row.data('id');
+                const costPrice = parseFloat($row.find('.cost-price-input').val()) || 0;
+                const price = parseFloat($row.find('.selling-price-input').val()) || 0;
+
+                // Simple Client validations
+                if (price <= 0) {
+                    showToast('Giá bán phải lớn hơn 0 VNĐ', 'error');
+                    return;
+                }
+                if (costPrice <= 0) {
+                    showToast('Giá vốn phải lớn hơn 0 VNĐ', 'error');
+                    return;
+                }
+                if (price < costPrice) {
+                    showToast('Giá bán không được nhỏ hơn giá vốn', 'error');
+                    return;
+                }
+
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+
+                $.ajax({
+                    url: '/AdminProduct/UpdateProductPrice',
+                    type: 'POST',
+                    data: {
+                        productId: productId,
+                        price: price,
+                        costPrice: costPrice,
+                        __RequestVerificationToken: token
+                    },
+                    success: function (res) {
+                        $btn.prop('disabled', false).html('<i class="fa fa-save"></i> Lưu');
+                        if (res.success) {
+                            showToast(res.message, 'success');
+                            // Update original attributes
+                            $row.find('.cost-price-input').data('original', costPrice);
+                            $row.find('.selling-price-input').data('original', price);
+                            $btn.fadeOut(200);
+                        } else {
+                            showToast(res.message, 'error');
+                        }
+                    },
+                    error: function () {
+                        $btn.prop('disabled', false).html('<i class="fa fa-save"></i> Lưu');
+                        showToast('Có lỗi xảy ra, vui lòng thử lại sau!', 'error');
+                    }
+                });
+            });
+
+            // Custom Simple Toast Notification
+            function showToast(message, type = 'success') {
+                let iconClass = 'fa-circle-check text-success';
+                let bgClass = 'bg-success-subtle text-dark border-success';
+                if (type === 'error') {
+                    iconClass = 'fa-circle-xmark text-danger';
+                    bgClass = 'bg-danger-subtle text-dark border-danger';
+                }
+
+                const toastHtml = `
+                    <div class="toast align-items-center ${bgClass} border-0 show shadow-sm" role="alert" aria-live="assertive" aria-atomic="true" style="position: fixed; top: 20px; right: 20px; z-index: 9999; border: 1px solid !important;">
+                        <div class="d-flex">
+                            <div class="toast-body d-flex align-items-center gap-2">
+                                <i class="fa-solid ${iconClass}"></i>
+                                <span>${message}</span>
+                            </div>
+                            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>
+                `;
+                const $toast = $(toastHtml).appendTo('body');
+                setTimeout(() => {
+                    $toast.fadeOut(400, function() { $(this).remove(); });
+                }, 3000);
+            }
+        });
+    </script>
+}
+
+<style>
+    /* Styling adjustments for price management */
+    .table th {
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #5c6a85;
+    }
+    .table td {
+        color: #333f54;
+    }
+    .input-group-text {
+        border-color: #dee2e6;
+    }
+    .form-control:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+    .profit-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .margin-badge {
+        font-size: 0.75rem;
+        margin-top: 2px;
+    }
+    .btn-save-price {
+        transition: all 0.2s ease-in-out;
+    }
+</style>

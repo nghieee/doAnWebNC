@@ -1,0 +1,485 @@
+@using web_ban_thuoc.Models
+@{
+    ViewData["Title"] = "Tạo phiếu điều chỉnh tồn kho";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+
+    var warehouses = ViewBag.Warehouses as List<Warehouse> ?? new();
+    var adjustmentTypes = ViewBag.AdjustmentTypes as string[] ?? Array.Empty<string>();
+    var reasons = ViewBag.Reasons as Dictionary<string, string> ?? new();
+}
+
+<div class="container-fluid py-3">
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger border-0 shadow-sm rounded-4">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0"><i class="fa fa-plus-circle text-primary me-2"></i>Tạo phiếu điều chỉnh tồn kho</h4>
+            <p class="text-muted small mb-0">Xuất kho thủ công theo nguyên tắc <strong>FEFO</strong> (First Expired First Out)</p>
+        </div>
+        <a href="/AdminInventory/StockAdjustments" class="btn btn-outline-secondary">
+            <i class="fa fa-arrow-left me-1"></i> Quay lại
+        </a>
+    </div>
+
+    <form method="post" action="/AdminInventory/CreateStockAdjustment" id="adjustmentForm" novalidate>
+        @Html.AntiForgeryToken()
+
+        <div class="row g-4">
+            <!-- Cột trái: Thông tin phiếu -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-white fw-semibold rounded-top-4">
+                        <i class="fa fa-info-circle text-primary me-1"></i> Thông tin phiếu
+                    </div>
+                    <div class="card-body">
+                        <!-- Kho -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Kho <span class="text-danger">*</span></label>
+                            <select class="form-select" name="WarehouseId" id="warehouseSelect" required>
+                                <option value="">— Chọn kho —</option>
+                                @foreach (var wh in warehouses)
+                                {
+                                    <option value="@wh.WarehouseId">@wh.Name</option>
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Loại điều chỉnh -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Loại điều chỉnh <span class="text-danger">*</span></label>
+                            <div class="row g-2">
+                                @foreach (var t in adjustmentTypes)
+                                {
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="AdjustmentType" id="type_@t"
+                                                   value="@t" @(t == StockAdjustmentTypes.Export ? "checked" : "") required />
+                                            <label class="form-check-label small" for="type_@t">
+                                                <i class="fa @StockAdjustmentTypes.Icon(t) me-1"></i>
+                                                @StockAdjustmentTypes.DisplayName(t)
+                                            </label>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Lý do -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Lý do <span class="text-danger">*</span></label>
+                            <select class="form-select" name="Reason" id="reasonSelect" required>
+                                <option value="">— Chọn lý do —</option>
+                                @foreach (var r in reasons)
+                                {
+                                    <option value="@r.Key">@r.Value</option>
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Ghi chú -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Ghi chú</label>
+                            <textarea class="form-control" name="Note" id="noteField" rows="3"
+                                      placeholder="VD: Kiểm kho tháng 7/2026, phát hiện 5 lọ thuốc hết hạn..."></textarea>
+                        </div>
+
+                        <!-- Alert FEFO -->
+                        <div class="alert alert-info py-2 small mb-0" id="fefoAlert">
+                            <i class="fa fa-lightbulb me-1"></i>
+                            Khi xuất kho, hệ thống sẽ tự động ưu tiên <strong>lô sắp hết hạn nhất</strong> (FEFO).
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick actions -->
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-body">
+                        <button type="submit" class="btn btn-primary w-100 mb-2" id="submitBtn">
+                            <i class="fa fa-paper-plane me-1"></i> Tạo phiếu
+                        </button>
+                        <a href="/AdminInventory/StockAdjustments" class="btn btn-outline-secondary w-100">
+                            <i class="fa fa-times me-1"></i> Hủy bỏ
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột phải: Danh sách sản phẩm -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-white fw-semibold rounded-top-4 d-flex justify-content-between align-items-center">
+                        <span><i class="fa fa-boxes-stacked text-primary me-1"></i> Danh sách sản phẩm</span>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="addLineBtn">
+                            <i class="fa fa-plus me-1"></i> Thêm dòng
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="linesTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 35%;">Sản phẩm</th>
+                                        <th style="width: 25%;">Lô (FEFO gợi ý)</th>
+                                        <th style="width: 15%;" class="text-center">Tồn lô</th>
+                                        <th style="width: 20%;" class="text-center">SL <span class="text-danger">*</span></th>
+                                        <th style="width: 5%;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="linesBody">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center text-muted py-4" id="emptyState">
+                            <i class="fa fa-inbox fa-2x mb-2 d-block opacity-25"></i>
+                            Chưa có sản phẩm nào.
+                            <button type="button" class="btn btn-sm btn-link" onclick="addLine()">Thêm dòng đầu tiên</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tổng hợp -->
+                <div class="mt-3 d-flex justify-content-end">
+                    <div class="bg-white shadow-sm rounded-4 px-4 py-3 border">
+                        <div class="small text-muted">Tổng dòng</div>
+                        <div class="fs-5 fw-bold" id="totalLines">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+(function() {
+    let lineIndex = 0;
+    const warehouseSelect = document.getElementById('warehouseSelect');
+    const linesBody = document.getElementById('linesBody');
+    const emptyState = document.getElementById('emptyState');
+    const totalLinesEl = document.getElementById('totalLines');
+
+    // ── Thêm dòng ──────────────────────────────────────────────────────
+    window.addLine = function(productId, productName, productSku, batches, warehouseId) {
+        emptyState.style.display = 'none';
+        const idx = lineIndex++;
+
+        const tr = document.createElement('tr');
+        tr.id = 'row-' + idx;
+        tr.dataset.lineIdx = idx;
+        tr.innerHTML = `
+            <td style="position:relative;">
+                <input type="hidden" name="Lines[${idx}].ProductId" id="pid_${idx}" value="${productId || ''}" />
+                <input type="hidden" name="Lines[${idx}].ProductBatchId" id="batchid_${idx}" value="" />
+                <div class="small fw-semibold" id="pname_${idx}">${productName || '—'}</div>
+                <div class="small text-muted" id="psku_${idx}">${productSku || ''}</div>
+                <input type="text" class="form-control form-control-sm mt-1"
+                       placeholder="Tìm sản phẩm theo tên/SKU..."
+                       id="psearch_${idx}"
+                       value="${productName || ''}"
+                       autocomplete="off"
+                       ${productId ? 'readonly' : ''} />
+            </td>
+            <td>
+                <select class="form-select form-select-sm" id="batchSelect_${idx}" onchange="onBatchChange(${idx})" ${!productId ? 'disabled' : ''}>
+                    <option value="">— Chọn lô —</option>
+                    ${(batches || []).map(function(b) {
+                        const days = b.daysUntilExpiry;
+                        const label = days <= 30 ? `⚠ ${b.batchNo} (${b.expiryDate ? b.expiryDate.substring(0,10) : 'N/A'})` : `${b.batchNo} (${b.expiryDate ? b.expiryDate.substring(0,10) : 'N/A'})`;
+                        return `<option value="${b.productBatchId}" data-qty="${b.quantityOnHand}" data-cost="${b.unitCost || 0}">${label}</option>`;
+                    }).join('')}
+                </select>
+                <div class="small text-muted mt-1" id="batchHint_${idx}"></div>
+            </td>
+            <td class="text-center">
+                <span class="badge bg-light text-dark border" id="batchQty_${idx}">—</span>
+            </td>
+            <td>
+                <input type="number" class="form-control form-control-sm text-center"
+                       name="Lines[${idx}].Quantity"
+                       id="qty_${idx}"
+                       min="1" max="9999" placeholder="0"
+                       oninput="updateTotals()" />
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLine(${idx})" title="Xóa dòng">
+                    <i class="fa fa-times"></i>
+                </button>
+            </td>
+        `;
+
+        linesBody.appendChild(tr);
+
+        if (!productId) {
+            initProductSearch(idx);
+        } else if (batches && batches.length > 0) {
+            selectFirstBatch(idx, batches);
+        }
+
+        updateTotals();
+    }
+
+    // ── Tự động chọn lô FEFO đầu tiên ────────────────────────────────
+    function selectFirstBatch(idx, batches) {
+        if (batches.length === 0) return;
+        const sel = document.getElementById('batchSelect_' + idx);
+        if (sel) sel.value = batches[0].productBatchId;
+        onBatchChange(idx);
+    }
+
+    // ── Khởi tạo tìm kiếm sản phẩm ──────────────────────────────────
+    function initProductSearch(idx) {
+        const searchInput = document.getElementById('psearch_' + idx);
+        if (!searchInput) return;
+
+        let debounceTimer;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const val = this.value.trim();
+            if (val.length < 2) { hideProductDropdown(); return; }
+            debounceTimer = setTimeout(function() {
+                fetchProducts(idx, val);
+            }, 300);
+        });
+
+        searchInput.addEventListener('focus', function() {
+            if (this.value.length >= 2) fetchProducts(idx, this.value);
+        });
+
+        // Close on outside click
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.product-dropdown') && !e.target.closest('[id^="psearch_"]')) {
+                hideProductDropdown();
+            }
+        });
+
+        // Close on scroll/resize
+        window.addEventListener('scroll', hideProductDropdown, true);
+        window.addEventListener('resize', hideProductDropdown);
+    }
+
+    // ── Banner cảnh báo nhỏ, không dùng alert() (tránh vòng lặp focus) ──
+    function showInlineWarn(input, message) {
+        hideInlineWarn(input);
+        const box = document.createElement('div');
+        box.className = 'inline-warn small text-danger mt-1';
+        box.innerHTML = '<i class="fa fa-exclamation-triangle me-1"></i>' + message;
+        input.parentElement.appendChild(box);
+        input.dataset.warnId = '1';
+        input._warnBox = box;
+        setTimeout(function() { hideInlineWarn(input); }, 3000);
+    }
+    function hideInlineWarn(input) {
+        if (input && input._warnBox) { input._warnBox.remove(); input._warnBox = null; }
+    }
+
+    function fetchProducts(idx, term) {
+        const whId = warehouseSelect.value;
+        const searchInput = document.getElementById('psearch_' + idx);
+        if (!whId) {
+            showInlineWarn(searchInput, 'Vui lòng chọn kho trước khi tìm sản phẩm.');
+            return;
+        }
+
+        const url = '/AdminInventory/GetProductsForWarehouse?warehouseId=' + whId + '&search=' + encodeURIComponent(term);
+        fetch(url)
+            .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
+            .then(function(data) {
+                showProductDropdown(idx, data);
+            })
+            .catch(function() {});
+    }
+
+    let activeDropdown = { idx: null, el: null };
+
+    function showProductDropdown(idx, products) {
+        hideProductDropdown();
+        if (!products || products.length === 0) return;
+
+        const searchInput = document.getElementById('psearch_' + idx);
+        if (!searchInput) return;
+
+        const container = document.createElement('div');
+        container.id = 'pdropdown_' + idx;
+        container.className = 'product-dropdown shadow rounded-3 overflow-auto';
+        container.style.cssText = 'position:fixed;z-index:10000;background:#fff;max-height:260px;border:1px solid #dee2e6;';
+
+        products.forEach(function(p) {
+            const item = document.createElement('div');
+            item.className = 'product-dropdown-item px-3 py-2';
+            item.style.cssText = 'cursor:pointer;border-bottom:1px solid #f0f0f0;';
+            item.innerHTML = '<div class="fw-semibold small">' + p.name + '</div><div class="small text-muted">'
+                + (p.sku || '—') + ' · Tồn: ' + p.stockQty + '</div>';
+            item.addEventListener('click', function() {
+                selectProduct(idx, p);
+            });
+            container.appendChild(item);
+        });
+
+        document.body.appendChild(container);
+        positionDropdown(container, searchInput);
+        activeDropdown = { idx: idx, el: container };
+    }
+
+    function positionDropdown(container, input) {
+        const rect = input.getBoundingClientRect();
+        container.style.top = (rect.bottom + 2) + 'px';
+        container.style.left = rect.left + 'px';
+        container.style.width = rect.width + 'px';
+    }
+
+    function hideProductDropdown() {
+        if (activeDropdown.el) {
+            activeDropdown.el.remove();
+            activeDropdown = { idx: null, el: null };
+        }
+        // legacy cleanup
+        document.querySelectorAll('.product-dropdown').forEach(function(el) { el.remove(); });
+    }
+
+    function selectProduct(idx, product) {
+        var pidField = document.getElementById('pid_' + idx);
+        var nameDiv = document.getElementById('pname_' + idx);
+        var skuDiv = document.getElementById('psku_' + idx);
+        var searchInput = document.getElementById('psearch_' + idx);
+
+        pidField.value = product.id;
+        nameDiv.textContent = product.name;
+        skuDiv.textContent = product.sku || '';
+        searchInput.value = product.name;
+        searchInput.readOnly = true;
+        hideProductDropdown();
+
+        // Fetch FEFO batches
+        var whId = warehouseSelect.value;
+        fetch('/AdminInventory/GetFefoBatches?productId=' + product.id + '&warehouseId=' + whId)
+            .then(function(r) { return r.json(); })
+            .then(function(batches) {
+                var batchSelect = document.getElementById('batchSelect_' + idx);
+                if (!batchSelect) return;
+                batchSelect.disabled = false;
+                batchSelect.innerHTML = '<option value="">— Chọn lô (FEFO) —</option>';
+                batches.forEach(function(b) {
+                    var daysLabel = b.daysUntilExpiry <= 30 ? ' ⚠ ' + b.daysUntilExpiry + ' ngày' : '';
+                    batchSelect.innerHTML += '<option value="' + b.productBatchId + '" data-qty="' + b.quantityOnHand + '" data-cost="' + (b.unitCost || 0) + '">'
+                        + b.batchNo + ' · HSD: ' + (b.expiryDate ? b.expiryDate.substring(0,10) : 'N/A') + daysLabel + ' · Còn: ' + b.quantityOnHand + '</option>';
+                });
+
+                var hint = document.getElementById('batchHint_' + idx);
+                hint.innerHTML = batches.length > 0
+                    ? '<span class="text-success small"><i class="fa fa-check-circle me-1"></i>' + batches.length + ' lô khả dụng</span>'
+                    : '<span class="text-danger small"><i class="fa fa-exclamation-circle me-1"></i>Không có lô nào!</span>';
+            });
+
+        updateTotals();
+    }
+
+    // ── Batch change → auto-fill qty hint ────────────────────────────
+    window.onBatchChange = function(idx) {
+        var sel = document.getElementById('batchSelect_' + idx);
+        if (!sel) return;
+        var opt = sel.options[sel.selectedIndex];
+        var qty = opt ? (parseInt(opt.dataset.qty) || 0) : 0;
+
+        var qtyEl = document.getElementById('batchQty_' + idx);
+        if (qtyEl) qtyEl.textContent = qty > 0 ? qty : '—';
+        var bidEl = document.getElementById('batchid_' + idx);
+        if (bidEl) bidEl.value = sel.value || '';
+    };
+
+    // ── Xóa dòng ────────────────────────────────────────────────────
+    window.removeLine = function(idx) {
+        var row = document.getElementById('row-' + idx);
+        if (row) row.remove();
+        updateTotals();
+        if (linesBody.children.length === 0) emptyState.style.display = '';
+    };
+
+    // ── Tổng hợp ────────────────────────────────────────────────────
+    function updateTotals() {
+        var rows = linesBody.querySelectorAll('tr');
+        totalLinesEl.textContent = rows.length;
+    }
+
+    // ── Nút thêm dòng ────────────────────────────────────────────────
+    document.getElementById('addLineBtn').addEventListener('click', function() {
+        var whId = warehouseSelect.value;
+        if (!whId) {
+            // Banner cảnh báo ở cạnh select kho, không focus để tránh vòng lặp
+            const sel = document.getElementById('warehouseSelect');
+            const old = document.getElementById('whWarn');
+            if (old) old.remove();
+            const warn = document.createElement('div');
+            warn.id = 'whWarn';
+            warn.className = 'small text-danger mt-1';
+            warn.innerHTML = '<i class="fa fa-exclamation-triangle me-1"></i>Vui lòng chọn kho trước.';
+            sel.parentElement.appendChild(warn);
+            setTimeout(() => { if (warn.parentElement) warn.remove(); }, 3000);
+            return;
+        }
+        addLine();
+    });
+
+    // ── Form submit validation ───────────────────────────────────────
+    document.getElementById('adjustmentForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        var whId = warehouseSelect.value;
+        var adjType = document.querySelector('input[name="AdjustmentType"]:checked');
+        var reason = document.getElementById('reasonSelect').value;
+
+        if (!whId) { alert('Vui lòng chọn kho.'); warehouseSelect.focus(); return; }
+        if (!adjType) { alert('Vui lòng chọn loại điều chỉnh.'); return; }
+        if (!reason) { alert('Vui lòng chọn lý do.'); document.getElementById('reasonSelect').focus(); return; }
+
+        var rows = linesBody.querySelectorAll('tr');
+        if (rows.length === 0) { alert('Vui lòng thêm ít nhất một sản phẩm.'); return; }
+
+        var hasValid = false;
+        rows.forEach(function(row) {
+            var pidInput = row.querySelector('input[name*="ProductId"]');
+            var qtyInput = row.querySelector('input[name*="Quantity"]');
+            if (pidInput && pidInput.value && qtyInput && parseInt(qtyInput.value) > 0) {
+                hasValid = true;
+            }
+        });
+
+        if (!hasValid) { alert('Phải có ít nhất một dòng với sản phẩm và số lượng hợp lệ.'); return; }
+
+        // Nếu là xuất kho → kiểm tra tồn batch
+        if (adjType.value === 'Export') {
+            var warehouseId = parseInt(whId);
+            var invalid = false;
+            rows.forEach(function(row) {
+                var pidInput = row.querySelector('input[name*="ProductId"]');
+                var batchSelect = row.querySelector('select[id^="batchSelect_"]');
+                var qtyInput = row.querySelector('input[name*="Quantity"]');
+                if (!pidInput || !pidInput.value || !qtyInput || !parseInt(qtyInput.value)) return;
+                if (!batchSelect || !batchSelect.value) {
+                    alert('Vui lòng chọn lô hàng cho sản phẩm ' + (document.getElementById('pname_' + row.dataset.lineIdx)?.textContent || '') + ' trước khi xuất kho.');
+                    batchSelect && batchSelect.focus();
+                    invalid = true;
+                }
+            });
+            if (invalid) return;
+        }
+
+        // Submit
+        this.submit();
+    });
+
+    // ── Khởi tạo 1 dòng trống ──────────────────────────────────────
+    addLine();
+
+})();
+</script>
+<style>
+.product-dropdown-item:hover { background: #e7f1ff; }
+.form-check-label { line-height: 1.6; cursor: pointer; }
+.rotate-180 { transform: rotate(180deg); }
+</style>
+}
