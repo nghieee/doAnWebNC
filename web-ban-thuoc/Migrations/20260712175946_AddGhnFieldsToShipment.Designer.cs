@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using web_ban_thuoc.Models;
 
@@ -11,9 +12,11 @@ using web_ban_thuoc.Models;
 namespace web_ban_thuoc.Migrations
 {
     [DbContext(typeof(LongChauDbContext))]
-    partial class LongChauDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260712175946_AddGhnFieldsToShipment")]
+    partial class AddGhnFieldsToShipment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -758,13 +761,7 @@ namespace web_ban_thuoc.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrderId"));
 
-                    b.Property<int?>("DistrictId")
-                        .HasColumnType("int");
-
                     b.Property<string>("FullName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("HouseNumber")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("OrderDate")
@@ -778,9 +775,6 @@ namespace web_ban_thuoc.Migrations
 
                     b.Property<string>("PrescriptionNote")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("ProvinceId")
-                        .HasColumnType("int");
 
                     b.Property<string>("ShippingAddress")
                         .HasColumnType("nvarchar(max)");
@@ -799,9 +793,6 @@ namespace web_ban_thuoc.Migrations
 
                     b.Property<decimal?>("VoucherDiscount")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("WardCode")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("OrderId");
 
@@ -1273,6 +1264,7 @@ namespace web_ban_thuoc.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("TrackingCode")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ShipmentId");

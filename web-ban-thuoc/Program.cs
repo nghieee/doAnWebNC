@@ -64,6 +64,7 @@ builder.Services.AddHostedService<MonthlyVoucherHostedService>();
 // Đăng ký PayOS Services
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IPayOSService, PayOSService>();
+builder.Services.AddScoped<IGHNService, GHNService>();
 builder.Services.AddScoped<IOrderEmailService, OrderEmailService>();
 
 var app = builder.Build();

@@ -129,34 +129,31 @@
                                     @if (order.Shipment != null)
                                     {
                                         var trackUrl = ShippingCarriers.GetTrackingUrl(order.Shipment.Carrier, order.Shipment.TrackingCode);
-                                        <div class="small">
+                                        <div class="small mb-2">
                                             <div><strong>@order.Shipment.Carrier</strong> — Mã: <code>@order.Shipment.TrackingCode</code></div>
                                             @if (trackUrl != null) { <a href="@trackUrl" target="_blank" class="small">Theo dõi vận đơn</a> }
+                                            <div class="text-muted">Phí ship: @(order.Shipment.ShippingFee?.ToString("N0") ?? "0")đ</div>
                                         </div>
                                     }
                                     else
                                     {
                                         <div class="small text-muted mb-2">Chưa có mã vận đơn</div>
                                     }
-                                    <div class="row g-2 mt-1 shipment-form" data-order-id="@order.OrderId">
-                                        <div class="col-md-3">
-                                            <select class="form-select form-select-sm ship-carrier">
-                                                @foreach (var c in ShippingCarriers.All)
-                                                {
-                                                    <option value="@c.Code" selected="@(order.Shipment?.Carrier == c.Code)">@c.Name</option>
-                                                }
-                                            </select>
+
+                                    <div class="row g-2 mt-2">
+                                        <div class="col-md-6">
+                                            <button type="button" class="btn btn-sm btn-primary w-100 create-ghn-order-btn" data-order-id="@order.OrderId">
+                                                <i class="fa fa-cube me-1"></i>Tạo đơn GHN
+                                            </button>
                                         </div>
-                                        <div class="col-md-4">
-                                            <input type="text" class="form-control form-control-sm ship-tracking" placeholder="Mã vận đơn" value="@order.Shipment?.TrackingCode" />
-                                        </div>
-                                        <div class="col-md-2">
-                                            <input type="number" class="form-control form-control-sm ship-fee" placeholder="Phí ship" value="@order.Shipment?.ShippingFee" />
-                                        </div>
-                                        <div class="col-md-3">
-                                            <button type="button" class="btn btn-sm btn-outline-primary w-100 save-shipment-btn">Lưu vận đơn</button>
+                                        <div class="col-md-6">
+                                            <div class="d-flex gap-2">
+                                                <a class="btn btn-sm btn-outline-secondary w-100 print-ghn-label-btn" data-order-id="@order.OrderId" data-format="A5" href="javascript:void(0);">In A5</a>
+                                                <a class="btn btn-sm btn-outline-secondary w-100 print-ghn-label-btn" data-order-id="@order.OrderId" data-format="80x80" href="javascript:void(0);">In 80x80</a>
+                                            </div>
                                         </div>
                                     </div>
+                                    <div id="ghn-label-@order.OrderId" class="mt-2"></div>
                                 </div>
                                 @if (order.Status != OrderStatuses.Cancelled && order.Status != OrderStatuses.Delivered)
                                 {
@@ -196,31 +193,15 @@
 
 @section Scripts {
 <script>
-document.querySelectorAll('.save-shipment-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const form = this.closest('.shipment-form');
-        const orderId = form.dataset.orderId;
-        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-        const body = new URLSearchParams({
-            orderId, __RequestVerificationToken: token || '',
-            carrier: form.querySelector('.ship-carrier').value,
-            trackingCode: form.querySelector('.ship-tracking').value,
-            shippingFee: form.querySelector('.ship-fee').value || ''
-        });
-        fetch('@Url.Action("SaveShipment", "AdminOrder")', { method: 'POST', body })
-            .then(r => r.json()).then(d => { showAlert(d.message, { icon: d.success ? 'success' : 'error' }).then(() => { if (d.success) location.reload(); }); });
-    });
-});
-
 document.querySelectorAll('.change-status-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         const orderId = this.dataset.orderId;
         const select = document.querySelector(`.status-select[data-order-id="${orderId}"]`);
         const newStatus = select.value;
         if (newStatus === '@OrderStatuses.Shipped') {
-            const tracking = document.querySelector(`.shipment-form[data-order-id="${orderId}"] .ship-tracking`)?.value?.trim();
-            if (!tracking) {
-                showAlert('Vui lòng nhập và lưu mã vận đơn trước khi chuyển sang Đang giao.', { icon: 'warning' });
+            const ghnOrderCode = document.querySelector(`#ghn-label-${orderId} code`)?.textContent?.trim();
+            if (!ghnOrderCode) {
+                showAlert('Vui lòng tạo đơn GHN trước khi chuyển sang Đang giao.', { icon: 'warning' });
                 return;
             }
         }
@@ -237,6 +218,70 @@ document.querySelectorAll('.change-status-btn').forEach(btn => {
         .then(data => {
             showAlert(data.message, { icon: data.success ? 'success' : 'error' }).then(() => { if (data.success) location.reload(); });
         });
+    });
+});
+
+document.querySelectorAll('.create-ghn-order-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        const orderId = this.dataset.orderId;
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        this.disabled = true;
+        this.innerHTML = '<i class="fa fa-circle-notch fa-spin me-1"></i>Đang tải dịch vụ...';
+        try {
+            const serviceResponse = await fetch(`/AdminShipping/AvailableServices?orderId=${orderId}`);
+            const serviceResult = await serviceResponse.json();
+            if (!serviceResult.success) {
+                showAlert(serviceResult.message || 'Không lấy được dịch vụ GHN.', { icon: 'error' });
+                return;
+            }
+
+            const selectedServiceId = serviceResult.selectedServiceId || serviceResult.services[0]?.serviceId;
+            if (!selectedServiceId) {
+                showAlert('Không có dịch vụ phù hợp cho địa chỉ này.', { icon: 'error' });
+                return;
+            }
+
+            const createResponse = await fetch('/AdminShipping/CreateShippingOrder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: new URLSearchParams({ orderId: String(orderId), serviceId: String(selectedServiceId), __RequestVerificationToken: token || '' })
+            });
+            const createResult = await createResponse.json();
+            if (!createResult.success) {
+                showAlert(createResult.message || 'Tạo đơn GHN thất bại.', { icon: 'error' });
+                return;
+            }
+            const labelBox = document.getElementById(`ghn-label-${orderId}`);
+            labelBox.innerHTML = `
+                <div class="alert alert-success py-2 mb-0">
+                    Đã tạo đơn GHN: <strong>${createResult.orderCode}</strong><br/>
+                    <a href="https://dev-online-gateway.ghn.vn/shiip/public-api/gateway/index.html#/list" target="_blank" class="btn btn-sm btn-outline-primary mt-1">Mở trang dev GHN</a>
+                </div>`;
+            showAlert('Đã tạo đơn GHN.', { icon: 'success' });
+        } catch (e) {
+            showAlert('Lỗi khi gọi API tạo đơn GHN.', { icon: 'error' });
+        } finally {
+            this.disabled = false;
+            this.innerHTML = '<i class="fa fa-cube me-1"></i>Tạo đơn GHN';
+        }
+    });
+});
+
+document.querySelectorAll('.print-ghn-label-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const orderId = this.dataset.orderId;
+        const format = this.dataset.format || 'A5';
+        const win = window.open('', '_blank');
+        if (!win) {
+            showAlert('Trình duyệt chặn mở tab mới.', { icon: 'warning' });
+            return;
+        }
+        const url = `/AdminShipping/PrintLabel?orderId=${orderId}&format=${encodeURIComponent(format)}`;
+        win.location = url;
     });
 });
 </script>

@@ -1,0 +1,26 @@
+@{
+    Layout = null;
+    var printUrl = ViewBag.PrintUrl as string;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>In vận đơn GHN</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        html, body { margin: 0; padding: 0; height: 100%; }
+        .toolbar { position: fixed; top: 0; left: 0; right: 0; z-index: 9999; background: #f8f9fa; padding: 10px 12px; border-bottom: 1px solid #dee2e6; display: flex; gap: 10px; align-items: center; }
+        iframe { width: 100%; height: calc(100% - 52px); border: 0; }
+        .title { font-weight: 600; margin-right: auto; }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="title">In vận đơn GHN</div>
+        <a class="btn btn-primary btn-sm" href="@printUrl" target="_blank">Mở trang in trong tab mới</a>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()">In trình duyệt</button>
+    </div>
+    <iframe src="@printUrl"></iframe>
+</body>
+</html>

@@ -1,0 +1,95 @@
+@{
+    Layout = "~/Views/Admin/_Layout.cshtml";
+    ViewData["Title"] = "Chọn dịch vụ GHN";
+}
+
+<div class="container-fluid">
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-white border-bottom pt-4 pb-4 rounded-top-4">
+            <h5 class="mb-0 text-dark fw-semibold">Chọn dịch vụ vận chuyển</h5>
+        </div>
+        <div class="card-body">
+            <input type="hidden" id="orderId" value="@ViewBag.OrderId" />
+            <div class="alert alert-info border-0 shadow-sm rounded-4">
+                Đơn hàng #@ViewBag.OrderId đang giao đến @ViewBag.ToAddress.
+            </div>
+            <div class="row g-3">
+                @foreach (var service in ViewBag.Services as IEnumerable<dynamic>)
+                {
+                    <div class="col-md-4">
+                        <div class="card service-card h-100 border cursor-pointer" data-service-id="@service.serviceId">
+                            <div class="card-body">
+                                <div class="fw-semibold mb-1">@service.shortName</div>
+                                <div class="small text-muted">Loại dịch vụ: @service.serviceTypeId</div>
+                                @if (service.preferred)
+                                {
+                                    <span class="badge bg-success">Mặc định</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="mt-4 d-flex justify-content-between">
+                <a href="/AdminOrder" class="btn btn-outline-secondary">Quay lại</a>
+                <button type="button" class="btn btn-primary" id="createOrderBtn" disabled>
+                    <i class="fa fa-cube me-1"></i>Tạo đơn GHN
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function initServiceSelection() {
+    const cards = document.querySelectorAll('.service-card');
+    const createBtn = document.getElementById('createOrderBtn');
+    let selectedServiceId = null;
+
+    cards.forEach(card => {
+        card.addEventListener('click', function() {
+            cards.forEach(c => c.classList.remove('border-primary'));
+            this.classList.add('border-primary');
+            selectedServiceId = this.dataset.serviceId;
+            createBtn.disabled = false;
+        });
+    });
+
+    createBtn.addEventListener('click', async function() {
+        if (!selectedServiceId) {
+            showAlert('Vui lòng chọn dịch vụ vận chuyển.', { icon: 'warning' });
+            return;
+        }
+
+        const orderId = document.getElementById('orderId').value;
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        this.disabled = true;
+        this.innerHTML = '<i class="fa fa-circle-notch fa-spin me-1"></i>Đang tạo...';
+        try {
+            const response = await fetch('/AdminShipping/CreateShippingOrder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: new URLSearchParams({ orderId: orderId, serviceId: selectedServiceId, __RequestVerificationToken: token || '' })
+            });
+            const result = await response.json();
+            if (!result.success) {
+                showAlert(result.message || 'Tạo đơn GHN thất bại.', { icon: 'error' });
+                return;
+            }
+            showAlert('Đã tạo đơn GHN.', { icon: 'success' }).then(() => {
+                location.href = '/AdminOrder';
+            });
+        } catch (e) {
+            showAlert('Lỗi khi gọi API tạo đơn GHN.', { icon: 'error' });
+        } finally {
+            this.disabled = false;
+            this.innerHTML = '<i class="fa fa-cube me-1"></i>Tạo đơn GHN';
+        }
+    });
+})();
+</script>
+}

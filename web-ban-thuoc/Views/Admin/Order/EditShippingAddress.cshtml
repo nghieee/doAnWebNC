@@ -1,0 +1,157 @@
+@{
+    Layout = "~/Views/Admin/_Layout.cshtml";
+    ViewData["Title"] = "Cập nhật địa chỉ giao hàng";
+}
+
+<div class="container-fluid">
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-white border-bottom pt-4 pb-4 rounded-top-4">
+            <h5 class="mb-0 text-dark fw-semibold">Cập nhật địa chỉ giao hàng</h5>
+        </div>
+        <div class="card-body">
+            <form id="editAddressForm">
+                <input type="hidden" name="OrderId" value="@ViewBag.OrderId" />
+                <div class="mb-3">
+                    <label class="form-label">Họ tên người nhận</label>
+                    <input type="text" class="form-control" name="FullName" value="@ViewBag.FullName" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="text" class="form-control" name="Phone" value="@ViewBag.Phone" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Số nhà, tên đường</label>
+                    <input type="text" class="form-control" name="HouseNumber" value="@ViewBag.HouseNumber" required placeholder="Ví dụ: 123 Nguyễn Văn Linh" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Tỉnh/Thành</label>
+                    <select class="form-select" id="provinceId" name="ProvinceId" required>
+                        <option value="">Chọn tỉnh/thành</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Quận/Huyện</label>
+                    <select class="form-select" id="districtId" name="DistrictId" required disabled>
+                        <option value="">Chọn quận/huyện</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Phường/Xã</label>
+                    <select class="form-select" id="wardCode" name="WardCode" required disabled>
+                        <option value="">Chọn phường/xã</option>
+                    </select>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <a href="/AdminOrder" class="btn btn-outline-secondary">Quay lại</a>
+                    <button type="submit" class="btn btn-primary">Lưu địa chỉ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+(function initAddress() {
+    const provinceSelect = document.getElementById('provinceId');
+    const districtSelect = document.getElementById('districtId');
+    const wardSelect = document.getElementById('wardCode');
+
+    async function loadJson(url) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Không tải được danh mục địa chỉ');
+        return res.json();
+    }
+
+    async function loadProvinces() {
+        const result = await loadJson('/AdminOrder/AddressLookup?type=province');
+        if (!result.success) throw new Error(result.message || 'Không tải được tỉnh/thành');
+        provinceSelect.innerHTML = '<option value="">Chọn tỉnh/thành</option>' + result.data.map(p => '<option value="' + p.id + '">' + p.name + '</option>').join('');
+        const currentProvince = '@(ViewBag.ProvinceId ?? 0)';
+        if (currentProvince) {
+            provinceSelect.value = currentProvince;
+            await loadDistricts(currentProvince);
+            const currentDistrict = '@(ViewBag.DistrictId ?? 0)';
+            if (currentDistrict) {
+                districtSelect.value = currentDistrict;
+                await loadWards(currentDistrict);
+                const currentWard = '@(ViewBag.WardCode ?? "")';
+                if (currentWard) {
+                    wardSelect.value = currentWard;
+                }
+            }
+        }
+    }
+
+    async function loadDistricts(provinceId) {
+        districtSelect.innerHTML = '<option value="">Chọn quận/huyện</option>';
+        districtSelect.disabled = true;
+        wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
+        wardSelect.disabled = true;
+        if (!provinceId) return;
+
+        const result = await loadJson('/AdminOrder/AddressLookup?type=district&id=' + provinceId);
+        if (!result.success) throw new Error(result.message || 'Không tải được quận/huyện');
+        districtSelect.innerHTML += result.data.map(d => '<option value="' + d.id + '">' + d.name + '</option>').join('');
+        districtSelect.disabled = false;
+    }
+
+    async function loadWards(districtId) {
+        wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
+        wardSelect.disabled = true;
+        if (!districtId) return;
+
+        const result = await loadJson('/AdminOrder/AddressLookup?type=ward&id=' + districtId);
+        if (!result.success) throw new Error(result.message || 'Không tải được phường/xã');
+        wardSelect.innerHTML += result.data.map(w => '<option value="' + w.code + '">' + w.name + '</option>').join('');
+        wardSelect.disabled = false;
+    }
+
+    provinceSelect.addEventListener('change', function() {
+        loadDistricts(this.value);
+    });
+
+    districtSelect.addEventListener('change', function() {
+        loadWards(this.value);
+    });
+
+    document.getElementById('editAddressForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = e.target;
+        const data = {
+            orderId: parseInt(form.OrderId.value, 10),
+            fullName: form.FullName.value.trim(),
+            phone: form.Phone.value.trim(),
+            houseNumber: form.HouseNumber.value.trim(),
+            provinceId: parseInt(form.ProvinceId.value || '0', 10),
+            districtId: parseInt(form.DistrictId.value || '0', 10),
+            wardCode: form.WardCode.value || ''
+        };
+
+        if (!data.provinceId || !data.districtId || !data.wardCode) {
+            showAlert('Vui lòng chọn đầy đủ tỉnh/quận/phường.', { icon: 'warning' });
+            return;
+        }
+
+        fetch('/AdminOrder/UpdateShippingAddress', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+            },
+            body: JSON.stringify(data)
+        })
+        .then(r => r.json())
+        .then(result => {
+            showAlert(result.message, { icon: result.success ? 'success' : 'error' }).then(() => {
+                if (result.success) location.href = '/AdminOrder';
+            });
+        })
+        .catch(() => showAlert('Có lỗi xảy ra khi cập nhật địa chỉ.', { icon: 'error' }));
+    });
+
+    loadProvinces();
+})();
+</script>
+}

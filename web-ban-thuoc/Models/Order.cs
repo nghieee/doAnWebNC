@@ -18,6 +18,11 @@ public partial class Order
 
     public string? ShippingAddress { get; set; }
 
+    public int? ProvinceId { get; set; }
+    public int? DistrictId { get; set; }
+    public string? WardCode { get; set; }
+    public string? HouseNumber { get; set; }
+
     public string? PaymentStatus { get; set; }
 
     public string? FullName { get; set; }

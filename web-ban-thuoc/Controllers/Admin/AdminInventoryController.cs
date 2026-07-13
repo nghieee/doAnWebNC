@@ -319,8 +319,7 @@ namespace web_ban_thuoc.Controllers.Admin
             try
             {
                 var userId = _userManager.GetUserId(User);
-                var userName = User.Identity?.Name ?? "";
-                model.RequestedBy = userName;
+                model.RequestedBy = User.Identity?.Name;
 
                 var adjustment = await _inventoryService.CreateStockAdjustmentAsync(model, userId);
 
@@ -328,7 +327,7 @@ namespace web_ban_thuoc.Controllers.Admin
                 // Admin có quyền tạo và duyệt luôn trong cùng thao tác.
                 if (User.IsInRole("Admin"))
                 {
-                    await _inventoryService.ApproveStockAdjustmentAsync(adjustment.StockAdjustmentId, userName);
+                    await _inventoryService.ApproveStockAdjustmentAsync(adjustment.StockAdjustmentId, userId);
                     TempData["SuccessMessage"] = $"Phiếu {adjustment.AdjustmentCode} đã được tạo và duyệt thành công! Tồn kho đã được cập nhật.";
                 }
                 else if (User.IsInRole("WarehouseStaff"))
@@ -398,8 +397,8 @@ namespace web_ban_thuoc.Controllers.Admin
         {
             try
             {
-                var userName = User.Identity?.Name ?? "";
-                await _inventoryService.ApproveStockAdjustmentAsync(id, userName);
+                var approvedByUserId = _userManager.GetUserId(User) ?? "";
+                await _inventoryService.ApproveStockAdjustmentAsync(id, approvedByUserId);
                 TempData["SuccessMessage"] = "Phiếu đã được duyệt. Tồn kho đã được cập nhật.";
             }
             catch (Exception ex)
@@ -416,8 +415,8 @@ namespace web_ban_thuoc.Controllers.Admin
         {
             try
             {
-                var userName = User.Identity?.Name ?? "";
-                await _inventoryService.RejectStockAdjustmentAsync(id, userName, reason);
+                var rejectedByUserId = _userManager.GetUserId(User) ?? "";
+                await _inventoryService.RejectStockAdjustmentAsync(id, rejectedByUserId, reason);
                 TempData["SuccessMessage"] = "Phiếu đã bị từ chối.";
             }
             catch (Exception ex)

@@ -144,6 +144,7 @@ public class CartService : ICartService
 
         var item = await _context.CartItems
             .FirstOrDefaultAsync(ci => ci.CartId == cart.CartId && ci.ProductId == productId);
+
         if (item != null)
         {
             _context.CartItems.Remove(item);
@@ -192,7 +193,8 @@ public class CartService : ICartService
             ?? throw new InvalidOperationException("Giỏ hàng trống!");
 
         var subtotal = cart.Items.Sum(i => i.UnitPrice * i.Quantity);
-        var total = subtotal - cart.VoucherDiscount;
+        var shippingFee = checkout.ShippingFee > 0 ? checkout.ShippingFee : 0m;
+        var total = subtotal - cart.VoucherDiscount + shippingFee;
         if (total < 0) total = 0;
 
         var order = new Order
@@ -207,6 +209,10 @@ public class CartService : ICartService
             VoucherCode = cart.VoucherCode,
             VoucherDiscount = cart.VoucherDiscount,
             TotalAmount = total,
+            ProvinceId = checkout.ProvinceId,
+            DistrictId = checkout.DistrictId,
+            WardCode = checkout.WardCode,
+            HouseNumber = checkout.HouseNumber,
             OrderItems = cart.Items.Select(i => new OrderItem
             {
                 ProductId = i.ProductId,
@@ -217,6 +223,17 @@ public class CartService : ICartService
 
         _context.Orders.Add(order);
         await _context.SaveChangesAsync();
+
+        if (checkout.ServiceId.HasValue || checkout.ShippingFee > 0)
+        {
+            _context.Shipments.Add(new Shipment
+            {
+                OrderId = order.OrderId,
+                Carrier = ShippingCarriers.Ghn,
+                ShippingFee = checkout.ShippingFee > 0 ? checkout.ShippingFee : null,
+                CreatedByUserId = userId
+            });
+        }
 
         _context.OrderStatusHistories.Add(new OrderStatusHistory
         {

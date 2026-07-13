@@ -99,7 +99,7 @@
                         </div>
                         <div class="d-flex justify-content-between mb-3">
                             <span class="text-muted">Phí vận chuyển:</span>
-                            <span class="fw-semibold text-success">Miễn phí</span>
+                            <span class="fw-semibold text-success" id="shippingFee">--</span>
                         </div>
                         <!-- Ô nhập voucher và nút áp dụng -->
                         <div class="mb-3">
@@ -126,11 +126,17 @@
                                 <i class="fas fa-arrow-left me-2"></i>
                                 Tiếp tục mua hàng
                             </a>
-                            <button type="button" class="btn btn-primary rounded-pill py-3 w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#checkoutModal">
+                            <button type="button" class="btn btn-outline-success rounded-pill py-3 w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#addressModal" id="openAddressBtn">
+                                <i class="fas fa-map-marker-alt me-2"></i>
+                                Địa chỉ nhận hàng
+                            </button>
+                            <button type="button" class="btn btn-primary rounded-pill py-3 w-100 fw-bold" id="payNowBtn" disabled>
                                 <i class="fas fa-credit-card me-2"></i>
                                 Thanh toán ngay
                             </button>
                         </div>
+
+                        <div class="mt-3 small text-muted" id="addressSummary" style="display:none;"></div>
                         
                         <div class="mt-4 p-3 bg-light rounded-3">
                             <div class="d-flex align-items-center mb-2">
@@ -167,80 +173,106 @@
     }
 </div>
 
-<!-- Modal popup thanh toán -->
-<div class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+<!-- Modal chọn địa chỉ nhận hàng -->
+<div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
-      <form id="checkoutForm">
+      <form id="addressForm">
         <div class="modal-header">
-          <h5 class="modal-title" id="checkoutModalLabel">Xác nhận đơn hàng</h5>
+          <h5 class="modal-title" id="addressModalLabel">Địa chỉ nhận hàng</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
         </div>
         <div class="modal-body">
-          <!-- Danh sách sản phẩm -->
-          <div id="checkout-products">
-            @foreach (var item in Model)
-            {
-                <div class="d-flex align-items-center mb-3">
-                    <img src="/images/products/@(item.ImageUrl ?? "sanpham.png")" width="60" height="60" class="rounded me-3" style="object-fit:cover;">
-                    <div class="flex-grow-1">
-                        <div class="fw-semibold">@item.ProductName</div>
-                        <div class="small text-muted">Số lượng: @item.Quantity</div>
-                    </div>
-                    <div class="fw-bold text-primary">@((item.Price * item.Quantity).ToString("N0"))đ</div>
-                </div>
-            }
-          </div>
-          <!-- Xóa ô nhập mã voucher khỏi modal thanh toán, chỉ hiển thị chi tiết giá -->
-          <div class="d-flex justify-content-between">
-            <span>Tạm tính:</span>
-            <span class="fw-bold" id="modalSubtotal">0đ</span>
-          </div>
-          <div class="d-flex justify-content-between" id="modalVoucherRow" style="display:none;">
-            <span>Giảm giá:</span>
-            <span class="fw-bold text-success" id="modalVoucherDiscount">-0đ</span>
-          </div>
-          <div class="d-flex justify-content-between fs-5 mt-2">
-            <span>Tổng cộng:</span>
-            <span class="fw-bold text-primary" id="modalTotal">0đ</span>
-          </div>
-          <hr>
-          <!-- Form nhập thông tin nhận hàng -->
           <div class="mb-3">
             <label class="form-label">Họ tên người nhận</label>
-            <input type="text" class="form-control" name="FullName" required>
+            <input type="text" class="form-control" id="inputFullName" required>
           </div>
           <div class="mb-3">
             <label class="form-label">Số điện thoại</label>
-            <input type="text" class="form-control" name="Phone" required>
+            <input type="text" class="form-control" id="inputPhone" required>
           </div>
           <div class="mb-3">
-            <label class="form-label">Địa chỉ nhận hàng</label>
-            <input type="text" class="form-control" name="ShippingAddress" required>
+            <label class="form-label">Số nhà, tên đường</label>
+            <input type="text" class="form-control" id="inputHouseNumber" required placeholder="Ví dụ: 123 Nguyễn Văn Linh">
           </div>
           <div class="mb-3">
-            <label class="form-label">Phương thức thanh toán</label>
-            <div class="form-check mb-2">
-              <input class="form-check-input" type="radio" name="PaymentMethod" id="cod" value="COD" checked>
-              <label class="form-check-label" for="cod">
-                <i class="fas fa-money-bill-wave me-2 text-success"></i>
-                Thanh toán khi nhận hàng (COD)
-              </label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="PaymentMethod" id="payos" value="PayOS">
-              <label class="form-check-label" for="payos">
-                <i class="fas fa-credit-card me-2 text-primary"></i>
-                Thanh toán online
-              </label>
-            </div>
+            <label class="form-label">Tỉnh/Thành</label>
+            <select class="form-select" id="provinceId" required>
+              <option value="">Chọn tỉnh/thành</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Quận/Huyện</label>
+            <select class="form-select" id="districtId" required disabled>
+              <option value="">Chọn quận/huyện</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Phường/Xã</label>
+            <select class="form-select" id="wardCode" required disabled>
+              <option value="">Chọn phường/xã</option>
+            </select>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-          <button type="submit" class="btn btn-primary">Xác nhận đặt hàng</button>
+          <button type="button" class="btn btn-success" id="saveAddressBtn">Lưu địa chỉ</button>
         </div>
       </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal xác nhận đơn hàng cuối -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmModalLabel">Xác nhận đơn hàng</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+      </div>
+      <div class="modal-body">
+        <h6 class="fw-semibold mb-2">Sản phẩm</h6>
+        <div id="confirm-products" class="mb-3"></div>
+        <div class="d-flex justify-content-between">
+          <span>Tạm tính:</span>
+          <span class="fw-bold" id="confirmSubtotal">0đ</span>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span>Phí vận chuyển:</span>
+          <span class="fw-bold text-success" id="confirmShipping">0đ</span>
+        </div>
+        <div class="d-flex justify-content-between" id="confirmVoucherRow" style="display:none;">
+          <span>Giảm giá:</span>
+          <span class="fw-bold text-success" id="confirmVoucher">-0đ</span>
+        </div>
+        <div class="d-flex justify-content-between fs-5 mt-2">
+          <span>Tổng cộng:</span>
+          <span class="fw-bold text-primary" id="confirmTotal">0đ</span>
+        </div>
+        <hr>
+        <div class="mb-3">
+          <label class="form-label">Phương thức thanh toán</label>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="radio" name="confirmPaymentMethod" id="confirmCod" value="COD" checked>
+            <label class="form-check-label" for="confirmCod">
+              <i class="fas fa-money-bill-wave me-2 text-success"></i>
+              Thanh toán khi nhận hàng (COD)
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="confirmPaymentMethod" id="confirmPayos" value="PayOS">
+            <label class="form-check-label" for="confirmPayos">
+              <i class="fas fa-credit-card me-2 text-primary"></i>
+              Thanh toán online (PayOS)
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn btn-primary" id="confirmOrderBtn">Xác nhận đặt hàng</button>
+      </div>
     </div>
   </div>
 </div>
@@ -334,8 +366,13 @@
     function removeItem(productId) {
         showConfirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?', { icon: 'warning', confirmButtonText: 'Xóa', confirmButtonColor: '#e03131' }).then(function(ok) {
             if (!ok) return;
-            fetch(`/Cart/Remove/${productId}`, {
-                method: 'GET',
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            const formData = new FormData();
+            formData.append('productId', String(productId));
+            if (token) formData.append('__RequestVerificationToken', token);
+            fetch('/Cart/Remove', {
+                method: 'POST',
+                body: formData,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
                 }
@@ -343,24 +380,10 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Xóa phần tử khỏi DOM
-                    const item = document.querySelector(`[data-product-id="${productId}"]`);
-                    if (item) {
-                        item.remove();
-                    }
-                    
-                    // Kiểm tra nếu giỏ hàng trống
-                    const remainingItems = document.querySelectorAll('.cart-item');
-                    if (remainingItems.length === 0) {
-                        location.reload(); // Reload để hiển thị giỏ hàng trống
-                    } else {
-                        // Cập nhật tổng giỏ hàng
-                        updateCartTotals();
-                    }
-                    
                     showToast(data.message, 'success');
+                    location.reload();
                 } else {
-                    showToast('Có lỗi xảy ra khi xóa sản phẩm!', 'error');
+                    showToast(data.message || 'Có lỗi xảy ra khi xóa sản phẩm!', 'error');
                 }
             })
             .catch(error => {
@@ -387,93 +410,150 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 @section Scripts {
 <script>
-document.getElementById('checkoutForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const form = e.target;
-    const data = {
-        FullName: form.FullName.value,
-        Phone: form.Phone.value,
-        ShippingAddress: form.ShippingAddress.value,
-        PaymentMethod: form.PaymentMethod.value
+const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+const provinceSelect = document.getElementById('provinceId');
+const districtSelect = document.getElementById('districtId');
+const wardSelect = document.getElementById('wardCode');
+const shippingFeeEl = document.getElementById('shippingFee');
+const totalEl = document.getElementById('total');
+const voucherDiscount = parseFloat('@((decimal)(ViewBag.VoucherDiscount ?? 0))') || 0;
+const subtotalBase = parseFloat((document.getElementById('subtotal')?.textContent || '').replace(/[^\d]/g, '') || '0');
+const payNowBtn = document.getElementById('payNowBtn');
+const addressSummary = document.getElementById('addressSummary');
+let currentShippingFee = 0;
+let savedAddress = null;
+
+function formatVND(n) {
+    return (Math.round(n) || 0).toLocaleString('vi-VN') + 'đ';
+}
+function recalcTotal() {
+    const total = Math.max(0, subtotalBase - voucherDiscount + currentShippingFee);
+    if (totalEl) totalEl.textContent = formatVND(total);
+}
+async function readJson(res) {
+    const text = await res.text();
+    try { return JSON.parse(text); }
+    catch (e) { throw new Error('Bad JSON: ' + text.slice(0, 200)); }
+}
+async function loadJson(url) {
+    const res = await fetch(url);
+    return readJson(res);
+}
+async function loadProvinces() {
+    const r = await loadJson('/Cart/AddressLookup?type=province');
+    if (r.success) provinceSelect.innerHTML = '<option value="">Chọn tỉnh/thành</option>' + (r.data || []).map(p => '<option value="' + p.id + '">' + p.name + '</option>').join('');
+}
+async function loadDistricts(provinceId) {
+    districtSelect.innerHTML = '<option value="">Chọn quận/huyện</option>';
+    districtSelect.disabled = true;
+    wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
+    wardSelect.disabled = true;
+    if (!provinceId) return;
+    const r = await loadJson('/Cart/AddressLookup?type=district&id=' + provinceId);
+    if (r.success) {
+        districtSelect.innerHTML += (r.data || []).map(d => '<option value="' + d.id + '">' + d.name + '</option>').join('');
+        districtSelect.disabled = false;
+    }
+}
+async function loadWards(districtId) {
+    wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
+    wardSelect.disabled = true;
+    if (!districtId) return;
+    const r = await loadJson('/Cart/AddressLookup?type=ward&id=' + districtId);
+    if (r.success) {
+        wardSelect.innerHTML += (r.data || []).map(w => '<option value="' + w.code + '">' + w.name + '</option>').join('');
+        wardSelect.disabled = false;
+    }
+}
+document.getElementById('openAddressBtn').addEventListener('click', () => loadProvinces());
+provinceSelect.addEventListener('change', () => loadDistricts(provinceSelect.value));
+districtSelect.addEventListener('change', () => loadWards(districtSelect.value));
+
+document.getElementById('saveAddressBtn').addEventListener('click', async () => {
+    const fullName = document.getElementById('inputFullName').value.trim();
+    const phone = document.getElementById('inputPhone').value.trim();
+    const house = document.getElementById('inputHouseNumber').value.trim();
+    const provinceId = parseInt(provinceSelect.value || '0', 10);
+    const districtId = parseInt(districtSelect.value || '0', 10);
+    const wardCode = wardSelect.value || '';
+    if (!fullName || !phone || !house || !provinceId || !districtId || !wardCode) {
+        showAlert('Vui lòng nhập đầy đủ thông tin địa chỉ!', { icon: 'warning' });
+        return;
+    }
+    shippingFeeEl.textContent = '...';
+    try {
+        const url = '/Cart/EstimateShippingFee?provinceId=' + provinceId + '&districtId=' + districtId + '&wardCode=' + encodeURIComponent(wardCode);
+        const r = await loadJson(url);
+        if (!r.success) {
+            showAlert(r.message || 'Không ước tính được phí ship', { icon: 'error' });
+            shippingFeeEl.textContent = '--';
+            return;
+        }
+        currentShippingFee = r.fee?.total || 0;
+        shippingFeeEl.textContent = formatVND(currentShippingFee);
+        recalcTotal();
+        savedAddress = { fullName, phone, house, provinceId, districtId, wardCode };
+        bootstrap.Modal.getInstance(document.getElementById('addressModal'))?.hide();
+        addressSummary.style.display = 'block';
+        addressSummary.innerHTML = '<i class="fas fa-map-marker-alt text-success"></i> <strong>' + fullName + '</strong> · ' + phone + '<br><span class="text-muted">' + house + '</span>';
+        payNowBtn.disabled = false;
+    } catch (e) {
+        showAlert('Lỗi khi tính phí vận chuyển: ' + e.message, { icon: 'error' });
+        shippingFeeEl.textContent = '--';
+    }
+});
+
+payNowBtn.addEventListener('click', () => {
+    if (!savedAddress) return;
+    const total = Math.max(0, subtotalBase - voucherDiscount + currentShippingFee);
+    document.getElementById('confirmSubtotal').textContent = formatVND(subtotalBase);
+    document.getElementById('confirmShipping').textContent = formatVND(currentShippingFee);
+    const vRow = document.getElementById('confirmVoucherRow');
+    if (voucherDiscount > 0) {
+        vRow.style.display = 'flex';
+        document.getElementById('confirmVoucher').textContent = '-' + formatVND(voucherDiscount);
+    } else vRow.style.display = 'none';
+    document.getElementById('confirmTotal').textContent = formatVND(total);
+    document.getElementById('confirmCod').checked = true;
+    new bootstrap.Modal(document.getElementById('confirmModal')).show();
+});
+
+document.getElementById('confirmOrderBtn').addEventListener('click', async function() {
+    if (!savedAddress) return;
+    const paymentMethod = document.querySelector('input[name="confirmPaymentMethod"]:checked')?.value || 'COD';
+    const payload = {
+        FullName: savedAddress.fullName,
+        Phone: savedAddress.phone,
+        HouseNumber: savedAddress.house,
+        ProvinceId: savedAddress.provinceId,
+        DistrictId: savedAddress.districtId,
+        WardCode: savedAddress.wardCode,
+        ShippingAddress: '',
+        PaymentMethod: paymentMethod,
+        ShippingFee: currentShippingFee
     };
-    fetch('/Cart/CheckoutPopup', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-        },
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(result => {
+    this.disabled = true;
+    this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang đặt...';
+    try {
+        const res = await fetch('/Cart/CheckoutPopup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': csrfToken || '' },
+            body: JSON.stringify(payload)
+        });
+        const result = await readJson(res);
         if (result.success) {
-            if (result.checkoutUrl) {
-                // Nếu có checkoutUrl (PayOS), chuyển hướng trực tiếp
-                window.location.href = result.checkoutUrl;
-            } else {
-                // Nếu không có checkoutUrl (COD), chuyển hướng đến trang cảm ơn
-                window.location.href = '/Cart/ThankYou';
-            }
+            if (result.checkoutUrl) window.location.href = result.checkoutUrl;
+            else window.location.href = '/Cart/ThankYou';
         } else {
             showAlert(result.message || 'Có lỗi xảy ra!', { icon: 'error' });
+            this.disabled = false;
+            this.innerHTML = 'Xác nhận đặt hàng';
         }
-    });
-});
-
-// Cập nhật lại nội dung modal khi mở
-var checkoutModal = document.getElementById('checkoutModal');
-checkoutModal.addEventListener('show.bs.modal', function (event) {
-    fetch('/Cart/GetCartSummary')
-        .then(res => res.json())
-        .then(data => {
-            // Render lại danh sách sản phẩm
-            let html = '';
-            data.items.forEach(item => {
-                html += `
-                <div class="d-flex align-items-center mb-3">
-                    <img src="/images/products/${item.imageUrl || 'sanpham.png'}" width="60" height="60" class="rounded me-3" style="object-fit:cover;">
-                    <div class="flex-grow-1">
-                        <div class="fw-semibold">${item.productName}</div>
-                        <div class="small text-muted">Số lượng: ${item.quantity}</div>
-                    </div>
-                    <div class="fw-bold text-primary">${item.total.toLocaleString('vi-VN')}đ</div>
-                </div>`;
-            });
-            document.getElementById('checkout-products').innerHTML = html;
-            // Cập nhật chi tiết giá
-            document.getElementById('modalSubtotal').textContent = data.subtotal.toLocaleString('vi-VN') + 'đ';
-            if (data.voucherDiscount && data.voucherDiscount > 0) {
-                document.getElementById('modalVoucherRow').style.display = '';
-                document.getElementById('modalVoucherDiscount').textContent = '-' + data.voucherDiscount.toLocaleString('vi-VN') + 'đ';
-            } else {
-                document.getElementById('modalVoucherRow').style.display = 'none';
-            }
-            document.getElementById('modalTotal').textContent = data.total.toLocaleString('vi-VN') + 'đ';
-        });
-});
-
-// Áp dụng voucher ở ngoài trang giỏ hàng
-$('#applyVoucherBtn').on('click', function() {
-    const code = $('#voucherInput').val().trim();
-    if (!code) return;
-    fetch('/Cart/ApplyVoucher', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            $('#voucherMessage').removeClass('text-danger').addClass('text-success').text(data.message).show();
-            // Hiện dòng giảm giá
-            $('#voucherDiscountRow').show();
-            $('#voucherDiscount').text('-' + data.message.match(/\d+[.,]?\d*/)[0] + 'đ');
-            // Cập nhật tổng tiền
-            $('#total').text(data.total + 'đ');
-        } else {
-            $('#voucherMessage').removeClass('text-success').addClass('text-danger').text(data.message).show();
-        }
-    });
+    } catch (e) {
+        showAlert('Lỗi: ' + e.message, { icon: 'error' });
+        this.disabled = false;
+        this.innerHTML = 'Xác nhận đặt hàng';
+    }
 });
 </script>
-} 
+}
