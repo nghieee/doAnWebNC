@@ -3,18 +3,28 @@
 {
     var mainImage = product.ProductImages?.FirstOrDefault(i => i.IsMain == true) ?? product.ProductImages?.FirstOrDefault();
     <div class="col">
-        <div class="bg-white rounded-3 shadow-sm overflow-hidden hover-border hover-border-blue-500 h-100">
-            <img src="/images/products/@(mainImage?.ImageUrl ?? "/images/sanpham.png")" class="p-3 w-100"
-                alt="@product.ProductName" />
-            <div class="px-3 pb-3">
-                <h5 class="text-sm text-black line-clamp-3">@product.ProductName</h5>
-                <div class="mt-1 text-primary fw-semibold">@product.Price.ToString("N0")đ</div>
-                <div class="text-gray-500 text-sm text-decoration-line-through opacity-50">@((product.Price * 1.25m).ToString("N0"))đ</div>
-                <p class="mt-1 bg-gray-200 text-gray-600 rounded text-xs w-fit opacity-50">@(product.Package ?? "Hộp")</p>
-                <form asp-controller="Cart" asp-action="AddToCart" method="post" style="margin-top:8px;" class="add-to-cart-form">
+        <div class="product-card shadow-sm">
+            <a class="text-decoration-none d-flex flex-column h-100" href="@Url.Action("Details", "Product", new { id = product.ProductId })">
+                <div class="product-image-wrapper">
+                    <img src="/images/products/@(mainImage?.ImageUrl ?? "/images/sanpham.png")"
+                        alt="@product.ProductName" />
+                </div>
+                <div class="px-3 pb-2 flex-grow-1 d-flex flex-column justify-content-between">
+                    <div>
+                        <h5 class="product-title" title="@product.ProductName">@product.ProductName</h5>
+                    </div>
+                    <div>
+                        <div class="product-price">@product.Price.ToString("N0")đ</div>
+                        <div class="product-original-price">@((product.Price * 1.25m).ToString("N0"))đ</div>
+                        <span class="product-unit">@(product.Package ?? "Hộp")</span>
+                    </div>
+                </div>
+            </a>
+            <div class="px-3 pb-3 pt-2">
+                <form asp-controller="Cart" asp-action="AddToCart" method="post" class="add-to-cart-form">
                     <input type="hidden" name="productId" value="@product.ProductId" />
                     <input type="hidden" name="quantity" value="1" />
-                    <button type="submit" class="btn btn-primary w-100">Thêm vào giỏ</button>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill btn-sm fw-medium">Thêm vào giỏ</button>
                 </form>
             </div>
         </div>
