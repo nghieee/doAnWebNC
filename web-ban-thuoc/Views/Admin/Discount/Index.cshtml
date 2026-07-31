@@ -1,0 +1,1279 @@
+@model List<web_ban_thuoc.Models.Product>
+@{
+    ViewData["Title"] = "Quản lý Giảm giá & Chiến dịch Khuyến mãi";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+    var categories = ViewBag.Categories as List<web_ban_thuoc.Models.Category> ?? new();
+    var brands = ViewBag.Brands as List<string> ?? new();
+    var campaigns = ViewBag.Campaigns as List<web_ban_thuoc.Models.PromotionCampaign> ?? new();
+    var banners = ViewBag.Banners as List<web_ban_thuoc.Models.Banner> ?? new();
+}
+
+<style>
+    .nav-tabs .nav-link {
+        color: #6b7280 !important;
+        border: none !important;
+        border-bottom: 3px solid transparent !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+    }
+    .nav-tabs .nav-link:hover {
+        color: #374151 !important;
+        border-bottom: 3px solid #e5e7eb !important;
+    }
+    .nav-tabs .nav-link.active {
+        color: #1250dc !important;
+        border-bottom: 3px solid #1250dc !important;
+        font-weight: 700 !important;
+    }
+</style>
+
+<div class="container-fluid px-4 py-3">
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+        <div>
+            <h3 class="fw-bold text-dark mb-1">
+                <i class="fa fa-percent text-primary me-2"></i>Khuyến mãi & Giảm giá
+            </h3>
+            <p class="text-muted small mb-0">Lên chiến dịch khuyến mãi hàng loạt hoặc cấu hình giá giảm lẻ cho từng sản phẩm</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#createCampaignModal">
+                <i class="fa fa-bullhorn me-1"></i> Tạo chiến dịch mới
+            </button>
+            <button type="button" class="btn btn-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#setDiscountModal">
+                <i class="fa fa-plus-circle me-1"></i> Giảm giá sản phẩm
+            </button>
+        </div>
+    </div>
+
+    <!-- Alert Notifications -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
+            <i class="fa fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
+            <i class="fa fa-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- KPI Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 bg-primary text-white p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-white-50 small fw-semibold">Tổng số sản phẩm</div>
+                        <div class="fs-3 fw-bold mt-1">@ViewBag.TotalCount</div>
+                    </div>
+                    <div class="fs-1 text-white opacity-50">
+                        <i class="fa fa-box"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 bg-success text-white p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-white-50 small fw-semibold">Sản phẩm đang giảm giá</div>
+                        <div class="fs-3 fw-bold mt-1">@ViewBag.DiscountedCount</div>
+                    </div>
+                    <div class="fs-1 text-white opacity-50">
+                        <i class="fa fa-bolt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 bg-info text-white p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-white-50 small fw-semibold font-semibold">Chiến dịch hoạt động</div>
+                        <div class="fs-3 fw-bold mt-1">@campaigns.Count(c => c.IsActive && c.EndDate >= DateTime.Now)</div>
+                    </div>
+                    <div class="fs-1 text-white opacity-50">
+                        <i class="fa fa-bullhorn"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 bg-warning text-dark p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-dark-50 small fw-semibold">Mức chiết khấu TB</div>
+                        <div class="fs-3 fw-bold mt-1">
+                            @(Model.Where(p => p.IsOnDiscount).Any() ? Math.Round(Model.Where(p => p.IsOnDiscount).Average(p => p.DiscountPercentCalculated)) : 0)%
+                        </div>
+                    </div>
+                    <div class="fs-1 text-dark opacity-50">
+                        <i class="fa fa-percent"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABS NAVIGATION -->
+    <ul class="nav nav-tabs border-bottom mb-4" id="discountTabs" role="tablist" style="border-width: 2px !important;">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold px-4 py-2.5" id="setup-tab" data-bs-toggle="tab" data-bs-target="#setup-content" type="button" role="tab" aria-controls="setup-content" aria-selected="true" style="transition: all 0.2s ease;">
+                <i class="fa fa-cog me-2"></i>Thiết lập &amp; Chiến dịch
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold px-4 py-2.5" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-content" type="button" role="tab" aria-controls="history-content" aria-selected="false" style="transition: all 0.2s ease;">
+                <i class="fa fa-history me-2"></i>Lịch sử Giảm giá
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="discountTabsContent">
+        <!-- TAB 1: THIẾT LẬP & CHIẾN DỊCH -->
+        <div class="tab-pane fade show active" id="setup-content" role="tabpanel" aria-labelledby="setup-tab">
+            <!-- SECTION 1: CAMPAIGNS LIST -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+            <h5 class="fw-bold text-dark mb-0">
+                <i class="fa fa-bullhorn text-primary me-2"></i>Chiến dịch Khuyến mãi Hàng loạt
+            </h5>
+            <span class="badge bg-primary-subtle text-primary border rounded-pill px-3 py-1.5 small">
+                Có @campaigns.Count chiến dịch thiết lập
+            </span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr class="text-secondary small fw-bold">
+                            <th class="ps-4">Tên chiến dịch</th>
+                            <th>Mức giảm</th>
+                            <th>Phạm vi áp dụng</th>
+                            <th>Thời gian diễn ra</th>
+                            <th>Trạng thái</th>
+                            <th class="text-end pe-4">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (campaigns.Any())
+                        {
+                            foreach (var camp in campaigns)
+                            {
+                                var now = DateTime.Now;
+                                string statusText = "Đã tắt";
+                                string statusBadge = "bg-secondary-subtle text-secondary";
+                                if (camp.IsActive)
+                                {
+                                    if (camp.StartDate <= now && camp.EndDate >= now)
+                                    {
+                                        statusText = "Đang diễn ra";
+                                        statusBadge = "bg-success-subtle text-success border border-success border-opacity-25";
+                                    }
+                                    else if (camp.StartDate > now)
+                                    {
+                                        statusText = "Sắp diễn ra";
+                                        statusBadge = "bg-warning-subtle text-warning-emphasis border border-warning border-opacity-25";
+                                    }
+                                    else
+                                    {
+                                        statusText = "Đã kết thúc";
+                                        statusBadge = "bg-light text-muted border";
+                                    }
+                                }
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold text-dark">@camp.Name</div>
+                                        @if (!string.IsNullOrEmpty(camp.Description))
+                                        {
+                                            <div class="small text-muted text-truncate" style="max-width: 300px;">@camp.Description</div>
+                                        }
+                                        @if (camp.BannerId.HasValue)
+                                        {
+                                            <div class="small text-primary mt-1" style="font-size: 0.8rem;">
+                                                <i class="fa fa-image me-1"></i>Banner: <strong>@camp.Banner?.Title</strong>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="small mt-1" style="font-size: 0.8rem;">
+                                                <span class="badge bg-danger-subtle text-danger border border-danger border-opacity-10 px-2 py-0.5 rounded-pill fw-bold">
+                                                    <i class="fa fa-bolt me-1"></i> Flash Sale
+                                                </span>
+                                            </div>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-danger shadow-sm px-2.5 py-1.5 fs-7 fw-bold rounded-pill">-@camp.DiscountPercent%</span>
+                                    </td>
+                                    <td>
+                                        @if (camp.CategoryId.HasValue)
+                                        {
+                                            <span class="badge bg-info-subtle text-info border border-info border-opacity-25 px-2 py-1"><i class="fa fa-folder-open me-1"></i>Danh mục: @camp.Category?.CategoryName</span>
+                                        }
+                                        else if (!string.IsNullOrEmpty(camp.Brand))
+                                        {
+                                            <span class="badge bg-primary-subtle text-primary border border-primary border-opacity-25 px-2 py-1"><i class="fa fa-copyright me-1"></i>Thương hiệu: @camp.Brand</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-secondary border px-2 py-1">Tất cả sản phẩm</span>
+                                        }
+                                    </td>
+                                    <td class="small">
+                                        <div><i class="fa fa-calendar-alt text-primary me-1"></i>Bắt đầu: @camp.StartDate.ToString("dd/MM/yyyy HH:mm")</div>
+                                        <div><i class="fa fa-calendar-check text-danger me-1"></i>Kết thúc: @camp.EndDate.ToString("dd/MM/yyyy HH:mm")</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge @statusBadge px-2.5 py-1.5 rounded-pill fw-semibold">@statusText</span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-flex align-items-center justify-content-end gap-2">
+                                            <!-- Toggle Switch -->
+                                            <div class="form-check form-switch mb-0" title="Bật/Tắt chiến dịch">
+                                                <input class="form-check-input campaign-toggle-switch" type="checkbox" data-campaign-id="@camp.PromotionCampaignId" @(camp.IsActive ? "checked" : "") style="cursor: pointer;" />
+                                            </div>
+                                            <!-- Edit Campaign -->
+                                            <button type="button" class="btn btn-outline-primary btn-sm rounded-3 edit-campaign-btn" 
+                                                    data-campaign-id="@camp.PromotionCampaignId" 
+                                                    data-name="@camp.Name" 
+                                                    data-desc="@camp.Description" 
+                                                    data-discount="@camp.DiscountPercent" 
+                                                    data-category="@(camp.CategoryId ?? 0)" 
+                                                    data-brand="@camp.Brand" 
+                                                    data-start="@camp.StartDate.ToString("yyyy-MM-ddTHH:mm")" 
+                                                    data-end="@camp.EndDate.ToString("yyyy-MM-ddTHH:mm")" 
+                                                    data-banner="@(camp.BannerId ?? 0)" 
+                                                    title="Chỉnh sửa chiến dịch">
+                                                <i class="fa fa-edit"></i>
+                                            </button>
+                                            <!-- Delete Campaign -->
+                                            <form method="post" action="/AdminDiscount/DeleteCampaign" onsubmit="return confirm('Hủy chiến dịch này sẽ hoàn trả giá trị gốc cho tất cả sản phẩm thuộc nhóm giảm giá. Bạn có chắc chắn?');">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="campaignId" value="@camp.PromotionCampaignId" />
+                                                <button type="submit" class="btn btn-outline-danger btn-sm rounded-3" title="Xóa chiến dịch">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted small">
+                                    Chưa có chiến dịch hàng loạt nào được tạo. Nhấp "Tạo chiến dịch mới" để bắt đầu.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 2: PRODUCT LIST -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+            <h5 class="fw-bold text-dark mb-0">
+                <i class="fa fa-box text-primary me-2"></i>Chi tiết Giảm giá Sản phẩm Lẻ
+            </h5>
+            <span class="badge bg-light text-muted border px-3 py-1.5 small">
+                Tìm thấy @ViewBag.TotalCount sản phẩm
+            </span>
+        </div>
+        <div class="card-body p-3 bg-light bg-opacity-25 border-bottom">
+            <form method="get" class="row g-2 align-items-center">
+                <div class="col-12 col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0" placeholder="Tìm tên sản phẩm hoặc SKU..." value="@ViewBag.Search" />
+                    </div>
+                </div>
+                <div class="col-12 col-md-3">
+                    <select name="categoryId" class="form-select">
+                        <option value="">-- Tất cả danh mục --</option>
+                        @foreach (var cat in categories)
+                        {
+                            <option value="@cat.CategoryId" selected="@(ViewBag.CategoryId == cat.CategoryId)">@cat.CategoryName</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">-- Tất cả trạng thái --</option>
+                        <option value="active" selected="@(ViewBag.Status == "active")">Đang giảm giá</option>
+                        <option value="upcoming" selected="@(ViewBag.Status == "upcoming")">Sắp diễn ra</option>
+                        <option value="expired" selected="@(ViewBag.Status == "expired")">Đã hết hạn</option>
+                        <option value="disabled" selected="@(ViewBag.Status == "disabled")">Đã tắt</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100 fw-semibold"><i class="fa fa-filter me-1"></i>Lọc</button>
+                    <a href="/AdminDiscount" class="btn btn-light border"><i class="fa fa-redo"></i></a>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr class="text-secondary small fw-bold">
+                        <th class="ps-4" style="width: 320px;">Sản phẩm</th>
+                        <th>Giá niêm yết</th>
+                        <th>Giá khuyến mãi</th>
+                        <th>Mức giảm</th>
+                        <th>Thời gian áp dụng</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end pe-4">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var p in Model)
+                        {
+                            var imgUrl = p.ProductImages?.FirstOrDefault(i => i.IsMain == true)?.ImageUrl 
+                                         ?? p.ProductImages?.FirstOrDefault()?.ImageUrl 
+                                         ?? "sanpham.png";
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="bg-light rounded-3 p-1 border text-center" style="width: 54px; height: 54px;">
+                                            <img src="/images/products/@imgUrl" alt="@p.ProductName" class="h-100 w-100 object-fit-contain" />
+                                        </div>
+                                        <div style="max-width: 240px;">
+                                            <div class="fw-bold text-dark text-truncate" title="@p.ProductName">@p.ProductName</div>
+                                            <div class="small text-muted">SKU: <code class="text-primary">@(p.Sku ?? "N/A")</code> | @(p.Category?.CategoryName ?? "N/A")</div>
+                                            @if (p.BannerId.HasValue)
+                                            {
+                                                <div class="small text-danger mt-1" style="font-size: 0.75rem;"><i class="fa fa-image me-1"></i>Banner: @p.Banner?.Title</div>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-secondary">@p.Price.ToString("N0")đ</span>
+                                </td>
+                                <td>
+                                    @if (p.IsOnDiscount)
+                                    {
+                                        <span class="fw-bold text-danger fs-6">@p.EffectivePrice.ToString("N0")đ</span>
+                                    }
+                                    else if (p.DiscountPrice.HasValue)
+                                    {
+                                        <span class="text-muted">@p.DiscountPrice.Value.ToString("N0")đ</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">--</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (p.IsOnDiscount)
+                                    {
+                                        <span class="badge bg-danger shadow-sm px-2.5 py-1.5 fs-7 fw-bold rounded-pill">
+                                            -@p.DiscountPercentCalculated%
+                                        </span>
+                                    }
+                                    else if (p.DiscountPercent.HasValue)
+                                    {
+                                        <span class="badge bg-secondary text-white px-2 py-1 small">
+                                            -@p.DiscountPercent.Value%
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">0%</span>
+                                    }
+                                </td>
+                                <td class="small">
+                                    @if (p.DiscountStartDate.HasValue || p.DiscountEndDate.HasValue)
+                                    {
+                                        <div><i class="fa fa-calendar-alt text-primary me-1"></i>Từ: @(p.DiscountStartDate?.ToString("dd/MM/yyyy HH:mm") ?? "Ngay lập tức")</div>
+                                        <div><i class="fa fa-calendar-check text-danger me-1"></i>Đến: @(p.DiscountEndDate?.ToString("dd/MM/yyyy HH:mm") ?? "Vô thời hạn")</div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Không giới hạn</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (p.IsOnDiscount)
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-2.5 py-1.5 rounded-pill fw-semibold">
+                                            <i class="fa fa-check-circle me-1"></i>Đang giảm giá
+                                        </span>
+                                    }
+                                    else if (p.IsDiscountActive && p.DiscountStartDate.HasValue && p.DiscountStartDate.Value > DateTime.Now)
+                                    {
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning border-opacity-25 px-2.5 py-1.5 rounded-pill fw-semibold">
+                                            <i class="fa fa-clock me-1"></i>Sắp diễn ra
+                                        </span>
+                                    }
+                                    else if (p.DiscountEndDate.HasValue && p.DiscountEndDate.Value < DateTime.Now)
+                                    {
+                                        <span class="badge bg-secondary-subtle text-secondary border px-2.5 py-1.5 rounded-pill fw-semibold">
+                                            <i class="fa fa-hourglass-end me-1"></i>Hết hạn
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-light text-muted border px-2.5 py-1.5 rounded-pill">
+                                            Chưa giảm giá
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="d-flex align-items-center justify-content-end gap-2">
+                                        <!-- Toggle Switch -->
+                                        <div class="form-check form-switch mb-0" title="Bật/Tắt giảm giá">
+                                            <input class="form-check-input discount-toggle-switch" type="checkbox" data-product-id="@p.ProductId" @(p.IsDiscountActive ? "checked" : "") style="cursor: pointer;" />
+                                        </div>
+
+                                        <!-- Edit Button -->
+                                        <button type="button" class="btn btn-outline-primary btn-sm rounded-3 edit-discount-btn" 
+                                                data-id="@p.ProductId" 
+                                                data-name="@p.ProductName" 
+                                                data-price="@p.Price" 
+                                                data-percent="@(p.DiscountPercent ?? 0)" 
+                                                data-disprice="@(p.DiscountPrice ?? 0)" 
+                                                data-start="@(p.DiscountStartDate?.ToString("yyyy-MM-ddTHH:mm") ?? "")" 
+                                                data-end="@(p.DiscountEndDate?.ToString("yyyy-MM-ddTHH:mm") ?? "")"
+                                                data-active="@(p.IsDiscountActive ? "true" : "false")"
+                                                data-banner="@(p.BannerId ?? 0)">
+                                            <i class="fa fa-edit"></i>
+                                        </button>
+
+                                        <!-- Remove Discount Form -->
+                                        @if (p.DiscountPrice.HasValue || p.DiscountPercent.HasValue)
+                                        {
+                                            <form method="post" action="/AdminDiscount/RemoveDiscount" onsubmit="return confirm('Bạn có chắc muốn hủy giảm giá cho sản phẩm này?');">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="productId" value="@p.ProductId" />
+                                                <button type="submit" class="btn btn-outline-danger btn-sm rounded-3" title="Hủy giảm giá">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="fa fa-inbox fa-3x mb-3 text-secondary opacity-50"></i>
+                                <div>Không tìm thấy sản phẩm nào theo điều kiện lọc.</div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    </div> <!-- END TAB 1 -->
+    
+    <!-- TAB 2: LỊCH SỬ GIẢM GIÁ -->
+    <div class="tab-pane fade" id="history-content" role="tabpanel" aria-labelledby="history-tab">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <h5 class="fw-bold text-dark mb-0">
+                    <i class="fa fa-history text-secondary me-2"></i>Lịch sử Lập lịch &amp; Cấu hình Giảm giá
+                </h5>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="input-group input-group-sm" style="width: 320px;">
+                        <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"></i></span>
+                        <input type="text" id="logSearchInput" class="form-control border-start-0" placeholder="Tìm tên sản phẩm hoặc SKU..." />
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="logProductTable">
+                        <thead class="bg-light">
+                            <tr class="text-secondary small fw-bold">
+                                <th class="ps-4" style="width: 350px;">Sản phẩm</th>
+                                <th>Giá hiện tại</th>
+                                <th class="text-center">Số lần điều chỉnh</th>
+                                <th>Lần cuối cập nhật</th>
+                                <th class="text-end pe-4">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var logsByProductList = ViewBag.LogsByProduct as IEnumerable<IGrouping<string, web_ban_thuoc.Models.DbActivityLog>> ?? new List<IGrouping<string, web_ban_thuoc.Models.DbActivityLog>>();
+                                var productsWithLogsDict = ViewBag.ProductsWithLogs as Dictionary<string, web_ban_thuoc.Models.Product> ?? new Dictionary<string, web_ban_thuoc.Models.Product>();
+
+                                // Translation helper lambda
+                                Func<string, string, string> cleanAndTranslate = (desc, name) => {
+                                    if (string.IsNullOrEmpty(desc)) return "";
+                                    string res = desc;
+                                    string prefix = $"Cập nhật sản phẩm '{name}': ";
+                                    if (res.StartsWith(prefix)) {
+                                        res = res.Substring(prefix.Length);
+                                    }
+                                    return res
+                                        .Replace("DiscountPercent", "Phần trăm giảm giá")
+                                        .Replace("DiscountPrice", "Giá sau giảm")
+                                        .Replace("DiscountStartDate", "Start")
+                                        .Replace("DiscountEndDate", "End")
+                                        .Replace("IsDiscountActive", "Kích hoạt giảm giá")
+                                        .Replace("BannerId", "Liên kết Banner")
+                                        .Replace("thay đổi từ '' thành", "được thiết lập mới thành")
+                                        .Replace("thay đổi từ 'False' thành 'True'", "được bật")
+                                        .Replace("thay đổi từ 'True' thành 'False'", "bị tắt");
+                                };
+                            }
+                            @if (logsByProductList.Any())
+                            {
+                                foreach (var group in logsByProductList)
+                                {
+                                    var pId = group.Key;
+                                    productsWithLogsDict.TryGetValue(pId, out var product);
+                                    
+                                    var pName = product?.ProductName ?? $"Sản phẩm đã xóa (ID: {pId})";
+                                    var pSku = product?.Sku ?? "N/A";
+                                    var pCategory = product?.Category?.CategoryName ?? "N/A";
+                                    var logsList = group.OrderByDescending(l => l.CreatedAt).ToList();
+                                    var lastLog = logsList.FirstOrDefault();
+                                    var imgUrl = product?.ProductImages?.FirstOrDefault(i => i.IsMain == true)?.ImageUrl 
+                                                 ?? product?.ProductImages?.FirstOrDefault()?.ImageUrl 
+                                                 ?? "sanpham.png";
+
+                                    <tr class="log-product-row" data-name="@pName.ToLower()" data-sku="@pSku.ToLower()" data-target-id="details-@pId">
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="bg-light rounded-3 p-1 border text-center" style="width: 50px; height: 50px;">
+                                                    <img src="/images/products/@imgUrl" alt="@pName" class="h-100 w-100 object-fit-contain" />
+                                                </div>
+                                                <div style="max-width: 260px;">
+                                                    <div class="fw-bold text-dark text-truncate" title="@pName">@pName</div>
+                                                    <div class="small text-muted">SKU: <code class="text-primary">@pSku</code> | @pCategory</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if (product != null)
+                                            {
+                                                @if (product.IsOnDiscount)
+                                                {
+                                                    <div class="fw-bold text-danger">@product.EffectivePrice.ToString("N0")đ</div>
+                                                    <div class="text-decoration-line-through text-muted small">@product.Price.ToString("N0")đ</div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="fw-bold text-secondary">@product.Price.ToString("N0")đ</div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">--</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-secondary shadow-sm px-2.5 py-1.5 rounded-pill fw-bold">
+                                                @logsList.Count lần
+                                            </span>
+                                        </td>
+                                        <td class="small text-muted">
+                                            @if (lastLog != null)
+                                            {
+                                                <div><i class="fa fa-clock me-1"></i>@lastLog.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                                                <div class="text-truncate" style="max-width: 180px;"><i class="fa fa-user me-1"></i>@(lastLog.UserEmail ?? "Hệ thống")</div>
+                                            }
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <button class="btn btn-sm btn-outline-primary fw-semibold rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#details-@pId" aria-expanded="false">
+                                                <i class="fa fa-history me-1"></i> Lịch sử <i class="fa fa-chevron-down ms-1"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <!-- COLLAPSIBLE DETAILS MIN-TABLE -->
+                                    <tr id="details-@pId" class="collapse bg-light bg-opacity-10 log-details-row">
+                                        <td colspan="5" class="p-4 border-bottom">
+                                            <div class="p-3 bg-light rounded-4 border shadow-sm">
+                                                <h6 class="fw-bold mb-3 text-primary d-flex align-items-center gap-2">
+                                                    <i class="fa fa-stream"></i> Lịch sử điều chỉnh chi tiết
+                                                </h6>
+                                                
+                                                <div class="table-responsive bg-white rounded-3 border">
+                                                    <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                                                        <thead class="bg-light">
+                                                            <tr class="text-secondary small fw-bold">
+                                                                <th class="ps-3" style="width: 160px;">Thời gian thực hiện</th>
+                                                                <th style="width: 120px;">Mức giảm</th>
+                                                                <th>Start</th>
+                                                                <th>End</th>
+                                                                <th style="width: 180px;">Người thực hiện</th>
+                                                                <th class="pe-3" style="width: 130px;">Hành động</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach (var log in logsList)
+                                                            {
+                                                                var desc = log.Description ?? "";
+                                                                string percent = "--";
+                                                                string price = "";
+                                                                string start = "Ngay lập tức";
+                                                                string end = "Vô thời hạn";
+                                                                string actionType = "Cập nhật";
+                                                                string badgeClass = "bg-primary-subtle text-primary border border-primary border-opacity-10";
+
+                                                                if (log.Action == "Kết thúc giảm giá")
+                                                                {
+                                                                    actionType = "Kết thúc";
+                                                                    badgeClass = "bg-warning-subtle text-warning border border-warning border-opacity-10";
+                                                                    
+                                                                    var mPercent = System.Text.RegularExpressions.Regex.Match(desc, @"Mức giảm:\s*(\d+%)");
+                                                                    if (mPercent.Success)
+                                                                    {
+                                                                        percent = "Hết hạn (" + mPercent.Groups[1].Value + ")";
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        percent = "Hết hạn";
+                                                                    }
+                                                                    
+                                                                    price = "Giá gốc";
+                                                                    
+                                                                    var mEnd = System.Text.RegularExpressions.Regex.Match(desc, @"End:\s*([^)]+)");
+                                                                    if (mEnd.Success)
+                                                                    {
+                                                                        end = mEnd.Groups[1].Value;
+                                                                    }
+                                                                    start = "--";
+                                                                }
+                                                                else if (log.Action == "Thêm")
+                                                                {
+                                                                    actionType = "Tạo mới";
+                                                                    badgeClass = "bg-success-subtle text-success border border-success border-opacity-10";
+                                                                }
+                                                                else if (log.Action == "Xóa")
+                                                                {
+                                                                    actionType = "Xóa giảm giá";
+                                                                    badgeClass = "bg-danger-subtle text-danger border border-danger border-opacity-10";
+                                                                }
+                                                                else if (desc.Contains("RemoveDiscount") || desc.Contains("Hủy giảm giá") || (desc.Contains("IsDiscountActive") && desc.Contains("thành 'False'")) || (desc.Contains("Kích hoạt giảm giá") && desc.Contains("thành 'False'")))
+                                                                {
+                                                                    actionType = "Hủy giảm giá";
+                                                                    badgeClass = "bg-secondary-subtle text-secondary border border-secondary border-opacity-10";
+                                                                    percent = "Hủy";
+                                                                    price = "Giá gốc";
+                                                                    start = "--";
+                                                                    end = "--";
+                                                                }
+                                                                else
+                                                                {
+                                                                    // Parse values
+                                                                    var percentMatch = System.Text.RegularExpressions.Regex.Match(desc, @"(?:DiscountPercent|Phần trăm giảm giá) (?:thay đổi từ|được thiết lập mới thành).*?thành '([^']+)'");
+                                                                    if (percentMatch.Success)
+                                                                    {
+                                                                        percent = "-" + percentMatch.Groups[1].Value + "%";
+                                                                    }
+
+                                                                    var priceMatch = System.Text.RegularExpressions.Regex.Match(desc, @"(?:DiscountPrice|Giá sau giảm) (?:thay đổi từ|được thiết lập mới thành).*?thành '([^']+)'");
+                                                                    if (priceMatch.Success)
+                                                                    {
+                                                                        if (decimal.TryParse(priceMatch.Groups[1].Value.Replace("đ", "").Replace(",", "").Replace(".", ""), out decimal pVal))
+                                                                        {
+                                                                            price = pVal.ToString("N0") + "đ";
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            price = priceMatch.Groups[1].Value;
+                                                                        }
+                                                                    }
+
+                                                                    var startMatch = System.Text.RegularExpressions.Regex.Match(desc, @"(?:DiscountStartDate|Ngày bắt đầu giảm|Start) (?:thay đổi từ|được thiết lập mới thành).*?thành '([^']+)'");
+                                                                    if (startMatch.Success && !string.IsNullOrWhiteSpace(startMatch.Groups[1].Value))
+                                                                    {
+                                                                        start = startMatch.Groups[1].Value;
+                                                                    }
+
+                                                                    var endMatch = System.Text.RegularExpressions.Regex.Match(desc, @"(?:DiscountEndDate|Ngày kết thúc giảm|End) (?:thay đổi từ|được thiết lập mới thành).*?thành '([^']+)'");
+                                                                    if (endMatch.Success && !string.IsNullOrWhiteSpace(endMatch.Groups[1].Value))
+                                                                    {
+                                                                        end = endMatch.Groups[1].Value;
+                                                                    }
+                                                                }
+
+                                                                <tr>
+                                                                    <td class="ps-3 text-muted">
+                                                                        <i class="fa fa-clock text-muted me-1"></i>@log.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")
+                                                                    </td>
+                                                                    <td>
+                                                                        @if (percent != "--" && percent != "Hủy")
+                                                                        {
+                                                                            <span class="badge bg-danger">@percent</span>
+                                                                            @if (!string.IsNullOrEmpty(price))
+                                                                            {
+                                                                                <div class="text-secondary small mt-0.5" style="font-size: 0.75rem;">@price</div>
+                                                                            }
+                                                                        }
+                                                                        else if (percent == "Hủy")
+                                                                        {
+                                                                            <span class="badge bg-secondary">Hủy</span>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <span class="text-muted">--</span>
+                                                                        }
+                                                                    </td>
+                                                                    <td>@start</td>
+                                                                    <td>@end</td>
+                                                                    <td>
+                                                                        <div class="text-truncate" style="max-width: 170px;" title="@log.UserEmail">
+                                                                            @(log.UserEmail ?? "Hệ thống")
+                                                                        </div>
+                                                                    </td>
+                                                                    <td class="pe-3">
+                                                                        <span class="badge @badgeClass rounded px-2 py-0.5 small fw-semibold">@actionType</span>
+                                                                    </td>
+                                                                </tr>
+                                                            }
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-5 text-muted">
+                                        <i class="fa fa-history fa-3x mb-3 text-secondary opacity-50"></i>
+                                        <div>Chưa có sản phẩm nào ghi nhận lịch sử điều chỉnh giảm giá.</div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div> <!-- END TAB 2 -->
+</div> <!-- END TAB CONTENT -->
+</div> <!-- END CONTAINER-FLUID -->
+
+<!-- Modal Tạo Chiến dịch Khuyến mãi Mới -->
+<div class="modal fade" id="createCampaignModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom bg-light">
+                <h5 class="modal-title fw-bold text-dark"><i class="fa fa-bullhorn text-primary me-2"></i>Tạo chiến dịch khuyến mãi mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="/AdminDiscount/CreateCampaign">
+                @Html.AntiForgeryToken()
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tên chiến dịch <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" placeholder="Ví dụ: Giảm giá 2-9, Flash Sale Cuối tuần..." required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mô tả chiến dịch</label>
+                        <textarea name="description" class="form-control" rows="2" placeholder="Nhập mô tả chi tiết chương trình khuyến mãi..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mức giảm giá (%) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" step="0.5" min="1" max="99" name="discountPercent" class="form-control" placeholder="Ví dụ: 15" required />
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Áp dụng cho Danh mục</label>
+                        <select name="categoryId" class="form-select">
+                            <option value="">-- Tất cả danh mục --</option>
+                            @foreach (var cat in categories)
+                            {
+                                <option value="@cat.CategoryId">@cat.CategoryName</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Áp dụng cho Thương hiệu</label>
+                        <select name="brand" class="form-select">
+                            <option value="">-- Tất cả thương hiệu --</option>
+                            @foreach (var b in brands)
+                            {
+                                <option value="@b">@b</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Ngày bắt đầu <span class="text-danger">*</span></label>
+                            <input type="datetime-local" name="startDate" class="form-control" required />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Ngày kết thúc <span class="text-danger">*</span></label>
+                            <input type="datetime-local" name="endDate" class="form-control" required />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Gắn Banner chiến dịch</label>
+                        <select name="bannerId" class="form-select">
+                            <option value="">-- Không gắn banner --</option>
+                            @foreach (var b in banners)
+                            {
+                                <option value="@b.BannerId">@b.Title (@(b.BannerType == "FullWidth" ? "Full Width" : b.BannerType))</option>
+                            }
+                        </select>
+                        <div class="form-text">Khi click vào banner này trên trang chủ sẽ dẫn trực tiếp đến danh sách khuyến mãi của chiến dịch này.</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary fw-semibold"><i class="fa fa-save me-1"></i>Kích hoạt chiến dịch</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Chỉnh sửa Chiến dịch -->
+<div class="modal fade" id="editCampaignModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom bg-light">
+                <h5 class="modal-title fw-bold text-dark"><i class="fa fa-edit text-primary me-2"></i>Chỉnh sửa chiến dịch khuyến mãi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="/AdminDiscount/EditCampaign">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="campaignId" id="edit-campaignId" />
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tên chiến dịch <span class="text-danger">*</span></label>
+                        <input type="text" name="name" id="edit-name" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mô tả chiến dịch</label>
+                        <textarea name="description" id="edit-description" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mức giảm giá (%) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" step="0.5" min="1" max="99" name="discountPercent" id="edit-discountPercent" class="form-control" required />
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Áp dụng cho Danh mục</label>
+                        <select name="categoryId" id="edit-categoryId" class="form-select">
+                            <option value="">-- Tất cả danh mục --</option>
+                            @foreach (var cat in categories)
+                            {
+                                <option value="@cat.CategoryId">@cat.CategoryName</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Áp dụng cho Thương hiệu</label>
+                        <select name="brand" id="edit-brand" class="form-select">
+                            <option value="">-- Tất cả thương hiệu --</option>
+                            @foreach (var b in brands)
+                            {
+                                <option value="@b">@b</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Ngày bắt đầu <span class="text-danger">*</span></label>
+                            <input type="datetime-local" name="startDate" id="edit-startDate" class="form-control" required />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Ngày kết thúc <span class="text-danger">*</span></label>
+                            <input type="datetime-local" name="endDate" id="edit-endDate" class="form-control" required />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Gắn Banner chiến dịch</label>
+                        <select name="bannerId" id="edit-bannerId" class="form-select">
+                            <option value="">-- Không gắn banner --</option>
+                            @foreach (var b in banners)
+                            {
+                                <option value="@b.BannerId">@b.Title (@(b.BannerType == "FullWidth" ? "Full Width" : b.BannerType))</option>
+                            }
+                        </select>
+                        <div class="form-text text-muted">Nếu không gắn banner thì đây sẽ được coi là chương trình Flash Sale Trang chủ.</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary fw-semibold"><i class="fa fa-save me-1"></i>Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Thiết lập giảm giá sản phẩm -->
+<div class="modal fade" id="setDiscountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom bg-light">
+                <h5 class="modal-title fw-bold text-dark"><i class="fa fa-tag text-primary me-2"></i>Giảm giá sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="/AdminDiscount/SetDiscount">
+                @Html.AntiForgeryToken()
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Chọn sản phẩm giảm giá <span class="text-danger">*</span></label>
+                        
+                        <!-- Search Box inside Modal -->
+                        <div class="input-group mb-2">
+                            <span class="input-group-text bg-white"><i class="fa fa-search text-muted"></i></span>
+                            <input type="text" id="modalSearchProduct" class="form-control" placeholder="Tìm kiếm nhanh sản phẩm theo tên hoặc SKU..." />
+                        </div>
+
+                        <!-- Product selection table -->
+                        <div class="table-responsive border rounded-3" style="max-height: 260px; overflow-y: auto;">
+                            <table class="table table-sm table-hover align-middle mb-0" id="modalProductTable">
+                                <thead class="bg-light sticky-top">
+                                    <tr class="small text-secondary fw-bold">
+                                        <th class="text-center" style="width: 45px;">
+                                            <input type="checkbox" id="modalSelectAllProducts" class="form-check-input" />
+                                        </th>
+                                        <th style="width: 50px;">Ảnh</th>
+                                        <th>Tên sản phẩm</th>
+                                        <th class="text-end pe-3">Giá gốc</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var p in Model)
+                                    {
+                                        var imgUrl = p.ProductImages?.FirstOrDefault(i => i.IsMain == true)?.ImageUrl 
+                                                     ?? p.ProductImages?.FirstOrDefault()?.ImageUrl 
+                                                     ?? "sanpham.png";
+                                        <tr class="modal-product-row" data-name="@p.ProductName.ToLower()" data-sku="@(p.Sku?.ToLower() ?? "")">
+                                            <td class="text-center">
+                                                <input type="checkbox" name="productIds" value="@p.ProductId" class="form-check-input modal-product-checkbox" />
+                                            </td>
+                                            <td>
+                                                <img src="/images/products/@imgUrl" alt="@p.ProductName" class="object-fit-contain rounded border" style="width: 36px; height: 36px; background-color: #f8fafc;" />
+                                            </td>
+                                            <td>
+                                                <div class="small fw-bold text-dark text-truncate" style="max-width: 480px;">@p.ProductName</div>
+                                                <div class="text-muted small" style="font-size: 0.75rem;">SKU: @(p.Sku ?? "N/A")</div>
+                                            </td>
+                                            <td class="text-end pe-3 small fw-bold text-secondary">
+                                                @p.Price.ToString("N0")đ
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="small text-muted mt-1"><i class="fa fa-info-circle me-1"></i>Đã chọn <strong id="modalCheckedCount" class="text-primary">0</strong> sản phẩm</div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Phần trăm giảm (%)</label>
+                            <div class="input-group">
+                                <input type="number" step="0.1" min="1" max="99" name="discountPercent" id="modalDiscountPercent" class="form-control" placeholder="Ví dụ: 10" />
+                                <span class="input-group-text">%</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Hoặc Giá bán sau giảm (VNĐ)</label>
+                            <div class="input-group">
+                                <input type="number" step="1000" min="0" name="discountPrice" id="modalDiscountPrice" class="form-control" placeholder="Ví dụ: 120000" />
+                                <span class="input-group-text">đ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Ngày bắt đầu</label>
+                            <input type="datetime-local" name="startDate" id="modalStartDate" class="form-control" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Ngày kết thúc</label>
+                            <input type="datetime-local" name="endDate" id="modalEndDate" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Gắn Banner quảng bá</label>
+                        <select name="bannerId" id="modalBannerId" class="form-select">
+                            <option value="">-- Không gắn banner --</option>
+                            @foreach (var b in banners)
+                            {
+                                <option value="@b.BannerId">@b.Title (@(b.BannerType == "FullWidth" ? "Full Width" : b.BannerType))</option>
+                            }
+                        </select>
+                        <div class="form-text">Khi click vào banner này trên trang chủ sẽ dẫn trực tiếp đến trang chi tiết sản phẩm.</div>
+                    </div>
+
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="isActive" id="modalIsActive" value="true" checked />
+                        <label class="form-check-label fw-semibold" for="modalIsActive">Kích hoạt giảm giá ngay</label>
+                    </div>
+                </div>
+                <div class="modal-footer border-top bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary fw-semibold"><i class="fa fa-save me-1"></i>Lưu lại</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('modalSearchProduct');
+            const rows = document.querySelectorAll('.modal-product-row');
+            const selectAllCheckbox = document.getElementById('modalSelectAllProducts');
+            const productCheckboxes = document.querySelectorAll('.modal-product-checkbox');
+            const checkedCountText = document.getElementById('modalCheckedCount');
+
+            // 1. Live Search Filter in Modal Table
+            if (searchInput) {
+                searchInput.addEventListener('input', function () {
+                    const term = this.value.toLowerCase().trim();
+                    rows.forEach(row => {
+                        const name = row.getAttribute('data-name');
+                        const sku = row.getAttribute('data-sku');
+                        if (name.includes(term) || sku.includes(term)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            }
+
+            // Update Checked Count
+            function updateCheckedCount() {
+                if (checkedCountText) {
+                    const checkedCount = document.querySelectorAll('.modal-product-checkbox:checked').length;
+                    checkedCountText.textContent = checkedCount;
+                }
+            }
+
+            // 2. Select All Checkbox Logic
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function () {
+                    const isChecked = this.checked;
+                    rows.forEach(row => {
+                        if (row.style.display !== 'none') {
+                            const checkbox = row.querySelector('.modal-product-checkbox');
+                            if (checkbox) {
+                                checkbox.checked = isChecked;
+                            }
+                        }
+                    });
+                    updateCheckedCount();
+                });
+            }
+
+            // Individual Checkbox Click
+            productCheckboxes.forEach(cb => {
+                cb.addEventListener('change', function () {
+                    updateCheckedCount();
+                });
+            });
+
+            // 3. Edit Discount Button Click
+            document.querySelectorAll('.edit-discount-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const productId = this.getAttribute('data-id');
+                    const percent = this.getAttribute('data-percent');
+                    const disprice = this.getAttribute('data-disprice');
+                    const start = this.getAttribute('data-start');
+                    const end = this.getAttribute('data-end');
+                    const active = this.getAttribute('data-active') === 'true';
+                    const bannerId = this.getAttribute('data-banner') || '0';
+
+                    // Reset search
+                    if (searchInput) searchInput.value = '';
+                    rows.forEach(row => row.style.display = '');
+
+                    // Uncheck all, check only the editing product
+                    productCheckboxes.forEach(cb => {
+                        cb.checked = (cb.value === productId);
+                    });
+                    if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                    updateCheckedCount();
+
+                    // Fill other fields
+                    document.getElementById('modalDiscountPercent').value = percent > 0 ? percent : '';
+                    document.getElementById('modalDiscountPrice').value = disprice > 0 ? disprice : '';
+                    document.getElementById('modalStartDate').value = start;
+                    document.getElementById('modalEndDate').value = end;
+                    document.getElementById('modalIsActive').checked = active;
+                    document.getElementById('modalBannerId').value = bannerId !== '0' ? bannerId : '';
+
+                    $('#setDiscountModal').modal('show');
+                });
+            });
+
+            // Reset checkboxes when opening set discount modal via top button
+            const setDiscountModalEl = document.getElementById('setDiscountModal');
+            if (setDiscountModalEl) {
+                setDiscountModalEl.addEventListener('show.bs.modal', function (event) {
+                    // If triggered by the top button, not edit button
+                    if (event.relatedTarget && event.relatedTarget.getAttribute('data-bs-target') === '#setDiscountModal') {
+                        productCheckboxes.forEach(cb => cb.checked = false);
+                        if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                        if (searchInput) searchInput.value = '';
+                        rows.forEach(row => row.style.display = '');
+                        document.getElementById('modalDiscountPercent').value = '';
+                        document.getElementById('modalDiscountPrice').value = '';
+                        document.getElementById('modalStartDate').value = '';
+                        document.getElementById('modalEndDate').value = '';
+                        document.getElementById('modalIsActive').checked = true;
+                        document.getElementById('modalBannerId').value = '';
+                        updateCheckedCount();
+                    }
+                });
+            }
+
+            // Ajax Toggle Switch for single product
+            document.querySelectorAll('.discount-toggle-switch').forEach(sw => {
+                sw.addEventListener('change', function () {
+                    const productId = this.getAttribute('data-product-id');
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                    fetch('/AdminDiscount/ToggleDiscount', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `productId=${productId}&__RequestVerificationToken=${encodeURIComponent(token)}`
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        }
+                    })
+                    .catch(err => console.error(err));
+                });
+            });
+
+            // Ajax Toggle Switch for campaign
+            document.querySelectorAll('.campaign-toggle-switch').forEach(sw => {
+                sw.addEventListener('change', function () {
+                    const campaignId = this.getAttribute('data-campaign-id');
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                    fetch('/AdminDiscount/ToggleCampaign', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `campaignId=${campaignId}&__RequestVerificationToken=${encodeURIComponent(token)}`
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        }
+                    })
+                    .catch(err => console.error(err));
+                });
+            });
+
+            // Edit Campaign Button click handler to populate and show modal using jQuery
+            $('.edit-campaign-btn').on('click', function () {
+                const btn = $(this);
+                $('#edit-campaignId').val(btn.attr('data-campaign-id'));
+                $('#edit-name').val(btn.attr('data-name'));
+                $('#edit-description').val(btn.attr('data-desc') || '');
+                $('#edit-discountPercent').val(btn.attr('data-discount'));
+                
+                const catId = btn.attr('data-category');
+                $('#edit-categoryId').val((catId && catId !== "0") ? catId : "");
+                
+                $('#edit-brand').val(btn.attr('data-brand') || '');
+                $('#edit-startDate').val(btn.attr('data-start'));
+                $('#edit-endDate').val(btn.attr('data-end'));
+                
+                const bannerId = btn.attr('data-banner');
+                $('#edit-bannerId').val((bannerId && bannerId !== "0") ? bannerId : "");
+                
+                $('#editCampaignModal').modal('show');
+            });
+
+            // 4. Log search filter by product name/sku
+            const logSearchInput = document.getElementById('logSearchInput');
+            if (logSearchInput) {
+                const logProductRows = document.querySelectorAll('.log-product-row');
+                logSearchInput.addEventListener('input', function () {
+                    const term = this.value.toLowerCase().trim();
+                    logProductRows.forEach(row => {
+                        const name = row.getAttribute('data-name') || '';
+                        const sku = row.getAttribute('data-sku') || '';
+                        const targetId = row.getAttribute('data-target-id');
+                        const subRow = document.getElementById(targetId);
+                        
+                        if (name.includes(term) || sku.includes(term)) {
+                            row.style.display = '';
+                            if (subRow) {
+                                subRow.classList.remove('d-none');
+                            }
+                        } else {
+                            row.style.display = 'none';
+                            if (subRow) {
+                                subRow.classList.add('d-none');
+                                subRow.classList.remove('show');
+                            }
+                        }
+                    });
+                });
+            }
+
+            // 5. Tab state retention via localStorage
+            const activeTabKey = 'discount_active_tab';
+            const savedTabId = localStorage.getItem(activeTabKey);
+            if (savedTabId) {
+                const tabTrigger = document.querySelector(`#discountTabs button[data-bs-target="${savedTabId}"]`);
+                if (tabTrigger) {
+                    const tab = new bootstrap.Tab(tabTrigger);
+                    tab.show();
+                }
+            }
+
+            // Save active tab on click
+            document.querySelectorAll('#discountTabs button[data-bs-toggle="tab"]').forEach(btn => {
+                btn.addEventListener('shown.bs.tab', function (e) {
+                    const targetId = this.getAttribute('data-bs-target');
+                    localStorage.setItem(activeTabKey, targetId);
+                });
+            });
+        });
+    </script>
+}

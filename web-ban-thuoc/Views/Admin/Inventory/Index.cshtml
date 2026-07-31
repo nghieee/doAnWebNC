@@ -106,6 +106,7 @@
                             <option value="@wh.WarehouseId" selected="@(selectedWarehouseId == wh.WarehouseId)">@wh.Name</option>
                         }
                     </select>
+                    <a href="/AdminReport/ExportInventoryExcel" class="btn btn-outline-success d-flex align-items-center gap-1 text-nowrap"><i class="fa fa-file-excel"></i> Xuất Excel (.xlsx)</a>
                 </form>
                 <div class="small text-muted">
                     Tổng: <strong>@Model.WarehouseStocks.Sum(w => w.QuantityOnHand).ToString("N0")</strong> tồn ·

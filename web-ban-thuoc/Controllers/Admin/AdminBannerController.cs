@@ -43,14 +43,7 @@ public class AdminBannerController : Controller
         // Filter theo trạng thái
         if (!string.IsNullOrEmpty(statusFilter))
         {
-            if (statusFilter.Equals("active", StringComparison.OrdinalIgnoreCase))
-            {
-                query = query.Where(b => b.IsActive);
-            }
-            else if (statusFilter.Equals("inactive", StringComparison.OrdinalIgnoreCase))
-            {
-                query = query.Where(b => !b.IsActive);
-            }
+            query = query.Where(b => b.IsActive);
         }
 
         const int pageSize = 10;
@@ -72,6 +65,12 @@ public class AdminBannerController : Controller
         ViewBag.CurrentPage = page;
         ViewBag.TotalPages = totalPages;
         ViewBag.TotalItems = totalItems;
+
+        var campaignsList = await _context.PromotionCampaigns.Where(c => c.BannerId != null).ToListAsync();
+        ViewBag.CampaignBanners = campaignsList.GroupBy(c => c.BannerId!.Value).ToDictionary(g => g.Key, g => g.First().Name);
+
+        var productsList = await _context.Products.Where(p => p.BannerId != null).ToListAsync();
+        ViewBag.ProductBanners = productsList.GroupBy(p => p.BannerId!.Value).ToDictionary(g => g.Key, g => string.Join(", ", g.Select(p => p.ProductName)));
 
         return View("~/Views/Admin/Banner/Index.cshtml", banners);
     }
@@ -178,7 +177,6 @@ public class AdminBannerController : Controller
         return View("~/Views/Admin/Banner/Edit.cshtml", banner);
     }
 
-    // POST: AdminBanner/Edit/5
     [HttpPost]
     [Route("Edit/{id}")]
     [ValidateAntiForgeryToken]

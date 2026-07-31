@@ -2,14 +2,13 @@
 @{
     var mainImage = Model.ProductImages?.FirstOrDefault(i => i.IsMain == true)
                  ?? Model.ProductImages?.FirstOrDefault();
-    var oldPrice = Model.Price * 1.25m;
-    var showDiscount = true; // Hiển thị -20% ngầm định như cũ
+    var isOnDiscount = Model.IsOnDiscount;
 }
 <a class="pc fade-up" href="@Url.Action("Details", "Product", new { id = Model.ProductId })" aria-label="@Model.ProductName">
-    @if (showDiscount)
+    @if (isOnDiscount)
     {
         <div class="pc__badge">
-            <span class="pc__discount"><i class="fas fa-bolt me-1"></i>-20%</span>
+            <span class="pc__discount" style="background-color: #ef4444 !important; color: white !important; border: none !important;"><i class="fas fa-bolt me-1"></i>-@Model.DiscountPercentCalculated%</span>
         </div>
     }
     <span class="pc__wish" role="button" tabindex="0" aria-label="Yêu thích"
@@ -25,8 +24,15 @@
         <h3 class="pc__name">@Model.ProductName</h3>
 
         <div class="pc__price">
-            <span class="pc__price-now">@Model.Price.ToString("N0")đ</span>
-            <span class="pc__price-old">@oldPrice.ToString("N0")đ</span>
+            <span class="pc__price-now">@Model.EffectivePrice.ToString("N0")đ</span>
+            @if (isOnDiscount)
+            {
+                <span class="pc__price-old">@Model.Price.ToString("N0")đ</span>
+            }
+            else
+            {
+                <span class="pc__price-old" style="visibility: hidden;">0đ</span>
+            }
         </div>
 
         <div class="pc__meta">

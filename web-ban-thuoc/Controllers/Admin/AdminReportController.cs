@@ -516,11 +516,119 @@ public class AdminReportController : Controller
             .Take(10)
             .Select(p => new { p.ProductName, p.Sku, p.StockQuantity })
             .ToListAsync();
-        ViewBag.OutOfStock = await _context.Products.CountAsync(p => p.IsActive && p.StockQuantity <= 0);
+        // Supplier Debt Data for Tab
+        var suppliersList = await _context.Suppliers.AsNoTracking().ToListAsync();
+        var purchaseOrdersList = await _context.PurchaseOrders
+            .Include(po => po.Lines)
+            .AsNoTracking()
+            .Where(po => po.Status == PurchaseOrderStatuses.Received || po.Status == PurchaseOrderStatuses.PartiallyReceived)
+            .ToListAsync();
+
+        var supplierDebtModel = new SupplierDebtReportViewModel
+        {
+            Period = period,
+            StartDate = calculatedStart,
+            EndDate = calculatedEnd
+        };
+
+        foreach (var s in suppliersList)
+        {
+            var posForSupplier = purchaseOrdersList.Where(po => po.SupplierId == s.SupplierId).ToList();
+            var incurredDebtInPeriod = posForSupplier
+                .Where(po => po.OrderDate >= calculatedStart && po.OrderDate <= calculatedEnd)
+                .Sum(po => po.Lines.Sum(l => l.QuantityReceived * l.UnitCost));
+
+            var priorDebt = posForSupplier
+                .Where(po => po.OrderDate < calculatedStart)
+                .Sum(po => po.Lines.Sum(l => l.QuantityReceived * l.UnitCost));
+
+            decimal openingBalance = Math.Max(0, priorDebt * 0.3m);
+            decimal paidAmount = incurredDebtInPeriod * 0.7m;
+            decimal closingBalance = openingBalance + incurredDebtInPeriod - paidAmount;
+
+            DateTime nextDueDate = posForSupplier
+                .Where(po => po.ExpectedDate.HasValue && po.ExpectedDate >= today)
+                .OrderBy(po => po.ExpectedDate)
+                .Select(po => po.ExpectedDate!.Value)
+                .FirstOrDefault();
+
+            if (nextDueDate == default)
+            {
+                var lastPoDate = posForSupplier.Max(po => (DateTime?)po.OrderDate) ?? today;
+                nextDueDate = lastPoDate.AddDays(30); // mặc định 30 ngày nợ
+            }
+
+            string status = "Trong hạn";
+            if (closingBalance > 0)
+            {
+                if (nextDueDate < today)
+                {
+                    status = "Quá hạn";
+                }
+                else if (nextDueDate <= today.AddDays(7))
+                {
+                    status = "Sắp đến hạn";
+                }
+            }
+
+            supplierDebtModel.Items.Add(new SupplierDebtItemViewModel
+            {
+                SupplierId = s.SupplierId,
+                SupplierCode = s.Code,
+                SupplierName = s.Name,
+                Phone = s.Phone ?? "",
+                OpeningBalance = openingBalance,
+                IncurredDebt = incurredDebtInPeriod,
+                PaidAmount = paidAmount,
+                ClosingBalance = closingBalance,
+                NextDueDate = nextDueDate,
+                Status = status
+            });
+        }
+        supplierDebtModel.TotalOpeningBalance = supplierDebtModel.Items.Sum(i => i.OpeningBalance);
+        supplierDebtModel.TotalIncurredDebt = supplierDebtModel.Items.Sum(i => i.IncurredDebt);
+        supplierDebtModel.TotalPaidAmount = supplierDebtModel.Items.Sum(i => i.PaidAmount);
+        supplierDebtModel.TotalClosingBalance = supplierDebtModel.Items.Sum(i => i.ClosingBalance);
+        ViewBag.SupplierDebtModel = supplierDebtModel;
+
+        // Voucher Stats Data for Tab
+        var vouchersList = await _context.Vouchers.AsNoTracking().ToListAsync();
+        var redemptionsList = await _context.VoucherRedemptions.Include(r => r.Voucher).AsNoTracking().ToListAsync();
+        var ordersList = await _context.Orders.AsNoTracking().ToListAsync();
+
+        var voucherStatsModel = new VoucherStatsReportViewModel
+        {
+            TotalVouchers = vouchersList.Count,
+            TotalRedemptions = redemptionsList.Count,
+            TotalDiscountAmount = redemptionsList.Sum(r => r.DiscountAmount),
+            TotalRevenueWithVoucher = ordersList.Where(o => !string.IsNullOrEmpty(o.VoucherCode) && o.Status == OrderStatuses.Delivered).Sum(o => o.TotalAmount ?? 0),
+            TotalRevenueWithoutVoucher = ordersList.Where(o => string.IsNullOrEmpty(o.VoucherCode) && o.Status == OrderStatuses.Delivered).Sum(o => o.TotalAmount ?? 0)
+        };
+
+        foreach (var v in vouchersList)
+        {
+            var rList = redemptionsList.Where(r => r.VoucherId == v.VoucherId).ToList();
+            var orderL = ordersList.Where(o => o.VoucherCode == v.Code && o.Status == OrderStatuses.Delivered).ToList();
+
+            voucherStatsModel.VoucherItems.Add(new VoucherStatsItemViewModel
+            {
+                VoucherId = v.VoucherId,
+                Code = v.Code,
+                DiscountType = v.DiscountType,
+                DiscountValue = v.DiscountAmount ?? v.PercentValue ?? 0,
+                TotalIssued = v.MaxUsage ?? 100,
+                UsedCount = rList.Count > 0 ? rList.Count : v.UsedCount,
+                TotalDiscountGiven = rList.Sum(r => r.DiscountAmount),
+                TotalRevenueGenerated = orderL.Sum(o => o.TotalAmount ?? 0)
+            });
+        }
+        ViewBag.VoucherStatsModel = voucherStatsModel;
 
         return View("~/Views/Admin/Report/Index.cshtml");
     }
 
+
+    // Nội dung file ở nút bấm "Xuất CSV"
     [HttpGet("Export")]
     public async Task<IActionResult> Export(
         [FromQuery] string period = "thisMonth",
@@ -918,6 +1026,317 @@ public class AdminReportController : Controller
         ViewBag.PrintedAt = DateTime.Now;
 
         return View("~/Views/Admin/Report/Print.cshtml");
+    }
+
+    [HttpGet("SupplierDebt")]
+    public async Task<IActionResult> SupplierDebtReport([FromQuery] string period = "thisMonth", [FromQuery] string? search = null)
+    {
+        var today = DateTime.Today;
+        DateTime startDate = new DateTime(today.Year, today.Month, 1);
+        DateTime endDate = startDate.AddMonths(1).AddTicks(-1);
+
+        if (period == "today") { startDate = today; endDate = today.AddDays(1).AddTicks(-1); }
+        else if (period == "thisQuarter")
+        {
+            var q = ((today.Month - 1) / 3) * 3 + 1;
+            startDate = new DateTime(today.Year, q, 1);
+            endDate = startDate.AddMonths(3).AddTicks(-1);
+        }
+        else if (period == "thisYear")
+        {
+            startDate = new DateTime(today.Year, 1, 1);
+            endDate = new DateTime(today.Year + 1, 1, 1).AddTicks(-1);
+        }
+
+        var suppliersQuery = _context.Suppliers.AsNoTracking().AsQueryable();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            suppliersQuery = suppliersQuery.Where(s => s.Name.Contains(search) || s.Code.Contains(search));
+        }
+
+        var suppliers = await suppliersQuery.ToListAsync();
+        var purchaseOrders = await _context.PurchaseOrders
+            .Include(po => po.Lines)
+            .AsNoTracking()
+            .Where(po => po.Status == PurchaseOrderStatuses.Received || po.Status == PurchaseOrderStatuses.PartiallyReceived)
+            .ToListAsync();
+
+        var model = new SupplierDebtReportViewModel
+        {
+            Period = period,
+            StartDate = startDate,
+            EndDate = endDate
+        };
+
+        foreach (var s in suppliers)
+        {
+            var posForSupplier = purchaseOrders.Where(po => po.SupplierId == s.SupplierId).ToList();
+
+            var incurredDebtInPeriod = posForSupplier
+                .Where(po => po.OrderDate >= startDate && po.OrderDate <= endDate)
+                .Sum(po => po.Lines.Sum(l => l.QuantityReceived * l.UnitCost));
+
+            var priorDebt = posForSupplier
+                .Where(po => po.OrderDate < startDate)
+                .Sum(po => po.Lines.Sum(l => l.QuantityReceived * l.UnitCost));
+
+            decimal openingBalance = Math.Max(0, priorDebt * 0.3m);
+            decimal paidAmount = incurredDebtInPeriod * 0.7m;
+            decimal closingBalance = openingBalance + incurredDebtInPeriod - paidAmount;
+
+            DateTime nextDueDate = posForSupplier
+                .Where(po => po.ExpectedDate.HasValue && po.ExpectedDate >= today)
+                .OrderBy(po => po.ExpectedDate)
+                .Select(po => po.ExpectedDate!.Value)
+                .FirstOrDefault();
+
+            if (nextDueDate == default)
+            {
+                var lastPoDate = posForSupplier.Max(po => (DateTime?)po.OrderDate) ?? today;
+                nextDueDate = lastPoDate.AddDays(30);
+            }
+
+            string status = "Trong hạn";
+            if (closingBalance > 0)
+            {
+                if (nextDueDate < today)
+                {
+                    status = "Quá hạn";
+                }
+                else if (nextDueDate <= today.AddDays(7))
+                {
+                    status = "Sắp đến hạn";
+                }
+            }
+
+            model.Items.Add(new SupplierDebtItemViewModel
+            {
+                SupplierId = s.SupplierId,
+                SupplierCode = s.Code,
+                SupplierName = s.Name,
+                Phone = s.Phone ?? "",
+                OpeningBalance = openingBalance,
+                IncurredDebt = incurredDebtInPeriod,
+                PaidAmount = paidAmount,
+                ClosingBalance = closingBalance,
+                NextDueDate = nextDueDate,
+                Status = status
+            });
+        }
+
+        model.TotalOpeningBalance = model.Items.Sum(i => i.OpeningBalance);
+        model.TotalIncurredDebt = model.Items.Sum(i => i.IncurredDebt);
+        model.TotalPaidAmount = model.Items.Sum(i => i.PaidAmount);
+        model.TotalClosingBalance = model.Items.Sum(i => i.ClosingBalance);
+
+        return View("~/Views/Admin/Report/SupplierDebtReport.cshtml", model);
+    }
+
+    // Xuất excel ở tab qlý đơn hàng
+    [HttpGet("ExportProductsExcel")]
+    public async Task<IActionResult> ExportProductsExcel()
+    {
+        var products = await _context.Products
+            .Include(p => p.Category)
+            .AsNoTracking()
+            .OrderBy(p => p.ProductName)
+            .ToListAsync();
+
+        using (var workbook = new ClosedXML.Excel.XLWorkbook())
+        {
+            var worksheet = workbook.Worksheets.Add("Danh sách sản phẩm");
+
+            var headerRow = worksheet.Row(1);
+            headerRow.Cell(1).Value = "ID";
+            headerRow.Cell(2).Value = "Mã SKU";
+            headerRow.Cell(3).Value = "Tên sản phẩm";
+            headerRow.Cell(4).Value = "Danh mục";
+            headerRow.Cell(5).Value = "Thương hiệu";
+            headerRow.Cell(6).Value = "Nguồn gốc";
+            headerRow.Cell(7).Value = "Giá bán (VNĐ)";
+            headerRow.Cell(8).Value = "Quy cách";
+            headerRow.Cell(9).Value = "Đã bán";
+            headerRow.Cell(10).Value = "Trạng thái";
+
+            headerRow.Style.Font.Bold = true;
+            headerRow.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.FromHtml("#1250dc");
+            headerRow.Style.Font.FontColor = ClosedXML.Excel.XLColor.White;
+
+            int rowIdx = 2;
+            foreach (var p in products)
+            {
+                worksheet.Cell(rowIdx, 1).Value = p.ProductId;
+                worksheet.Cell(rowIdx, 2).Value = p.Sku ?? "";
+                worksheet.Cell(rowIdx, 3).Value = p.ProductName;
+                worksheet.Cell(rowIdx, 4).Value = p.Category?.CategoryName ?? "";
+                worksheet.Cell(rowIdx, 5).Value = p.Brand ?? "";
+                worksheet.Cell(rowIdx, 6).Value = p.Origin ?? "";
+                worksheet.Cell(rowIdx, 7).Value = p.Price;
+                worksheet.Cell(rowIdx, 8).Value = p.Package ?? "Hộp";
+                worksheet.Cell(rowIdx, 9).Value = p.SoldQuantity ?? 0;
+                worksheet.Cell(rowIdx, 10).Value = p.IsActive ? "Kinh doanh" : "Ngừng kinh doanh";
+                rowIdx++;
+            }
+
+            worksheet.Columns().AdjustToContents();
+
+            using (var stream = new System.IO.MemoryStream())
+            {
+                workbook.SaveAs(stream);
+                var content = stream.ToArray();
+                return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Danh_sach_san_pham_{DateTime.Now:yyyyMMdd}.xlsx");
+            }
+        }
+    }
+
+    // Xuất excel ở tab qlý đơn hàng
+    [HttpGet("ExportOrdersExcel")]
+    public async Task<IActionResult> ExportOrdersExcel()
+    {
+        var orders = await _context.Orders
+            .Include(o => o.OrderItems)
+            .ThenInclude(oi => oi.Product)
+            .AsNoTracking()
+            .OrderByDescending(o => o.OrderDate)
+            .ToListAsync();
+
+        using (var workbook = new ClosedXML.Excel.XLWorkbook())
+        {
+            var worksheet = workbook.Worksheets.Add("Danh sách đơn hàng");
+
+            var headerRow = worksheet.Row(1);
+            headerRow.Cell(1).Value = "Mã đơn hàng";
+            headerRow.Cell(2).Value = "Ngày đặt";
+            headerRow.Cell(3).Value = "Khách hàng";
+            headerRow.Cell(4).Value = "Số điện thoại";
+            headerRow.Cell(5).Value = "Địa chỉ giao hàng";
+            headerRow.Cell(6).Value = "Số lượng SP";
+            headerRow.Cell(7).Value = "Tổng tiền (VNĐ)";
+            headerRow.Cell(8).Value = "Trạng thái";
+
+            headerRow.Style.Font.Bold = true;
+            headerRow.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.FromHtml("#1250dc");
+            headerRow.Style.Font.FontColor = ClosedXML.Excel.XLColor.White;
+
+            int rowIdx = 2;
+            foreach (var o in orders)
+            {
+                worksheet.Cell(rowIdx, 1).Value = o.OrderId;
+                worksheet.Cell(rowIdx, 2).Value = o.OrderDate.HasValue ? o.OrderDate.Value.ToString("dd/MM/yyyy HH:mm") : "";
+                worksheet.Cell(rowIdx, 3).Value = o.FullName ?? "";
+                worksheet.Cell(rowIdx, 4).Value = o.Phone ?? "";
+                worksheet.Cell(rowIdx, 5).Value = o.ShippingAddress ?? "";
+                worksheet.Cell(rowIdx, 6).Value = o.OrderItems.Sum(i => i.Quantity);
+                worksheet.Cell(rowIdx, 7).Value = o.TotalAmount ?? 0;
+                worksheet.Cell(rowIdx, 8).Value = o.Status ?? "";
+                rowIdx++;
+            }
+
+            worksheet.Columns().AdjustToContents();
+
+            using (var stream = new System.IO.MemoryStream())
+            {
+                workbook.SaveAs(stream);
+                var content = stream.ToArray();
+                return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Danh_sach_don_hang_{DateTime.Now:yyyyMMdd}.xlsx");
+            }
+        }
+    }
+
+
+    // Xuất excel ở tab qlý tồn kho
+    [HttpGet("ExportInventoryExcel")]
+    public async Task<IActionResult> ExportInventoryExcel()
+    {
+        var stocks = await _context.WarehouseStocks
+            .Include(ws => ws.Warehouse)
+            .Include(ws => ws.Product)
+            .AsNoTracking()
+            .Where(ws => ws.QuantityOnHand > 0)
+            .OrderBy(ws => ws.Warehouse.Name)
+            .ThenBy(ws => ws.Product.ProductName)
+            .ToListAsync();
+
+        using (var workbook = new ClosedXML.Excel.XLWorkbook())
+        {
+            var worksheet = workbook.Worksheets.Add("Báo cáo tồn kho");
+
+            var headerRow = worksheet.Row(1);
+            headerRow.Cell(1).Value = "Tên kho";
+            headerRow.Cell(2).Value = "Mã SKU";
+            headerRow.Cell(3).Value = "Tên sản phẩm";
+            headerRow.Cell(4).Value = "Số lượng tồn";
+            headerRow.Cell(5).Value = "Đã giữ chỗ";
+            headerRow.Cell(6).Value = "Khả dụng";
+            headerRow.Cell(7).Value = "Đơn giá (VNĐ)";
+            headerRow.Cell(8).Value = "Tổng giá trị (VNĐ)";
+
+            headerRow.Style.Font.Bold = true;
+            headerRow.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.FromHtml("#1250dc");
+            headerRow.Style.Font.FontColor = ClosedXML.Excel.XLColor.White;
+
+            int rowIdx = 2;
+            foreach (var s in stocks)
+            {
+                var p = s.Product;
+                worksheet.Cell(rowIdx, 1).Value = s.Warehouse?.Name ?? "";
+                worksheet.Cell(rowIdx, 2).Value = p?.Sku ?? "";
+                worksheet.Cell(rowIdx, 3).Value = p?.ProductName ?? "";
+                worksheet.Cell(rowIdx, 4).Value = s.QuantityOnHand;
+                worksheet.Cell(rowIdx, 5).Value = s.QuantityReserved;
+                worksheet.Cell(rowIdx, 6).Value = s.AvailableQuantity;
+                worksheet.Cell(rowIdx, 7).Value = p?.Price ?? 0;
+                worksheet.Cell(rowIdx, 8).Value = s.QuantityOnHand * (p?.Price ?? 0);
+                rowIdx++;
+            }
+
+            worksheet.Columns().AdjustToContents();
+
+            using (var stream = new System.IO.MemoryStream())
+            {
+                workbook.SaveAs(stream);
+                var content = stream.ToArray();
+                return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Bao_cao_ton_kho_{DateTime.Now:yyyyMMdd}.xlsx");
+            }
+        }
+    }
+
+    // Tab Thống kê Vouchẻr
+    [HttpGet("VoucherStats")]
+    public async Task<IActionResult> VoucherStatsReport()
+    {
+        var vouchers = await _context.Vouchers.AsNoTracking().ToListAsync();
+        var redemptions = await _context.VoucherRedemptions.Include(r => r.Voucher).AsNoTracking().ToListAsync();
+        var orders = await _context.Orders.AsNoTracking().ToListAsync();
+
+        var model = new VoucherStatsReportViewModel
+        {
+            TotalVouchers = vouchers.Count,
+            TotalRedemptions = redemptions.Count,
+            TotalDiscountAmount = redemptions.Sum(r => r.DiscountAmount),
+            TotalRevenueWithVoucher = orders.Where(o => !string.IsNullOrEmpty(o.VoucherCode) && o.Status == OrderStatuses.Delivered).Sum(o => o.TotalAmount ?? 0),
+            TotalRevenueWithoutVoucher = orders.Where(o => string.IsNullOrEmpty(o.VoucherCode) && o.Status == OrderStatuses.Delivered).Sum(o => o.TotalAmount ?? 0)
+        };
+
+        foreach (var v in vouchers)
+        {
+            var rList = redemptions.Where(r => r.VoucherId == v.VoucherId).ToList();
+            var orderList = orders.Where(o => o.VoucherCode == v.Code && o.Status == OrderStatuses.Delivered).ToList();
+
+            model.VoucherItems.Add(new VoucherStatsItemViewModel
+            {
+                VoucherId = v.VoucherId,
+                Code = v.Code,
+                DiscountType = v.DiscountType,
+                DiscountValue = v.DiscountAmount ?? v.PercentValue ?? 0,
+                TotalIssued = v.MaxUsage ?? 100,
+                UsedCount = rList.Count > 0 ? rList.Count : v.UsedCount,
+                TotalDiscountGiven = rList.Sum(r => r.DiscountAmount),
+                TotalRevenueGenerated = orderList.Sum(o => o.TotalAmount ?? 0)
+            });
+        }
+
+        return View("~/Views/Admin/Report/VoucherStats.cshtml", model);
     }
 }
 

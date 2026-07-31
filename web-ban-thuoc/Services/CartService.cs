@@ -97,7 +97,7 @@ public class CartService : ICartService
         if (item != null)
         {
             item.Quantity = newQty;
-            item.UnitPrice = product.Price;
+            item.UnitPrice = product.EffectivePrice;
         }
         else
         {
@@ -106,7 +106,7 @@ public class CartService : ICartService
                 CartId = cart.CartId,
                 ProductId = productId,
                 Quantity = quantity,
-                UnitPrice = product.Price
+                UnitPrice = product.EffectivePrice
             });
         }
 

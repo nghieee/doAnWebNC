@@ -8,7 +8,15 @@
             var mainImage = product.ProductImages?.FirstOrDefault(i => i.IsMain == true) ??
             product.ProductImages?.FirstOrDefault();
             <div class="col">
-                <div class="product-card shadow-sm">
+                <div class="product-card shadow-sm position-relative">
+                    @if (product.IsOnDiscount)
+                    {
+                        <div class="position-absolute top-0 start-0 m-2 z-1">
+                            <span class="badge bg-danger shadow-sm px-2 py-1 fs-7 fw-bold rounded-pill">
+                                -@product.DiscountPercentCalculated%
+                            </span>
+                        </div>
+                    }
                     <a class="text-decoration-none d-flex flex-column h-100" href="@Url.Action("Details", "Product", new { id = product.ProductId })">
                         <div class="product-image-wrapper">
                             <img src="/images/products/@(mainImage?.ImageUrl ?? "/images/sanpham.png")"
@@ -19,8 +27,16 @@
                                 <h5 class="product-title" title="@product.ProductName">@product.ProductName</h5>
                             </div>
                             <div>
-                                <div class="product-price">@product.Price.ToString("N0")đ</div>
-                                <div class="product-original-price">@((product.Price * 1.25m).ToString("N0"))đ</div>
+                                @if (product.IsOnDiscount)
+                                {
+                                    <div class="product-price text-danger fw-bold">@product.EffectivePrice.ToString("N0")đ</div>
+                                    <div class="product-original-price text-decoration-line-through text-muted small">@product.Price.ToString("N0")đ</div>
+                                }
+                                else
+                                {
+                                    <div class="product-price">@product.Price.ToString("N0")đ</div>
+                                    <div class="product-original-price text-muted small" style="visibility: hidden;">0đ</div>
+                                }
                                 <span class="product-unit">@(product.Package ?? "Hộp")</span>
                             </div>
                         </div>

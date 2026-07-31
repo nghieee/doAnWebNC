@@ -25,21 +25,25 @@ public class ProductController : Controller
     }
 
     [HttpGet("{id}")]
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(int id)
     {
         ViewData["Title"] = "Chi tiết sản phẩm - Nhà Thuốc Long Châu";
-        var product = _context.Products
+        var product = await _context.Products
             .Include(p => p.ProductImages)
             .Include(p => p.Category)
             .Include(p => p.Supplier)
             .Include(p => p.Reviews)
             .ThenInclude(r => r.User)
-            .FirstOrDefault(p => p.ProductId == id);
+            .FirstOrDefaultAsync(p => p.ProductId == id);
 
         if (product == null)
         {
             return NotFound();
         }
+
+        // Gọi Thuật toán KNN (K-Nearest Neighbors) để lấy sản phẩm tương tự (K=10 cho Carousel)
+        var knnRecommendations = await _recommendationService.GetKnnRecommendationsAsync(id, 10);
+        ViewBag.KnnRecommendations = knnRecommendations;
 
         if (User.Identity.IsAuthenticated)
         {
@@ -52,13 +56,23 @@ public class ProductController : Controller
             else
             {
                 // Kiểm tra user đã mua sản phẩm này với đơn hàng đã giao/thanh toán
-                bool canReview = _context.Orders
+                bool canReview = await _context.Orders
                     .Where(o => o.UserId == userId && (o.Status == OrderStatuses.Delivered || o.PaymentStatus == PaymentStatuses.Paid))
                     .SelectMany(o => o.OrderItems)
-                    .Any(oi => oi.ProductId == id);
+                    .AnyAsync(oi => oi.ProductId == id);
                 ViewBag.CanReview = canReview;
             }
         }
+
+        var currentDate = DateTime.Now;
+        var activeCampaign = await _context.PromotionCampaigns
+            .Where(c => c.IsActive && c.StartDate <= currentDate && c.EndDate >= currentDate &&
+                       ((c.CategoryId != null && c.CategoryId == product.CategoryId) ||
+                        (c.Brand != null && c.Brand == product.Brand)))
+            .OrderByDescending(c => c.DiscountPercent)
+            .FirstOrDefaultAsync();
+        ViewBag.ActiveCampaign = activeCampaign;
+
         return View(product);
     }
 

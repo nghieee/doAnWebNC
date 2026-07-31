@@ -52,6 +52,7 @@ public class LongChauDbContext : IdentityDbContext
     public DbSet<News> News { get; set; }
     public DbSet<StockAdjustment> StockAdjustments { get; set; }
     public DbSet<StockAdjustmentDetail> StockAdjustmentDetails { get; set; }
+    public DbSet<PromotionCampaign> PromotionCampaigns { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -488,6 +489,7 @@ public class LongChauDbContext : IdentityDbContext
             LoyaltyReward => "Quà đổi điểm",
             web_ban_thuoc.Models.News => "Bài viết",
             StockAdjustment => "Phiếu điều chỉnh tồn kho",
+            PromotionCampaign => "Chiến dịch khuyến mãi",
             _ => null
         };
     }
@@ -573,6 +575,7 @@ public class AuditEntry
             if (Entry.Entity is Warehouse w) return w.Name ?? "";
             if (Entry.Entity is LoyaltyReward lr) return lr.Title ?? "";
             if (Entry.Entity is News n) return n.Title ?? "";
+            if (Entry.Entity is PromotionCampaign pc) return pc.Name ?? "";
         }
         catch { }
         return Entry.Entity.GetType().Name;
@@ -597,6 +600,15 @@ public class AuditEntry
             "ExpiryDate" => "Ngày hết hạn",
             "Title" => "Tiêu đề",
             "ImageUrl" => "Đường dẫn ảnh",
+            "DiscountPercent" => "Phần trăm giảm giá",
+            "DiscountPrice" => "Giá sau giảm",
+            "DiscountStartDate" => "Ngày bắt đầu giảm",
+            "DiscountEndDate" => "Ngày kết thúc giảm",
+            "IsDiscountActive" => "Kích hoạt giảm giá",
+            "BannerId" => "Liên kết Banner",
+            "StartDate" => "Ngày bắt đầu chiến dịch",
+            "EndDate" => "Ngày kết thúc chiến dịch",
+            "Name" => "Tên chiến dịch",
             _ => propName
         };
     }

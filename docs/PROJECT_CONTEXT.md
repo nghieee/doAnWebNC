@@ -1,7 +1,7 @@
 # 📋 PROJECT CONTEXT — NHÀ THUỐC LONG CHÂU
 
 > **Mục đích file này**: Đưa cho AI assistant ở session mới để nhanh chóng nắm context dự án mà không cần rà soát lại toàn bộ.
-> **Cập nhật lần cuối**: 2026-06-17
+> **Cập nhật lần cuối**: 2026-07-25
 
 ---
 
@@ -84,18 +84,23 @@ doAnWebNC/                          (root)
 │   │       ├── AdminBannerController.cs    CRUD banner (14KB)
 │   │       ├── AdminUserController.cs      Quản lý user (10KB)
 │   │       ├── AdminChatController.cs      Chat với khách
-│   │       ├── AdminInventoryController.cs Kho hàng
-│   │       ├── AdminPurchaseController.cs  Đơn mua hàng NCC (14KB)
-│   │       ├── AdminReportController.cs    Báo cáo thống kê (34KB - lớn nhất)
+│   │       ├── AdminInventoryController.cs Kho hàng (20KB)
+│   │       ├── AdminPurchaseController.cs  Đơn mua hàng NCC (18KB)
+│   │       ├── AdminReportController.cs    Báo cáo thống kê (65KB - lớn nhất)
 │   │       ├── AdminLoyaltyController.cs   Quản lý loyalty
 │   │       ├── AdminStaffController.cs     Quản lý nhân viên (10KB)
-│   │       └── AdminSupplierController.cs  CRUD nhà cung cấp
+│   │       ├── AdminSupplierController.cs  CRUD nhà cung cấp
+│   │       ├── AdminActivityLogController.cs Nhật ký thao tác hệ thống
+│   │       ├── AdminNewsController.cs      Quản lý tin tức
+│   │       ├── AdminDiscountController.cs  Quản lý giảm giá & chiến dịch
+│   │       ├── AdminShippingController.cs  Quản lý vận đơn & tích hợp GHN
+│   │       └── AdminWarehouseController.cs Quản lý thông tin kho hàng
 │   │
 │   ├── Models/                     (46 files)
-│   │   ├── LongChauDbContext.cs    ★ DbContext (307 lines, 29 DbSets)
-│   │   ├── Product.cs              Sản phẩm
+│   │   ├── LongChauDbContext.cs    ★ DbContext (616 lines, 34 DbSets)
+│   │   ├── Product.cs              Sản phẩm (giảm giá, banner link)
 │   │   ├── Category.cs             Danh mục (tự tham chiếu 3 cấp)
-│   │   ├── Order.cs                Đơn hàng
+│   │   ├── Order.cs                Đơn hàng (địa chỉ chi tiết)
 │   │   ├── OrderItem.cs            Chi tiết đơn hàng
 │   │   ├── OrderStatuses.cs        ★ Enum trạng thái đơn (chuỗi tiếng Việt)
 │   │   ├── OrderStatusHistory.cs   Lịch sử trạng thái
@@ -105,7 +110,7 @@ doAnWebNC/                          (root)
 │   │   ├── Review.cs               Đánh giá SP
 │   │   ├── Voucher.cs              Voucher + UserVoucher
 │   │   ├── VoucherRedemption.cs    Lịch sử dùng voucher
-│   │   ├── Banner.cs               Banner quảng cáo
+│   │   ├── Banner.cs               Banner quảng cáo (liên kết campaign)
 │   │   ├── ChatMessage.cs          Tin nhắn chat
 │   │   ├── UserRankInfo.cs         Thông tin hạng thành viên
 │   │   ├── LoyaltyTiers.cs         ★ Định nghĩa hạng (Bạc/Vàng/Bạch kim)
@@ -113,16 +118,23 @@ doAnWebNC/                          (root)
 │   │   ├── LoyaltyPointTransaction.cs Giao dịch điểm
 │   │   ├── Warehouse.cs            Kho hàng
 │   │   ├── WarehouseStock.cs       Tồn kho theo kho
-│   │   ├── InventoryTransaction.cs Phiếu nhập/xuất kho
+│   │   ├── InventoryTransaction.cs Biến động tồn kho
 │   │   ├── ProductBatch.cs         Lô hàng
 │   │   ├── ProductImage.cs         Ảnh sản phẩm
 │   │   ├── Supplier.cs             Nhà cung cấp
 │   │   ├── PurchaseOrder.cs        Đơn mua hàng + PurchaseOrderLine
 │   │   ├── GoodsReceipt.cs         Phiếu nhập kho + GoodsReceiptLine
-│   │   ├── Shipment.cs             Vận chuyển + ShippingCarriers
+│   │   ├── Shipment.cs             Vận chuyển + ShippingCarriers (các trường GHN)
 │   │   ├── PayOSModels.cs          Models PayOS (Request/Response/Webhook)
 │   │   ├── PayOSWebhookEvent.cs    Lưu webhook event (idempotency)
 │   │   ├── StaffRoles.cs           ★ Roles: Admin, WarehouseStaff, CustomerSupport
+│   │   ├── DbActivityLog.cs        Nhật ký thao tác hệ thống
+│   │   ├── News.cs                 Bài viết tin tức y tế/khuyến mãi
+│   │   ├── StockAdjustment.cs      Phiếu điều chỉnh tồn kho thủ công & StockAdjustmentDetail
+│   │   ├── PromotionCampaign.cs    Chiến dịch khuyến mãi
+│   │   ├── GhnDtos.cs              Các DTO truyền nhận API Giao Hàng Nhanh
+│   │   ├── StockAdjustmentViewModels.cs VM điều chỉnh kho
+│   │   ├── ReportViewModels.cs     VM xuất Excel & Báo cáo nâng cao
 │   │   ├── ProfileViewModel.cs     VM profile
 │   │   ├── LoginViewModel.cs       VM đăng nhập
 │   │   ├── RegisterViewModel.cs    VM đăng ký
@@ -172,7 +184,10 @@ doAnWebNC/                          (root)
 │   │   ├── _ViewImports.cshtml     Tag helpers
 │   │   ├── _ViewStart.cshtml       Layout mặc định
 │   │   ├── _ProductList.cshtml     Partial danh sách SP
-│   │   ├── Home/Index.cshtml       ★ Trang chủ (13KB)
+│   │   ├── Home/
+│   │   │   ├── Index.cshtml        ★ Trang chủ (13KB)
+│   │   │   ├── BannerProducts.cshtml Sản phẩm thuộc Banner quảng cáo
+│   │   │   └── Campaign.cshtml       Sản phẩm thuộc Chiến dịch khuyến mãi
 │   │   ├── Auth/
 │   │   │   ├── Index.cshtml        Đăng nhập/Đăng ký (10KB)
 │   │   │   ├── Profile.cshtml      Hồ sơ cá nhân (41KB - lớn nhất)
@@ -213,16 +228,29 @@ doAnWebNC/                          (root)
 │   │       ├── Product/            Create, Edit, Delete, Import, ImportResult, Index, _ProductDetailPartial
 │   │       ├── Category/           Create, Edit, Delete, Index
 │   │       ├── Order/Index.cshtml  (16KB)
-│   │       ├── Banner/             Create, Edit, Delete, Details, Index
+│   │       ├── Banner/             Create, Edit, Delete, Details, Index (xem trước desktop/mobile)
 │   │       ├── Voucher/            Index (19KB), Redemptions
 │   │       ├── User/               Index (10KB), Details (14KB)
 │   │       ├── Chat/Index.cshtml   (41KB — lớn nhất)
-│   │       ├── Report/Index.cshtml (36KB)
-│   │       ├── Inventory/Index.cshtml (12KB)
-│   │       ├── Purchase/           Create, Details, Index, Receive, Replenishment
+│   │       ├── Report/
+│   │       │   ├── Index.cshtml    Dashboard KPI biểu đồ (36KB)
+│   │       │   ├── SupplierDebtReport.cshtml Báo cáo công nợ nhà cung cấp
+│   │       │   └── VoucherStats.cshtml Thống kê sử dụng Voucher
+│   │       ├── Inventory/
+│   │       │   ├── Index.cshtml    Quản lý kho & tồn kho theo kho
+│   │       │   ├── StockAdjustments.cshtml Danh sách phiếu điều chỉnh kho
+│   │       │   ├── CreateStockAdjustment.cshtml Form tạo phiếu xuất/nhập kho (FEFO)
+│   │       │   ├── StockAdjustmentDetails.cshtml Chi tiết phiếu & duyệt
+│   │       │   └── PrintStockAdjustment.cshtml Mẫu in phiếu xuất GIN A4
+│   │       ├── Purchase/           Create, Details, Index, Receive, Replenishment (Mẫu in PO & Phiếu nhập GRN)
 │   │       ├── Staff/              Create, Edit, Index
 │   │       ├── Supplier/           Create, Edit, Index
-│   │       └── Loyalty/            Index, Rewards
+│   │       ├── Loyalty/            Index, Rewards
+│   │       ├── ActivityLog/        Index (Xem nhật ký thao tác)
+│   │       ├── AdminNews/          Index, Create, Edit, Details (Quản lý tin tức)
+│   │       ├── Discount/           Index (Bảng chọn sản phẩm đa năng), Create, Edit, Details (Quản lý giảm giá)
+│   │       ├── Shipping/           Index, PrintLabel (In tem vận đơn GHN)
+│   │       └── Warehouse/          Index, Create, Edit (Quản lý thông tin kho)
 │   │
 │   ├── Migrations/                 (55 files — ~28 migration pairs)
 │   └── wwwroot/
@@ -242,7 +270,7 @@ doAnWebNC/                          (root)
 
 ---
 
-## 4. DATABASE SCHEMA (29 DbSets)
+## 4. DATABASE SCHEMA (34 DbSets)
 
 ### DbContext: `LongChauDbContext` (kế thừa `IdentityDbContext`)
 
@@ -276,6 +304,11 @@ DbSet<GoodsReceipt>            GoodsReceipts
 DbSet<GoodsReceiptLine>        GoodsReceiptLines
 DbSet<Shipment>                Shipments
 DbSet<PayOSWebhookEvent>       PayOSWebhookEvents
+DbSet<DbActivityLog>           DbActivityLogs
+DbSet<News>                    News
+DbSet<StockAdjustment>         StockAdjustments
+DbSet<StockAdjustmentDetail>   StockAdjustmentDetails
+DbSet<PromotionCampaign>       PromotionCampaigns
 + Các bảng Identity mặc định (AspNetUsers, AspNetRoles, ...)
 ```
 
@@ -316,6 +349,15 @@ DbSet<PayOSWebhookEvent>       PayOSWebhookEvents
 │ Adjustment)         │     └──────────────────┘
 └─────────────────────┘
 
+┌──────────────────┐     ┌───────────────────────┐
+│ StockAdjustment  │◄────│ StockAdjustmentDetail │────► Product/Batch
+│ (Requested/Appr) │     │                       │
+└──────────────────┘     └───────────────────────┘
+
+PromotionCampaign ──► Category / Banner
+DbActivityLog ──► Hệ thống nhật ký
+News ──► Bài viết tin tức
+
 ┌───────────────┐     ┌──────────────────┐     ┌──────────────────┐
 │ PurchaseOrder │────►│PurchaseOrderLine │     │  GoodsReceipt    │
 │ (Supplier+WH) │     │                  │     │  (Supplier+WH)   │
@@ -352,7 +394,13 @@ DbSet<PayOSWebhookEvent>       PayOSWebhookEvents
 | Slug | string? | URL-friendly name |
 | SoldQuantity | int? | Đã bán |
 | MinStockLevel | int | Ngưỡng cảnh báo hết hàng |
-| **Nav** | ProductImages, Reviews, OrderItems, InventoryTransactions, WarehouseStocks, ProductBatches | |
+| DiscountPrice | decimal? | Giá sau giảm |
+| DiscountPercent | double? | % giảm giá |
+| DiscountStartDate | DateTime? | Ngày bắt đầu giảm |
+| DiscountEndDate | DateTime? | Ngày kết thúc giảm |
+| IsDiscountActive | bool | Cho phép giảm giá |
+| BannerId | int? (FK) | → Banner liên kết |
+| **Nav** | ProductImages, Reviews, OrderItems, InventoryTransactions, WarehouseStocks, ProductBatches, Banner | |
 
 #### Order
 | Field | Type | Note |
@@ -362,7 +410,11 @@ DbSet<PayOSWebhookEvent>       PayOSWebhookEvents
 | OrderDate | DateTime? | |
 | TotalAmount | decimal? | |
 | Status | string? | Chuỗi tiếng Việt (xem OrderStatuses) |
-| ShippingAddress | string? | |
+| ShippingAddress | string? | Địa chỉ đầy đủ |
+| ProvinceId | int? | Mã tỉnh/thành (GHN) |
+| DistrictId | int? | Mã quận/huyện (GHN) |
+| WardCode | string? | Mã phường/xã (GHN) |
+| HouseNumber | string? | Số nhà, tên đường |
 | PaymentStatus | string? | |
 | FullName, Phone | string? | |
 | VoucherCode | string? | Mã voucher đã dùng |
@@ -400,6 +452,80 @@ DbSet<PayOSWebhookEvent>       PayOSWebhookEvents
 | MaxUsage | int? | Tổng lượt dùng tối đa |
 | UsedCount | int | Đã dùng |
 | **Nav** | UserVouchers, Redemptions | |
+
+#### PromotionCampaign (Chiến dịch khuyến mãi)
+| Field | Type | Note |
+|---|---|---|
+| PromotionCampaignId | int (PK) | |
+| Name | string (required) | Tên chiến dịch |
+| Description | string? | Mô tả |
+| DiscountPercent | double | % giảm giá chung |
+| StartDate | DateTime | Thời điểm bắt đầu |
+| EndDate | DateTime | Thời điểm kết thúc |
+| CategoryId | int? (FK) | → Category áp dụng |
+| Brand | string? | Hãng áp dụng |
+| IsActive | bool | Bật/tắt |
+| BannerId | int? (FK) | → Banner liên kết |
+| **Nav** | Category, Banner | |
+
+#### StockAdjustment (Phiếu điều chỉnh tồn kho)
+| Field | Type | Note |
+|---|---|---|
+| StockAdjustmentId | int (PK) | |
+| AdjustmentCode | string | Mã phiếu tự động (SA...) |
+| AdjustmentType | string | Loại: Export/Import/Positive/Negative |
+| Reason | string? | Lý do điều chỉnh |
+| Note | string? | Ghi chú |
+| RequestedBy | string? | Người yêu cầu |
+| ApprovedBy | string? | Người duyệt |
+| Status | string | Chờ duyệt / Đã duyệt / Từ chối |
+| WarehouseId | int (FK) | → Kho điều chỉnh |
+| CreatedAt | DateTime | Thời gian tạo |
+| ProcessedAt | DateTime? | Thời gian duyệt/từ chối |
+| CreatedByUserId | string? | Người tạo phiếu |
+| **Nav** | Warehouse, Details | |
+
+#### StockAdjustmentDetail (Chi tiết phiếu điều chỉnh)
+| Field | Type | Note |
+|---|---|---|
+| StockAdjustmentDetailId | int (PK) | |
+| StockAdjustmentId | int (FK) | → StockAdjustment |
+| ProductId | int (FK) | → Product |
+| ProductBatchId | int? (FK) | → ProductBatch |
+| Quantity | int | Số lượng thay đổi |
+| UnitCost | decimal? | Giá vốn tại thời điểm chỉnh |
+| Note | string? | Ghi chú dòng |
+| **Nav** | StockAdjustment, Product, ProductBatch | |
+
+#### News (Bài viết tin tức)
+| Field | Type | Note |
+|---|---|---|
+| NewsId | int (PK) | |
+| Title | string | Tiêu đề bài viết |
+| Slug | string? | URL-friendly |
+| Summary | string? | Tóm tắt ngắn |
+| Content | string? | Nội dung chi tiết |
+| ImageUrl | string? | Ảnh đại diện |
+| Category | string? | Danh mục tin tức |
+| IsFeature | bool | Tin nổi bật |
+| IsPublished | bool | Trạng thái hiển thị |
+| ViewCount | int | Lượt xem |
+| Author | string? | Tác giả |
+| CreatedAt | DateTime | Ngày viết |
+| PublishedAt | DateTime? | Ngày xuất bản |
+| Source | string? | Nguồn bài viết |
+
+#### DbActivityLog (Nhật ký thao tác)
+| Field | Type | Note |
+|---|---|---|
+| Id | int (PK) | |
+| UserId | string? | ID tài khoản thực hiện |
+| UserEmail | string? | Email tài khoản |
+| Action | string | Hành động (Thêm/Sửa/Xóa) |
+| EntityName | string | Tên thực thể tác động (Sản phẩm...) |
+| EntityId | string? | ID của đối tượng |
+| Description | string? | Chi tiết thao tác |
+| CreatedAt | DateTime | Thời điểm thao tác |
 
 ---
 
@@ -599,7 +725,7 @@ MapRazorPages()
 - **Soft reference**: Hầu hết FK dùng `OnDelete(SetNull)` hoặc `Restrict`
 - **Cascade**: Cart→CartItem, Order→StatusHistory, PurchaseOrder→Lines, GoodsReceipt→Lines
 - **Unique indexes**: UserVoucher(UserId+VoucherId), WarehouseStock(WarehouseId+ProductId), VoucherRedemption(VoucherId+OrderId), Supplier.Code, PurchaseOrder.OrderCode, GoodsReceipt.ReceiptCode, Product.Sku (filtered)
-- **Code-first migrations**: 28 migrations (07/2025 → 06/2026)
+- **Code-first migrations**: 38 migrations (07/2025 → 07/2026)
 
 ---
 
@@ -607,13 +733,13 @@ MapRazorPages()
 
 | File | Size | Ghi chú |
 |---|---|---|
+| `Controllers/Admin/AdminReportController.cs` | 65KB | Báo cáo & Dashboard quản trị (lớn nhất) |
 | `Views/Admin/Chat/Index.cshtml` | 41KB | Chat admin phức tạp |
 | `Views/Auth/Profile.cshtml` | 41KB | Profile có nhiều tab |
 | `Views/Product/Details.cshtml` | 39KB | Chi tiết SP + review |
 | `Views/Admin/Report/Index.cshtml` | 36KB | Báo cáo đầy đủ |
-| `Controllers/Admin/AdminReportController.cs` | 34KB | Logic báo cáo |
 | `Views/Shared/_ChatPopup.cshtml` | 29KB | Chat popup |
-| `Controllers/PayOSController.cs` | 27KB | Thanh toán |
+| `Controllers/PayOSController.cs` | 27KB | Logic thanh toán |
 | `Services/InventoryService.cs` | 27KB | Logic kho hàng |
 | `Controllers/AuthController.cs` | 25KB | Auth flow |
 | `Views/Cart/Index.cshtml` | 23KB | Giỏ hàng |
@@ -677,6 +803,16 @@ docker-compose up --build
 | 2026-06-08 | AddLoyaltyRewards | Bảng LoyaltyReward |
 | 2026-06-08 | Phase4_OperationsAndShipping | Shipment, PayOSWebhookEvent |
 | 2026-06-09 | PendingChanges | Sửa nhỏ cuối |
+| 2026-07-06 | AddDbActivityLog | Thêm bảng nhật ký hoạt động hệ thống DbActivityLog |
+| 2026-07-06 | AddNews | Thêm bảng đăng bài viết, tin tức y tế/khuyến mãi News |
+| 2026-07-07 | AddStockAdjustment | Thêm các bảng điều chỉnh tồn kho thủ công (StockAdjustments, StockAdjustmentDetails) |
+| 2026-07-12 | AddGhnFieldsToShipment | Bổ sung các trường tích hợp API Giao Hàng Nhanh vào Shipment |
+| 2026-07-12 | AddOrderAddressFields | Thêm các trường địa chỉ chi tiết (Province, District, Ward, HouseNumber) vào Order |
+| 2026-07-12 | MakeShipmentTrackingCodeNullable | Chuyển TrackingCode trong Shipment sang dạng nullable |
+| 2026-07-24 | AddProductDiscount | Thêm các trường hỗ trợ giảm giá trực tiếp và BannerId vào Product |
+| 2026-07-24 | AddPromotionCampaign | Thêm bảng quản lý Chiến dịch khuyến mãi PromotionCampaign |
+| 2026-07-24 | AddBannerCampaignRelation | Bổ sung quan hệ Banner - Chiến dịch khuyến mãi (PromotionCampaignId) |
+| 2026-07-24 | LinkPromotionsToBanners | Thiết lập liên kết khóa ngoại giữa Banner và PromotionCampaign |
 
 ---
 

@@ -67,6 +67,9 @@ builder.Services.AddScoped<IPayOSService, PayOSService>();
 builder.Services.AddScoped<IGHNService, GHNService>();
 builder.Services.AddScoped<IOrderEmailService, OrderEmailService>();
 
+// chatbot AI
+builder.Services.AddHttpClient<IGeminiAiService, GeminiAiService>();
+
 var app = builder.Build();
 
 // Dev: tự apply migration + seed

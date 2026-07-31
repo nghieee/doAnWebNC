@@ -1,7 +1,7 @@
 # CƠ SỞ DỮ LIỆU — NHÀ THUỐC LONG CHÂU
 
 > **Mục đích**: Tài liệu tập trung toàn bộ thông tin liên quan đến CSDL — schema, entity, quan hệ, migration, quy ước lưu trữ. Dùng cho báo cáo CSDL, ERD, thiết kế bảng, hoặc đưa context cho AI.
-> **Cập nhật lần cuối**: 2026-06-17
+> **Cập nhật lần cuối**: 2026-07-25
 > **Liên quan**: [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md) · [BUSINESS_CONTEXT.md](./BUSINESS_CONTEXT.md)
 
 ---
@@ -13,8 +13,8 @@
 | **Hệ quản trị** | Microsoft SQL Server |
 | **ORM** | Entity Framework Core 9.x (Code-First) |
 | **DbContext** | `LongChauDbContext` — kế thừa `IdentityDbContext` |
-| **File DbContext** | `web-ban-thuoc/Models/LongChauDbContext.cs` (~307 dòng) |
-| **Số DbSet nghiệp vụ** | 29 |
+| **File DbContext** | `web-ban-thuoc/Models/LongChauDbContext.cs` (~616 dòng) |
+| **Số DbSet nghiệp vụ** | 34 |
 | **Bảng Identity** | AspNetUsers, AspNetRoles, AspNetUserRoles, AspNetUserClaims, AspNetUserLogins, AspNetUserTokens, AspNetRoleClaims |
 | **Tên database (local)** | `LongChauDB_New` |
 | **Migration folder** | `web-ban-thuoc/Migrations/` (~28 cặp migration, 55 file) |
@@ -75,7 +75,7 @@ Thư mục `docs/ERD/`:
 
 ---
 
-## 3. DANH SÁCH DbSet (29 BẢNG NGHIỆP VỤ)
+## 3. DANH SÁCH DbSet (34 BẢNG NGHIỆP VỤ)
 
 | # | Entity | DbSet property | Bảng (mặc định EF) |
 |---|---|---|---|
@@ -108,6 +108,11 @@ Thư mục `docs/ERD/`:
 | 27 | GoodsReceiptLine | GoodsReceiptLines | GoodsReceiptLines |
 | 28 | Shipment | Shipments | Shipments |
 | 29 | PayOSWebhookEvent | PayOSWebhookEvents | PayOSWebhookEvents |
+| 30 | DbActivityLog | DbActivityLogs | DbActivityLogs |
+| 31 | News | News | News |
+| 32 | StockAdjustment | StockAdjustments | StockAdjustments |
+| 33 | StockAdjustmentDetail | StockAdjustmentDetails | StockAdjustmentDetails |
+| 34 | PromotionCampaign | PromotionCampaigns | PromotionCampaigns |
 
 ---
 
@@ -157,11 +162,19 @@ Thư mục `docs/ERD/`:
                                                 │→ tạo ProductBatch│
                                                 └──────────────────┘
 
+┌──────────────────┐     ┌───────────────────────┐
+│ StockAdjustment  │◄────│ StockAdjustmentDetail │────► Product, ProductBatch
+│ (Requested/Appr) │     │                       │
+└──────────────────┘     └───────────────────────┘
+
 Cart (1 user = 1 cart) ──► CartItem ──► Product
 Voucher ──► UserVoucher, VoucherRedemption
 UserRankInfo (PK = UserId) ──► AspNetUsers
 LoyaltyPointTransaction ──► Order?, LoyaltyReward?
 PayOSWebhookEvent (IdempotencyKey unique)
+PromotionCampaign ──► Category?, Banner?
+DbActivityLog (Nhật ký thao tác)
+News (Tin tức bài viết)
 ```
 
 ---

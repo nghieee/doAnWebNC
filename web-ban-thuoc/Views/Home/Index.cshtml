@@ -2,6 +2,24 @@
 
 @{
     ViewData["Title"] = "Nhà Thuốc Long Châu - Trang chủ";
+    var campaignBanners = ViewBag.CampaignBanners as Dictionary<int, int> ?? new();
+    var bannersWithProducts = ViewBag.BannersWithProducts as List<int> ?? new();
+    
+    Func<web_ban_thuoc.Models.Banner, string> getBannerLink = b => 
+    {
+        if (campaignBanners.TryGetValue(b.BannerId, out var campaignId))
+        {
+            return $"/Home/Campaign/{campaignId}";
+        }
+        if (bannersWithProducts.Contains(b.BannerId))
+        {
+            return $"/Home/BannerProducts/{b.BannerId}";
+        }
+        return b.LinkUrl ?? "";
+    };
+    
+    Func<web_ban_thuoc.Models.Banner, string> getBannerTarget = b => 
+        (campaignBanners.ContainsKey(b.BannerId) || bannersWithProducts.Contains(b.BannerId)) ? "_self" : "_blank";
 }
 
 <!-- Full-Width Carousel -->
@@ -16,9 +34,9 @@
                 {
                     var banner = fullWidthBanners[i];
                     <div class="carousel-item @(i == 0 ? "active" : "")">
-                        @if (!string.IsNullOrEmpty(banner.LinkUrl))
+                        @if (campaignBanners.ContainsKey(banner.BannerId) || bannersWithProducts.Contains(banner.BannerId) || !string.IsNullOrEmpty(banner.LinkUrl))
                         {
-                            <a href="@banner.LinkUrl" target="_blank">
+                            <a href="@getBannerLink(banner)" target="@getBannerTarget(banner)">
                                 <img src="@banner.ImageUrl" class="d-block w-100" alt="@banner.Title"
                                     style="object-fit: cover; min-height: 240px; background: #e9ecef;" />
                             </a>
@@ -72,9 +90,9 @@
                                 {
                                     var banner = twoThirdsBanners[i];
                                     <div class="carousel-item @(i == 0 ? "active" : "")">
-                                        @if (!string.IsNullOrEmpty(banner.LinkUrl))
+                                        @if (campaignBanners.ContainsKey(banner.BannerId) || bannersWithProducts.Contains(banner.BannerId) || !string.IsNullOrEmpty(banner.LinkUrl))
                                         {
-                                            <a href="@banner.LinkUrl" target="_blank">
+                                            <a href="@getBannerLink(banner)" target="@getBannerTarget(banner)">
                                                 <img src="@banner.ImageUrl" class="d-block w-100 rounded-3" alt="@banner.Title"
                                                     style="object-fit: cover;" />
                                             </a>
@@ -116,9 +134,9 @@
                             @foreach (var banner in oneThirdBanners)
                             {
                                 <div class="one-third-banner-item">
-                                    @if (!string.IsNullOrEmpty(banner.LinkUrl))
+                                    @if (campaignBanners.ContainsKey(banner.BannerId) || bannersWithProducts.Contains(banner.BannerId) || !string.IsNullOrEmpty(banner.LinkUrl))
                                     {
-                                        <a href="@banner.LinkUrl" target="_blank">
+                                        <a href="@getBannerLink(banner)" target="@getBannerTarget(banner)">
                                             <img src="@banner.ImageUrl" class="d-block w-100 rounded-3" alt="@banner.Title" />
                                         </a>
                                     }
@@ -163,6 +181,116 @@
     </div>
 </div>
 
+@{
+    var flashSaleProducts = ViewBag.FlashSaleProducts as List<web_ban_thuoc.Models.Product> ?? new();
+    var flashSaleEndDate = ViewBag.FlashSaleEndDate as string;
+    var flashSaleCampaignName = ViewBag.FlashSaleCampaignName as string ?? "Flash Sale";
+}
+
+@if (flashSaleProducts.Any())
+{
+    <div class="mx-auto pt-5 pb-3">
+        <!-- Flash Sale Banner Top -->
+        <div class="flash-sale-banner mb-0">
+            <img src="/images/banners/template/flash sale banner.png" alt="Flash Sale" class="w-100 d-block rounded-top-4 shadow-sm" style="max-height: 140px; object-fit: cover;" />
+        </div>
+        
+        <!-- Flash Sale Carousel Outer Box with Pink Border matching the banner -->
+        <div class="flash-sale-box p-4 rounded-bottom-4 bg-white shadow-sm position-relative" style="border: 4px solid #ff708a; border-top: none;">
+            <!-- Header inside the box: Countdown + View All -->
+            <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3 pb-2.5 border-bottom border-light">
+                <div class="d-flex align-items-center gap-2.5 flex-wrap">
+                    <span class="badge px-3 py-2 fs-6 fw-bold rounded-pill text-white animate-pulse" style="background: linear-gradient(135deg, #ff4d6d, #ff708a);">
+                        <i class="fa fa-bolt me-1"></i> FLASH SALE
+                    </span>
+                    <span class="text-secondary small fw-bold ms-1" style="letter-spacing: 0.5px;">KẾT THÚC SAU:</span>
+                    <div class="d-flex align-items-center gap-1.5" id="flash-sale-countdown">
+                        <div id="fs-hours" class="countdown-card text-white px-2.5 py-1 rounded fw-extrabold text-center bg-dark shadow-sm" style="min-width: 32px; font-size: 0.9rem;">00</div>
+                        <span class="fw-bold text-dark">:</span>
+                        <div id="fs-minutes" class="countdown-card text-white px-2.5 py-1 rounded fw-extrabold text-center bg-dark shadow-sm" style="min-width: 32px; font-size: 0.9rem;">00</div>
+                        <span class="fw-bold text-dark">:</span>
+                        <div id="fs-seconds" class="countdown-card text-white px-2.5 py-1 rounded fw-extrabold text-center bg-dark shadow-sm" style="min-width: 32px; font-size: 0.9rem;">00</div>
+                    </div>
+                </div>
+                <a href="/Home/Campaign/@ViewBag.FlashSaleCampaignId" class="text-decoration-none small fw-bold text-danger hover-opacity">
+                    Xem tất cả <i class="fa fa-chevron-right ms-1 small"></i>
+                </a>
+            </div>
+            
+            <!-- Slider Wrapper -->
+            <div class="position-relative px-2">
+                <!-- Left Navigation Button -->
+                <button class="position-absolute start-0 top-50 translate-middle-y btn btn-light rounded-circle shadow d-flex align-items-center justify-content-center z-3 cursor-pointer border hover-scale" 
+                        id="fs-prev-btn" style="width: 40px; height: 40px; left: -20px !important; transition: all 0.2s ease;">
+                    <i class="fa fa-chevron-left text-danger"></i>
+                </button>
+                
+                <!-- Right Navigation Button -->
+                <button class="position-absolute end-0 top-50 translate-middle-y btn btn-light rounded-circle shadow d-flex align-items-center justify-content-center z-3 cursor-pointer border hover-scale" 
+                        id="fs-next-btn" style="width: 40px; height: 40px; right: -20px !important; transition: all 0.2s ease;">
+                    <i class="fa fa-chevron-right text-danger"></i>
+                </button>
+                
+                <!-- Horizontal Scrollable Container -->
+                <div class="scroll-container d-flex gap-4 py-2 overflow-x-auto" id="fs-scroll-container" style="scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none;">
+                    @foreach (var product in flashSaleProducts)
+                    {
+                        var mainImage = product.ProductImages?.FirstOrDefault(i => i.IsMain == true) ?? product.ProductImages?.FirstOrDefault();
+                        int soldPercentage = (product.ProductId * 7) % 55 + 30;
+                        
+                        <div class="flex-shrink-0" style="width: 190px;">
+                            <div class="product-card shadow-sm position-relative border-0 rounded-4 overflow-hidden bg-white h-100 d-flex flex-column" style="transition: transform 0.25s ease, box-shadow 0.25s ease;">
+                                <!-- Discount Badge -->
+                                <div class="position-absolute top-0 start-0 m-2 z-1">
+                                    <span class="badge bg-danger shadow-sm px-2 py-1 fs-7 fw-bold rounded-pill text-white">
+                                        -@product.DiscountPercentCalculated%
+                                    </span>
+                                </div>
+                                
+                                <a class="text-decoration-none d-flex flex-column h-100" href="@Url.Action("Details", "Product", new { id = product.ProductId })">
+                                    <div class="product-image-wrapper p-3 text-center" style="height: 160px; display: flex; align-items: center; justify-content: center;">
+                                        <img src="/images/products/@(mainImage?.ImageUrl ?? "/images/sanpham.png")" alt="@product.ProductName" class="img-fluid object-fit-contain mh-100" style="max-height: 130px;" />
+                                    </div>
+                                    
+                                    <div class="px-3 pb-2 flex-grow-1 d-flex flex-column justify-content-between text-start">
+                                        <div>
+                                            <h5 class="product-title text-dark font-semibold text-truncate mb-1.5" style="font-size: 0.85rem;" title="@product.ProductName">@product.ProductName</h5>
+                                        </div>
+                                        <div>
+                                            <div class="product-price text-danger fw-bold" style="font-size: 0.95rem;">@product.EffectivePrice.ToString("N0")đ</div>
+                                            <div class="product-original-price text-decoration-line-through text-muted small" style="font-size: 0.75rem;">@product.Price.ToString("N0")đ</div>
+                                            <span class="product-unit text-secondary small opacity-75">@(product.Package ?? "Hộp")</span>
+                                        </div>
+                                    </div>
+                                </a>
+                                
+                                <!-- Sold Progress Bar -->
+                                <div class="px-3 pt-1 pb-2">
+                                    <div class="d-flex align-items-center justify-content-between small text-secondary mb-1" style="font-size: 0.7rem;">
+                                        <span>Đang bán chạy</span>
+                                        <span class="fw-bold text-danger">@soldPercentage%</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px; background-color: #ffe0e6;">
+                                        <div class="progress-bar" role="progressbar" style="width: @soldPercentage%; background: linear-gradient(90deg, #ff4d6d, #ff708a);" aria-valuenow="@soldPercentage" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="px-3 pb-3 pt-1">
+                                    <form asp-controller="Cart" asp-action="AddToCart" method="post" class="add-to-cart-form">
+                                        <input type="hidden" name="productId" value="@product.ProductId" />
+                                        <input type="hidden" name="quantity" value="1" />
+                                        <button type="submit" class="btn btn-danger w-100 rounded-pill btn-sm fw-medium shadow-sm hover-brightness" style="background-color: #ff4d6d; border-color: #ff4d6d;">Mua ngay</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 <!-- Products -->
 <div class="pt-4">
     <div class="mx-auto">
@@ -176,7 +304,15 @@
                 var mainImage = product.ProductImages?.FirstOrDefault(i => i.IsMain == true) ??
                 product.ProductImages?.FirstOrDefault();
                 <div class="col">
-                    <div class="product-card shadow-sm">
+                    <div class="product-card shadow-sm position-relative">
+                        @if (product.IsOnDiscount)
+                        {
+                            <div class="position-absolute top-0 start-0 m-2 z-1">
+                                <span class="badge bg-danger shadow-sm px-2 py-1 fs-7 fw-bold rounded-pill text-white">
+                                    -@product.DiscountPercentCalculated%
+                                </span>
+                            </div>
+                        }
                         <a class="text-decoration-none d-flex flex-column h-100"
                             href="@Url.Action("Details", "Product", new { id = product.ProductId })">
                             <div class="product-image-wrapper">
@@ -188,8 +324,16 @@
                                     <h5 class="product-title" title="@product.ProductName">@product.ProductName</h5>
                                 </div>
                                 <div>
-                                    <div class="product-price">@product.Price.ToString("N0")đ</div>
-                                    <div class="product-original-price">@((product.Price * 1.25m).ToString("N0"))đ</div>
+                                    @if (product.IsOnDiscount)
+                                    {
+                                        <div class="product-price text-danger fw-bold">@product.EffectivePrice.ToString("N0")đ</div>
+                                        <div class="product-original-price text-decoration-line-through text-muted small">@product.Price.ToString("N0")đ</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="product-price">@product.Price.ToString("N0")đ</div>
+                                        <div class="product-original-price text-muted small" style="visibility: hidden;">0đ</div>
+                                    }
                                     <span class="product-unit">@(product.Package ?? "Hộp")</span>
                                 </div>
                             </div>
@@ -405,6 +549,26 @@
         transform: translateY(-3px);
         box-shadow: 0 8px 24px rgba(0,0,0,0.1) !important;
     }
+
+    /* Flash Sale Carousel Specific Styles */
+    #fs-scroll-container {
+        display: flex;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        gap: 16px;
+        scrollbar-width: none; /* Hide scrollbar Firefox */
+    }
+    #fs-scroll-container::-webkit-scrollbar {
+        display: none; /* Hide scrollbar Chrome/Safari/Opera */
+    }
+    .hover-scale:hover {
+        transform: translateY(-50%) scale(1.1) !important;
+        box-shadow: 0 4px 12px rgba(255, 77, 109, 0.25) !important;
+        background-color: #fff !important;
+    }
+    .hover-brightness:hover {
+        filter: brightness(1.05);
+    }
 </style>
 @section Scripts {
 <script>
@@ -414,6 +578,53 @@ $(function() {
         $('#gift-popup-overlay').fadeOut(300);
         $.post('/Home/MarkGiftSeen', function(){});
     });
+
+    // 1. Flash Sale Horizontal Scroll Handler
+    const container = document.getElementById('fs-scroll-container');
+    const prevBtn = document.getElementById('fs-prev-btn');
+    const nextBtn = document.getElementById('fs-next-btn');
+    
+    if (container && prevBtn && nextBtn) {
+        prevBtn.addEventListener('click', () => {
+            container.scrollBy({ left: -container.clientWidth * 0.75, behavior: 'smooth' });
+        });
+        nextBtn.addEventListener('click', () => {
+            container.scrollBy({ left: container.clientWidth * 0.75, behavior: 'smooth' });
+        });
+    }
+
+    // 2. Flash Sale Countdown Timer
+    const rawEndDate = '@flashSaleEndDate';
+    if (rawEndDate) {
+        const endDate = new Date(rawEndDate).getTime();
+        
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = endDate - now;
+            
+            if (distance < 0) {
+                clearInterval(countdownInterval);
+                document.getElementById('fs-hours').innerText = '00';
+                document.getElementById('fs-minutes').innerText = '00';
+                document.getElementById('fs-seconds').innerText = '00';
+                setTimeout(() => {
+                    location.reload();
+                }, 3000);
+                return;
+            }
+            
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            document.getElementById('fs-hours').innerText = String(hours).padStart(2, '0');
+            document.getElementById('fs-minutes').innerText = String(minutes).padStart(2, '0');
+            document.getElementById('fs-seconds').innerText = String(seconds).padStart(2, '0');
+        }
+        
+        updateCountdown();
+        const countdownInterval = setInterval(updateCountdown, 1000);
+    }
 });
 </script>
 }

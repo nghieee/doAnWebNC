@@ -39,4 +39,9 @@ public class Banner
     
     [Display(Name = "Ngày cập nhật")]
     public DateTime? UpdatedAt { get; set; }
+
+    [Display(Name = "Chiến dịch khuyến mãi liên kết")]
+    public int? PromotionCampaignId { get; set; }
+
+    public virtual PromotionCampaign? PromotionCampaign { get; set; }
 }

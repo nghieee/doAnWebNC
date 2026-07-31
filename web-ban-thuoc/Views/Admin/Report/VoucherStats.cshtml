@@ -1,0 +1,108 @@
+@model web_ban_thuoc.Models.VoucherStatsReportViewModel
+
+@{
+    ViewData["Title"] = "Thống kê sử dụng Voucher - Nhà thuốc Long Châu";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="h4 fw-bold text-dark mb-1">
+                <i class="fas fa-ticket-alt me-2 text-primary"></i>Báo cáo hiệu quả & Thống kê Voucher
+            </h2>
+            <p class="text-muted small mb-0">Đo lường tỷ lệ quy đổi (Redemption rate), tổng chiết khấu và doanh thu từ các chương trình khuyến mãi.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Admin/Voucher" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i>Quản lý Voucher
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 bg-white p-3">
+                <div class="text-muted small mb-1">Tổng mã Voucher</div>
+                <div class="fs-4 fw-bold text-dark">@Model.TotalVouchers</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 bg-white p-3">
+                <div class="text-muted small mb-1">Tổng số lượt sử dụng</div>
+                <div class="fs-4 fw-bold text-primary">@Model.TotalRedemptions lượt</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 bg-white p-3">
+                <div class="text-muted small mb-1">Tổng tiền đã giảm giá</div>
+                <div class="fs-4 fw-bold text-danger">@Model.TotalDiscountAmount.ToString("N0")đ</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 bg-white p-3 border-start border-success border-4">
+                <div class="text-muted small mb-1">Doanh thu đơn có Voucher</div>
+                <div class="fs-4 fw-bold text-success">@Model.TotalRevenueWithVoucher.ToString("N0")đ</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table of Vouchers -->
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-white py-3">
+            <h5 class="card-title fs-6 fw-bold text-dark mb-0">Thống kê chi tiết từng mã Voucher</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr class="small text-secondary">
+                            <th class="ps-3 py-3">Mã Voucher</th>
+                            <th>Loại giảm giá</th>
+                            <th class="text-end">Giá trị giảm</th>
+                            <th class="text-center">Đã dùng / Phát ra</th>
+                            <th class="text-center">Tỷ lệ quy đổi</th>
+                            <th class="text-end">Tổng tiền đã giảm</th>
+                            <th class="pe-3 text-end">Doanh thu mang lại</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.VoucherItems.Any())
+                        {
+                            foreach (var item in Model.VoucherItems)
+                            {
+                                <tr>
+                                    <td class="ps-3">
+                                        <span class="badge bg-primary-subtle text-primary border border-primary border-opacity-25 px-2 py-1 font-monospace fs-6">@item.Code</span>
+                                    </td>
+                                    <td class="text-muted small">@item.DiscountType</td>
+                                    <td class="text-end font-semibold">
+                                        @(item.DiscountType == "Percentage" ? $"{item.DiscountValue}%" : $"{item.DiscountValue:N0}đ")
+                                    </td>
+                                    <td class="text-center">@item.UsedCount / @item.TotalIssued</td>
+                                    <td class="text-center">
+                                        <div class="d-flex align-items-center justify-content-center gap-2">
+                                            <div class="progress w-50" style="height: 6px;">
+                                                <div class="progress-bar bg-success" style="width: @(item.RedemptionRate)%"></div>
+                                            </div>
+                                            <span class="small fw-semibold">@item.RedemptionRate%</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-end text-danger fw-semibold">@item.TotalDiscountGiven.ToString("N0")đ</td>
+                                    <td class="pe-3 text-end text-success fw-bold">@item.TotalRevenueGenerated.ToString("N0")đ</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">Chưa có dữ liệu thống kê voucher.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

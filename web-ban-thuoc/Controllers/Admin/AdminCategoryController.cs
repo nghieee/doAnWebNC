@@ -18,6 +18,46 @@ namespace web_ban_thuoc.Controllers.Admin
 
         public IActionResult Index(int? parentId1 = null, int? parentId2 = null, int page = 1, string? isFeature = null, string? searchName = null)
         {
+            try
+            {
+                var categoriesList = _context.Categories.ToList();
+                var activeProductsList = _context.Products.Where(p => p.IsActive).ToList();
+                bool hasChanged = false;
+
+                foreach (var cat in categoriesList)
+                {
+                    var subCatIds = categoriesList
+                        .Where(c => c.ParentCategoryId == cat.CategoryId)
+                        .Select(c => c.CategoryId)
+                        .ToList();
+
+                    var allCatIds = new List<int> { cat.CategoryId };
+                    allCatIds.AddRange(subCatIds);
+
+                    var subSubCatIds = categoriesList
+                        .Where(c => c.ParentCategoryId != null && subCatIds.Contains(c.ParentCategoryId.Value))
+                        .Select(c => c.CategoryId)
+                        .ToList();
+                    allCatIds.AddRange(subSubCatIds);
+
+                    int count = activeProductsList.Count(p => p.CategoryId.HasValue && allCatIds.Contains(p.CategoryId.Value));
+                    if (cat.ProductCount != count)
+                    {
+                        cat.ProductCount = count;
+                        hasChanged = true;
+                    }
+                }
+
+                if (hasChanged)
+                {
+                    _context.SaveChanges();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error sync Category ProductCount: " + ex.Message);
+            }
+
             int pageSize = 12;
             var categories = _context.Categories
                 .Include(c => c.ParentCategory)

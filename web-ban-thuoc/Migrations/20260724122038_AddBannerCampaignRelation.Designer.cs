@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using web_ban_thuoc.Models;
 
@@ -11,9 +12,11 @@ using web_ban_thuoc.Models;
 namespace web_ban_thuoc.Migrations
 {
     [DbContext(typeof(LongChauDbContext))]
-    partial class LongChauDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260724122038_AddBannerCampaignRelation")]
+    partial class AddBannerCampaignRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -265,6 +268,8 @@ namespace web_ban_thuoc.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("BannerId");
+
+                    b.HasIndex("PromotionCampaignId");
 
                     b.ToTable("Banners");
                 });
@@ -952,9 +957,6 @@ namespace web_ban_thuoc.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductId"));
 
-                    b.Property<int?>("BannerId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Barcode")
                         .HasColumnType("nvarchar(max)");
 
@@ -1044,8 +1046,6 @@ namespace web_ban_thuoc.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ProductId");
-
-                    b.HasIndex("BannerId");
 
                     b.HasIndex("CategoryId");
 
@@ -1145,9 +1145,6 @@ namespace web_ban_thuoc.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PromotionCampaignId"));
 
-                    b.Property<int?>("BannerId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Brand")
                         .HasColumnType("nvarchar(max)");
 
@@ -1178,10 +1175,6 @@ namespace web_ban_thuoc.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("PromotionCampaignId");
-
-                    b.HasIndex("BannerId")
-                        .IsUnique()
-                        .HasFilter("[BannerId] IS NOT NULL");
 
                     b.HasIndex("CategoryId");
 
@@ -1769,6 +1762,15 @@ namespace web_ban_thuoc.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("web_ban_thuoc.Models.Banner", b =>
+                {
+                    b.HasOne("web_ban_thuoc.Models.PromotionCampaign", "PromotionCampaign")
+                        .WithMany()
+                        .HasForeignKey("PromotionCampaignId");
+
+                    b.Navigation("PromotionCampaign");
+                });
+
             modelBuilder.Entity("web_ban_thuoc.Models.CartItem", b =>
                 {
                     b.HasOne("web_ban_thuoc.Models.Cart", "Cart")
@@ -1964,10 +1966,6 @@ namespace web_ban_thuoc.Migrations
 
             modelBuilder.Entity("web_ban_thuoc.Models.Product", b =>
                 {
-                    b.HasOne("web_ban_thuoc.Models.Banner", "Banner")
-                        .WithMany()
-                        .HasForeignKey("BannerId");
-
                     b.HasOne("web_ban_thuoc.Models.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId");
@@ -1976,8 +1974,6 @@ namespace web_ban_thuoc.Migrations
                         .WithMany("Products")
                         .HasForeignKey("SupplierId")
                         .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Banner");
 
                     b.Navigation("Category");
 
@@ -2030,15 +2026,9 @@ namespace web_ban_thuoc.Migrations
 
             modelBuilder.Entity("web_ban_thuoc.Models.PromotionCampaign", b =>
                 {
-                    b.HasOne("web_ban_thuoc.Models.Banner", "Banner")
-                        .WithOne("PromotionCampaign")
-                        .HasForeignKey("web_ban_thuoc.Models.PromotionCampaign", "BannerId");
-
                     b.HasOne("web_ban_thuoc.Models.Category", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId");
-
-                    b.Navigation("Banner");
 
                     b.Navigation("Category");
                 });
@@ -2200,11 +2190,6 @@ namespace web_ban_thuoc.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("Warehouse");
-                });
-
-            modelBuilder.Entity("web_ban_thuoc.Models.Banner", b =>
-                {
-                    b.Navigation("PromotionCampaign");
                 });
 
             modelBuilder.Entity("web_ban_thuoc.Models.Cart", b =>

@@ -1,0 +1,139 @@
+@model web_ban_thuoc.Models.SupplierDebtReportViewModel
+
+@{
+    ViewData["Title"] = "Báo cáo công nợ Nhà cung cấp - Nhà thuốc Long Châu";
+    Layout = "~/Views/Admin/_Layout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="h4 fw-bold text-dark mb-1">
+                <i class="fas fa-hand-holding-usd me-2 text-primary"></i>Báo cáo công nợ Nhà cung cấp
+            </h2>
+            <p class="text-muted small mb-0">Theo dõi nợ phải trả NCC, hạn thanh toán và đối chiếu công nợ phát sinh trong kỳ.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/AdminReport/SupplierDebt?period=@Model.Period" class="btn btn-outline-secondary btn-sm" onclick="window.print(); return false;">
+                <i class="fas fa-print me-1"></i>In báo cáo
+            </a>
+            <a href="/AdminSupplier" class="btn btn-primary btn-sm">
+                <i class="fas fa-truck-field me-1"></i>Quản lý NCC
+            </a>
+        </div>
+    </div>
+
+    <!-- Period Filter -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-3">
+            <form method="get" action="/AdminReport/SupplierDebt" class="row g-3 align-items-center">
+                <div class="col-auto">
+                    <label class="col-form-label fw-semibold text-secondary small">Kỳ báo cáo:</label>
+                </div>
+                <div class="col-auto">
+                    <select name="period" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="thisMonth" selected="@(Model.Period == "thisMonth")">Tháng này</option>
+                        <option value="today" selected="@(Model.Period == "today")">Hôm nay</option>
+                        <option value="thisQuarter" selected="@(Model.Period == "thisQuarter")">Quý này</option>
+                        <option value="thisYear" selected="@(Model.Period == "thisYear")">Năm nay</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <input type="text" name="search" class="form-select form-select-sm" placeholder="Tìm tên / mã NCC..." value="@Context.Request.Query["search"]" style="min-width: 220px;" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-sm btn-primary">Lọc dữ liệu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 bg-white p-3">
+                <div class="text-muted small mb-1">Dư nợ đầu kỳ</div>
+                <div class="fs-5 fw-bold text-dark">@Model.TotalOpeningBalance.ToString("N0")đ</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 bg-white p-3">
+                <div class="text-muted small mb-1">Phát sinh tăng (Nhập hàng)</div>
+                <div class="fs-5 fw-bold text-danger">+@Model.TotalIncurredDebt.ToString("N0")đ</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 bg-white p-3">
+                <div class="text-muted small mb-1">Phát sinh giảm (Đã trả)</div>
+                <div class="fs-5 fw-bold text-success">-@Model.TotalPaidAmount.ToString("N0")đ</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 bg-white p-3 border-start border-primary border-4">
+                <div class="text-muted small mb-1">Dư nợ cuối kỳ</div>
+                <div class="fs-5 fw-bold text-primary">@Model.TotalClosingBalance.ToString("N0")đ</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debt Table -->
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr class="small text-secondary">
+                            <th class="ps-3 py-3">Mã NCC</th>
+                            <th>Nhà cung cấp</th>
+                            <th>Số điện thoại</th>
+                            <th class="text-end">Nợ đầu kỳ</th>
+                            <th class="text-end">Phát sinh tăng</th>
+                            <th class="text-end">Phát sinh giảm</th>
+                            <th class="text-end fw-bold">Nợ cuối kỳ</th>
+                            <th>Hạn thanh toán</th>
+                            <th class="pe-3 text-center">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Items.Any())
+                        {
+                            foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td class="ps-3 fw-semibold text-primary">@item.SupplierCode</td>
+                                    <td class="fw-medium text-dark">@item.SupplierName</td>
+                                    <td class="text-muted small">@item.Phone</td>
+                                    <td class="text-end">@item.OpeningBalance.ToString("N0")đ</td>
+                                    <td class="text-end text-danger">+@item.IncurredDebt.ToString("N0")đ</td>
+                                    <td class="text-end text-success">-@item.PaidAmount.ToString("N0")đ</td>
+                                    <td class="text-end fw-bold text-dark">@item.ClosingBalance.ToString("N0")đ</td>
+                                    <td class="small text-muted">@(item.NextDueDate?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                    <td class="pe-3 text-center">
+                                        @if (item.Status == "Quá hạn")
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger border border-danger border-opacity-25 px-2 py-1">Quá hạn</span>
+                                        }
+                                        else if (item.Status == "Sắp đến hạn")
+                                        {
+                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning border-opacity-25 px-2 py-1">Sắp đến hạn</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-2 py-1">Trong hạn</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center py-5 text-muted">Không có dữ liệu công nợ nào.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

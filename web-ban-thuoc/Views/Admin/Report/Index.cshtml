@@ -36,7 +36,6 @@
     <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
         <div class="row align-items-center g-3">
             <div class="col-12 col-lg-4">
-                <h4 class="mb-1 text-primary fw-bold"><i class="fa fa-chart-line me-2"></i>Báo cáo tài chính & vận hành</h4>
                 <p class="text-muted small mb-0">Thời gian báo cáo: <strong class="text-dark">@ViewBag.RangeText</strong></p>
             </div>
             <div class="col-12 col-lg-8">
@@ -165,29 +164,37 @@
 
     <!-- Tabbed Details -->
     <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-        <!-- Navigation Tabs -->
-        <ul class="nav nav-pills mb-4 gap-2 border-bottom pb-3" id="reportTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active rounded-3 px-3 py-2" id="financials-tab" data-bs-toggle="tab" data-bs-target="#financials" type="button" role="tab"><i class="fa fa-coins me-2"></i>Tài chính & Dòng tiền</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link rounded-3 px-3 py-2 position-relative" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab">
-                    <i class="fa fa-boxes-stacked me-2"></i>Kho hàng & Hạn dùng
-                    @if (expirySummary.ExpiredCount > 0)
-                    {
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white" style="font-size: 0.65rem;">
-                            @expirySummary.ExpiredCount
-                        </span>
-                    }
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link rounded-3 px-3 py-2" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab"><i class="fa fa-pills me-2"></i>Hiệu suất Sản phẩm</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link rounded-3 px-3 py-2" id="customers-tab" data-bs-toggle="tab" data-bs-target="#customers" type="button" role="tab"><i class="fa fa-users me-2"></i>Khách hàng & Thanh toán</button>
-            </li>
-        </ul>
+        <!-- Navigation Tabs & Sub-Reports -->
+        <div class="border-bottom pb-3 mb-4">
+            <ul class="nav nav-pills gap-2 mb-0" id="reportTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active rounded-3 px-3 py-2" id="financials-tab" data-bs-toggle="tab" data-bs-target="#financials" type="button" role="tab"><i class="fa fa-coins me-2"></i>Tài chính & Dòng tiền</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-3 px-3 py-2 position-relative" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab">
+                        <i class="fa fa-boxes-stacked me-2"></i>Kho hàng & Hạn dùng
+                        @if (expirySummary.ExpiredCount > 0)
+                        {
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white" style="font-size: 0.65rem;">
+                                @expirySummary.ExpiredCount
+                            </span>
+                        }
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-3 px-3 py-2" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab"><i class="fa fa-pills me-2"></i>Hiệu suất Sản phẩm</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-3 px-3 py-2" id="customers-tab" data-bs-toggle="tab" data-bs-target="#customers" type="button" role="tab"><i class="fa fa-users me-2"></i>Khách hàng & Thanh toán</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-3 px-3 py-2" id="supplier-debt-tab" data-bs-toggle="tab" data-bs-target="#supplier-debt" type="button" role="tab"><i class="fa fa-hand-holding-usd me-2"></i>Công nợ NCC</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-3 px-3 py-2" id="voucher-stats-tab" data-bs-toggle="tab" data-bs-target="#voucher-stats" type="button" role="tab"><i class="fa fa-ticket-alt me-2"></i>Thống kê Voucher</button>
+                </li>
+            </ul>
+        </div>
 
         <!-- Tab Content -->
         <div class="tab-content" id="reportTabsContent">
@@ -501,6 +508,188 @@
                             </table>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: SUPPLIER DEBT -->
+            <div class="tab-pane fade" id="supplier-debt" role="tabpanel">
+                @{
+                    var supplierDebt = ViewBag.SupplierDebtModel as web_ban_thuoc.Models.SupplierDebtReportViewModel ?? new();
+                }
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-hand-holding-usd text-primary me-2"></i>Báo cáo công nợ Nhà cung cấp</h6>
+                    <a href="/AdminSupplier" class="btn btn-sm btn-primary"><i class="fas fa-truck-field me-1"></i>Quản lý NCC</a>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-12 col-md-3">
+                        <div class="card border-0 shadow-sm rounded-3 bg-light p-3">
+                            <div class="text-muted small mb-1">Dư nợ đầu kỳ</div>
+                            <div class="fs-6 fw-bold text-dark">@supplierDebt.TotalOpeningBalance.ToString("N0")đ</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <div class="card border-0 shadow-sm rounded-3 bg-light p-3">
+                            <div class="text-muted small mb-1">Phát sinh tăng (Nhập hàng)</div>
+                            <div class="fs-6 fw-bold text-danger">+@supplierDebt.TotalIncurredDebt.ToString("N0")đ</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <div class="card border-0 shadow-sm rounded-3 bg-light p-3">
+                            <div class="text-muted small mb-1">Phát sinh giảm (Đã trả)</div>
+                            <div class="fs-6 fw-bold text-success">-@supplierDebt.TotalPaidAmount.ToString("N0")đ</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <div class="card border-0 shadow-sm rounded-3 bg-light p-3 border-start border-primary border-4">
+                            <div class="text-muted small mb-1">Dư nợ cuối kỳ</div>
+                            <div class="fs-6 fw-bold text-primary">@supplierDebt.TotalClosingBalance.ToString("N0")đ</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 border">
+                        <thead class="bg-light">
+                            <tr class="small text-secondary">
+                                <th class="ps-3 py-3">Mã NCC</th>
+                                <th>Nhà cung cấp</th>
+                                <th>Số điện thoại</th>
+                                <th class="text-end">Nợ đầu kỳ</th>
+                                <th class="text-end">Phát sinh tăng</th>
+                                <th class="text-end">Phát sinh giảm</th>
+                                <th class="text-end fw-bold">Nợ cuối kỳ</th>
+                                <th>Hạn thanh toán</th>
+                                <th class="pe-3 text-center">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (supplierDebt.Items.Any())
+                            {
+                                foreach (var item in supplierDebt.Items)
+                                {
+                                    <tr>
+                                        <td class="ps-3 fw-semibold text-primary">@item.SupplierCode</td>
+                                        <td class="fw-medium text-dark">@item.SupplierName</td>
+                                        <td class="text-muted small">@item.Phone</td>
+                                        <td class="text-end">@item.OpeningBalance.ToString("N0")đ</td>
+                                        <td class="text-end text-danger">+@item.IncurredDebt.ToString("N0")đ</td>
+                                        <td class="text-end text-success">-@item.PaidAmount.ToString("N0")đ</td>
+                                        <td class="text-end fw-bold text-dark">@item.ClosingBalance.ToString("N0")đ</td>
+                                        <td class="small text-muted">@(item.NextDueDate?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                        <td class="pe-3 text-center">
+                                            @if (item.Status == "Quá hạn")
+                                            {
+                                                <span class="badge bg-danger-subtle text-danger border border-danger border-opacity-25 px-2 py-1">Quá hạn</span>
+                                            }
+                                            else if (item.Status == "Sắp đến hạn")
+                                            {
+                                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning border-opacity-25 px-2 py-1">Sắp đến hạn</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-2 py-1">Trong hạn</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="9" class="text-center py-4 text-muted">Không có dữ liệu công nợ nào.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 6: VOUCHER STATS -->
+            <div class="tab-pane fade" id="voucher-stats" role="tabpanel">
+                @{
+                    var voucherStats = ViewBag.VoucherStatsModel as web_ban_thuoc.Models.VoucherStatsReportViewModel ?? new();
+                }
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-ticket-alt text-info me-2"></i>Thống kê hiệu quả Voucher & Khuyến mãi</h6>
+                    <a href="/Admin/Voucher" class="btn btn-sm btn-info text-white"><i class="fas fa-plus me-1"></i>Quản lý Voucher</a>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-12 col-md-3">
+                        <div class="card border-0 shadow-sm rounded-3 bg-light p-3">
+                            <div class="text-muted small mb-1">Tổng mã Voucher</div>
+                            <div class="fs-6 fw-bold text-dark">@voucherStats.TotalVouchers</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <div class="card border-0 shadow-sm rounded-3 bg-light p-3">
+                            <div class="text-muted small mb-1">Tổng lượt dùng</div>
+                            <div class="fs-6 fw-bold text-primary">@voucherStats.TotalRedemptions lượt</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <div class="card border-0 shadow-sm rounded-3 bg-light p-3">
+                            <div class="text-muted small mb-1">Tổng tiền đã giảm</div>
+                            <div class="fs-6 fw-bold text-danger">@voucherStats.TotalDiscountAmount.ToString("N0")đ</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <div class="card border-0 shadow-sm rounded-3 bg-light p-3 border-start border-success border-4">
+                            <div class="text-muted small mb-1">Doanh thu đơn Voucher</div>
+                            <div class="fs-6 fw-bold text-success">@voucherStats.TotalRevenueWithVoucher.ToString("N0")đ</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 border">
+                        <thead class="bg-light">
+                            <tr class="small text-secondary">
+                                <th class="ps-3 py-3">Mã Voucher</th>
+                                <th>Loại giảm giá</th>
+                                <th class="text-end">Giá trị giảm</th>
+                                <th class="text-center">Đã dùng / Phát ra</th>
+                                <th class="text-center">Tỷ lệ quy đổi</th>
+                                <th class="text-end">Tổng tiền đã giảm</th>
+                                <th class="pe-3 text-end">Doanh thu mang lại</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (voucherStats.VoucherItems.Any())
+                            {
+                                foreach (var item in voucherStats.VoucherItems)
+                                {
+                                    <tr>
+                                        <td class="ps-3">
+                                            <span class="badge bg-primary-subtle text-primary border border-primary border-opacity-25 px-2 py-1 font-monospace fs-6">@item.Code</span>
+                                        </td>
+                                        <td class="text-muted small">@item.DiscountType</td>
+                                        <td class="text-end font-semibold">
+                                            @(item.DiscountType == "Percentage" ? $"{item.DiscountValue}%" : $"{item.DiscountValue:N0}đ")
+                                        </td>
+                                        <td class="text-center">@item.UsedCount / @item.TotalIssued</td>
+                                        <td class="text-center">
+                                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                                <div class="progress w-50" style="height: 6px;">
+                                                    <div class="progress-bar bg-success" style="width: @(item.RedemptionRate)%"></div>
+                                                </div>
+                                                <span class="small fw-semibold">@item.RedemptionRate%</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-end text-danger fw-semibold">@item.TotalDiscountGiven.ToString("N0")đ</td>
+                                        <td class="pe-3 text-end text-success fw-bold">@item.TotalRevenueGenerated.ToString("N0")đ</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">Chưa có dữ liệu thống kê voucher.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

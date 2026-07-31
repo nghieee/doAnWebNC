@@ -101,11 +101,22 @@
 
                     <div class="pd-purchase-card">
                         <div class="pd-purchase-top">
-                            <div>
-                                <div id="main-product-price" class="pd-price">@Model.Price.ToString("N0")<small>đ</small></div>
+                            <div class="d-flex flex-column gap-1">
+                                <div class="d-flex align-items-baseline gap-2 flex-wrap">
+                                    @if (Model.IsOnDiscount)
+                                    {
+                                        <div id="main-product-price" class="pd-price text-danger fw-bold mb-0">@Model.EffectivePrice.ToString("N0")<small>đ</small></div>
+                                        <div class="text-decoration-line-through text-muted ms-2" style="font-size: 1.1rem; font-weight: 500;">@Model.Price.ToString("N0")đ</div>
+                                        <span class="badge bg-danger ms-2 px-2.5 py-1 rounded-pill" style="font-size: 0.85rem; font-weight: bold; line-height: 1;">-@Model.DiscountPercentCalculated%</span>
+                                    }
+                                    else
+                                    {
+                                        <div id="main-product-price" class="pd-price mb-0">@Model.Price.ToString("N0")<small>đ</small></div>
+                                    }
+                                </div>
                                 @if (!string.IsNullOrEmpty(Model.Package))
                                 {
-                                    <div class="pd-package">@Model.Package</div>
+                                    <div class="pd-package mt-1">@Model.Package</div>
                                 }
                             </div>
                             <div class="pd-badges">
@@ -122,6 +133,92 @@
                                 </span>
                             </div>
                         </div>
+
+                        @if (Model.IsOnDiscount)
+                        {
+                            var campaign = ViewBag.ActiveCampaign as web_ban_thuoc.Models.PromotionCampaign;
+                            var promoEndDate = Model.DiscountEndDate ?? campaign?.EndDate;
+                            if (promoEndDate.HasValue && promoEndDate.Value > DateTime.Now)
+                            {
+                                <div class="pd-promo-countdown-box my-3 p-3 rounded-3 border position-relative overflow-hidden" 
+                                     style="background: linear-gradient(135deg, #fff5f5 0%, #fff0f0 100%); border-color: #feb2b2 !important;">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <div class="d-flex align-items-center gap-2 text-danger fw-bold" style="font-size: 0.85rem;">
+                                            <i class="fa fa-fire text-danger"></i>
+                                            <span>
+                                                @(campaign != null ? $"ƯU ĐÃI: {campaign.Name.ToUpper()}" : "DEAL CỰC SỐC ĐANG DIỄN RA")
+                                            </span>
+                                        </div>
+                                        <div class="text-muted" style="font-size: 0.75rem;">
+                                            Kết thúc: @promoEndDate.Value.ToString("dd/MM/yyyy HH:mm")
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="fw-medium text-secondary" style="font-size: 0.85rem;">Khuyến mãi kết thúc sau:</div>
+                                        <div id="promo-countdown" class="d-flex align-items-center gap-1" data-end="@promoEndDate.Value.ToString("o")">
+                                            <div class="d-flex flex-column align-items-center bg-danger text-white rounded px-2 py-1 fs-7 fw-bold" style="min-width: 42px;">
+                                                <span id="cd-days">00</span>
+                                                <span class="fw-normal" style="font-size: 0.65rem; line-height: 1; margin-top: 2px;">Ngày</span>
+                                            </div>
+                                            <span class="text-danger fw-bold fs-6">:</span>
+                                            <div class="d-flex flex-column align-items-center bg-danger text-white rounded px-2 py-1 fs-7 fw-bold" style="min-width: 42px;">
+                                                <span id="cd-hours">00</span>
+                                                <span class="fw-normal" style="font-size: 0.65rem; line-height: 1; margin-top: 2px;">Giờ</span>
+                                            </div>
+                                            <span class="text-danger fw-bold fs-6">:</span>
+                                            <div class="d-flex flex-column align-items-center bg-danger text-white rounded px-2 py-1 fs-7 fw-bold" style="min-width: 42px;">
+                                                <span id="cd-mins">00</span>
+                                                <span class="fw-normal" style="font-size: 0.65rem; line-height: 1; margin-top: 2px;">Phút</span>
+                                            </div>
+                                            <span class="text-danger fw-bold fs-6">:</span>
+                                            <div class="d-flex flex-column align-items-center bg-danger text-white rounded px-2 py-1 fs-7 fw-bold" style="min-width: 42px;">
+                                                <span id="cd-secs">00</span>
+                                                <span class="fw-normal" style="font-size: 0.65rem; line-height: 1; margin-top: 2px;">Giây</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <script>
+                                    (function () {
+                                        const countdownEl = document.getElementById('promo-countdown');
+                                        if (!countdownEl) return;
+
+                                        const endDateStr = countdownEl.getAttribute('data-end');
+                                        const endDate = new Date(endDateStr).getTime();
+
+                                        const dSpan = document.getElementById('cd-days');
+                                        const hSpan = document.getElementById('cd-hours');
+                                        const mSpan = document.getElementById('cd-mins');
+                                        const sSpan = document.getElementById('cd-secs');
+
+                                        function updateCountdown() {
+                                            const now = new Date().getTime();
+                                            const distance = endDate - now;
+
+                                            if (distance < 0) {
+                                                clearInterval(intervalId);
+                                                const box = document.querySelector('.pd-promo-countdown-box');
+                                                if (box) box.style.display = 'none';
+                                                return;
+                                            }
+
+                                            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                                            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                                            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                                            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                                            if (dSpan) dSpan.textContent = String(days).padStart(2, '0');
+                                            if (hSpan) hSpan.textContent = String(hours).padStart(2, '0');
+                                            if (mSpan) mSpan.textContent = String(minutes).padStart(2, '0');
+                                            if (sSpan) sSpan.textContent = String(seconds).padStart(2, '0');
+                                        }
+
+                                        updateCountdown();
+                                        const intervalId = setInterval(updateCountdown, 1000);
+                                    })();
+                                </script>
+                            }
+                        }
 
                         <form asp-controller="Cart" asp-action="AddToCart" method="post" class="pd-cart-form">
                             <input type="hidden" name="productId" value="@Model.ProductId" />
@@ -766,38 +863,131 @@ else if (!User.Identity.IsAuthenticated)
         <div class="text-muted">Chưa có đánh giá nào cho sản phẩm này.</div>
     }
 </div>
+
+<!-- Phần gợi ý sản phẩm Carousel -->
+@{
+    var knnRecommendations = ViewBag.KnnRecommendations as List<web_ban_thuoc.Services.KnnProductRecommendation> ?? new();
+    int itemsPerSlide = 4;
+    var totalSlides = (int)Math.Ceiling((double)knnRecommendations.Count / itemsPerSlide);
+}
+@if (knnRecommendations.Any())
+{
+    <div class="mt-5 p-4 bg-white rounded-4 shadow-sm border position-relative" id="knn-recommendations-section">
+        <!-- Header đơn giản -->
+        <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+            <h4 class="fw-bold text-dark mb-0"><i class="fa fa-thumbs-up text-primary me-2"></i>Sản phẩm gợi ý</h4>
+            @if (totalSlides > 1)
+            {
+                <div class="btn-group" role="group">
+                    <button class="btn btn-outline-primary btn-sm rounded-circle me-2 d-flex align-items-center justify-content-center knn-nav-btn" type="button" data-bs-target="#knnCarousel" data-bs-slide="prev">
+                        <i class="fa fa-chevron-left"></i>
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm rounded-circle d-flex align-items-center justify-content-center knn-nav-btn" type="button" data-bs-target="#knnCarousel" data-bs-slide="next">
+                        <i class="fa fa-chevron-right"></i>
+                    </button>
+                </div>
+            }
+        </div>
+
+        <!-- Carousel Component -->
+        <div id="knnCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="6000">
+            <div class="carousel-inner">
+                @for (int slideIdx = 0; slideIdx < totalSlides; slideIdx++)
+                {
+                    var slideItems = knnRecommendations.Skip(slideIdx * itemsPerSlide).Take(itemsPerSlide).ToList();
+                    <div class="carousel-item @(slideIdx == 0 ? "active" : "")">
+                        <div class="row row-cols-2 row-cols-sm-2 row-cols-md-4 g-3">
+                            @foreach (var item in slideItems)
+                            {
+                                var p = item.Product;
+                                var imgUrl = p.ProductImages?.FirstOrDefault(i => i.IsMain == true)?.ImageUrl 
+                                             ?? p.ProductImages?.FirstOrDefault()?.ImageUrl 
+                                             ?? "sanpham.png";
+                                <div class="col">
+                                    <div class="product-card shadow-sm h-100">
+                                        <a class="text-decoration-none d-flex flex-column h-100" href="@Url.Action("Details", "Product", new { id = p.ProductId })">
+                                            <div class="product-image-wrapper">
+                                                <img src="/images/products/@imgUrl" alt="@p.ProductName" />
+                                            </div>
+                                            <div class="px-3 pb-2 flex-grow-1 d-flex flex-column justify-content-between">
+                                                <div>
+                                                    <h5 class="product-title" title="@p.ProductName">@p.ProductName</h5>
+                                                </div>
+                                                <div>
+                                                    <div class="product-price">@p.Price.ToString("N0")đ</div>
+                                                    <div class="product-original-price">@((p.Price * 1.25m).ToString("N0"))đ</div>
+                                                    <span class="product-unit">@(p.Package ?? "Hộp")</span>
+                                                </div>
+                                            </div>
+                                        </a>
+                                        <div class="px-3 pb-3 pt-2">
+                                            <form asp-controller="Cart" asp-action="AddToCart" method="post" class="add-to-cart-form">
+                                                <input type="hidden" name="productId" value="@p.ProductId" />
+                                                <input type="hidden" name="quantity" value="1" />
+                                                <button type="submit" class="btn btn-primary w-100 rounded-pill btn-sm fw-medium py-1-5">Thêm vào giỏ</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (totalSlides > 1)
+            {
+                <div class="carousel-indicators position-relative mt-4 mb-0">
+                    @for (int i = 0; i < totalSlides; i++)
+                    {
+                        <button type="button" data-bs-target="#knnCarousel" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "") bg-primary" aria-current="@(i == 0 ? "true" : "false")" aria-label="Slide @(i + 1)" style="width: 24px; height: 4px; border-radius: 2px;"></button>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}
 <style>
-.star-rating {
-    font-size: 2.1rem;
-    cursor: pointer;
-    user-select: none;
-    display: flex;
-    gap: 2px;
-}
-.star-rating .star {
-    transition: color 0.2s;
-    margin-right: 2px;
-    font-size: 2.1rem;
-}
-.star-rating .star.selected,
-.star-rating .star.hovered {
-    color: #ffc107 !important;
-}
-.star-rating .star.text-secondary {
-    color: #d1d5db !important;
-}
-.star-rating .star.text-warning {
-    color: #ffc107 !important;
-}
-.review-item {
-    border: 1px solid #e5e7eb;
-    background: #f9fafb;
-    box-shadow: 0 2px 8px rgba(96, 165, 250, 0.07);
-}
-.avatar img {
-    border: 2px solid #e5e7eb;
-    background: #f3f4f6;
-}
+    .knn-nav-btn {
+        width: 36px;
+        height: 36px;
+        transition: all 0.2s ease;
+    }
+    .knn-nav-btn:hover {
+        background: #1976d2 !important;
+        color: #ffffff !important;
+    }
+    .star-rating {
+        font-size: 2.1rem;
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        gap: 2px;
+    }
+    .star-rating .star {
+        transition: color 0.2s;
+        margin-right: 2px;
+        font-size: 2.1rem;
+    }
+    .star-rating .star.selected,
+    .star-rating .star.hovered {
+        color: #ffc107 !important;
+    }
+    .star-rating .star.text-secondary {
+        color: #d1d5db !important;
+    }
+    .star-rating .star.text-warning {
+        color: #ffc107 !important;
+    }
+    .review-item {
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+        box-shadow: 0 2px 8px rgba(96, 165, 250, 0.07);
+    }
+    .avatar img {
+        border: 2px solid #e5e7eb;
+        background: #f3f4f6;
+    }
 </style>
 @section Scripts {
     <script>

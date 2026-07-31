@@ -1,0 +1,183 @@
+@model List<web_ban_thuoc.Models.Product>
+@{
+    var banner = ViewBag.Banner as web_ban_thuoc.Models.Banner;
+    ViewData["Title"] = banner?.Title ?? "Danh sách sản phẩm";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var totalCount = ViewBag.TotalCount ?? 0;
+    var currentPage = ViewBag.CurrentPage ?? 1;
+    var totalPages = ViewBag.TotalPages ?? 1;
+}
+
+<div class="container mx-auto py-6 px-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="/" class="text-decoration-none">Trang chủ</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">@banner?.Title</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Bộ lọc bên trái -->
+        <div class="col-12 col-lg-3">
+            <partial name="_FilterSidebar" />
+        </div>
+
+        <!-- Danh sách sản phẩm bên phải -->
+        <div class="col-12 col-lg-9">
+            <!-- Header với tiêu đề và sắp xếp -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="text-black mb-1 fw-bold">@banner?.Title</h4>
+                    <p class="text-muted mb-0">
+                        Tìm thấy <span class="fw-semibold text-primary">@totalCount</span> sản phẩm đang giảm giá
+                    </p>
+                </div>
+                
+                @if (Model?.Any() == true)
+                {
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted small">Sắp xếp:</span>
+                        @{
+                            var sort = Context.Request.Query["sort"].ToString();
+                            string sortActive(string value) => sort == value ? "btn-primary" : "btn-outline-primary";
+                        }
+                        <button type="button" class="btn @sortActive("") btn-sm btn-sort rounded-pill px-3" data-sort="" onclick="sortProducts('')">
+                            <i class="fas fa-fire me-1"></i>Mặc định
+                        </button>
+                        <button type="button" class="btn @sortActive("name") btn-sm btn-sort rounded-pill px-3" data-sort="name" onclick="sortProducts('name')">
+                            <i class="fas fa-sort-alpha-down me-1"></i>Tên
+                        </button>
+                        <button type="button" class="btn @sortActive("price_asc") btn-sm btn-sort rounded-pill px-3" data-sort="price_asc" onclick="sortProducts('price_asc')">
+                            <i class="fas fa-sort-numeric-down me-1"></i>Giá thấp
+                        </button>
+                        <button type="button" class="btn @sortActive("price_desc") btn-sm btn-sort rounded-pill px-3" data-sort="price_desc" onclick="sortProducts('price_desc')">
+                            <i class="fas fa-sort-numeric-up me-1"></i>Giá cao
+                        </button>
+                    </div>
+                }
+            </div>
+            
+            <!-- Danh sách sản phẩm -->
+            <div id="product-list-container">
+                <partial name="~/Views/Categories/_ProductList.cshtml" model="Model" />
+            </div>
+            
+            <!-- Phân trang -->
+            @if (totalPages > 1)
+            {
+                <nav class="d-flex justify-content-center mt-5">
+                    <ul class="pagination">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" href="@BuildPaginationUrl(currentPage - 1)" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        
+                        @{
+                            int startPage = Math.Max(1, currentPage - 2);
+                            int endPage = Math.Min(totalPages, currentPage + 2);
+                        }
+                        
+                        @if (startPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@BuildPaginationUrl(1)">1</a>
+                            </li>
+                            @if (startPage > 2)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+                        }
+                        
+                        @for (int i = startPage; i <= endPage; i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" href="@BuildPaginationUrl(i)">@i</a>
+                            </li>
+                        }
+                        
+                        @if (endPage < totalPages)
+                        {
+                            @if (endPage < totalPages - 1)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+                            <li class="page-item">
+                                <a class="page-link" href="@BuildPaginationUrl(totalPages)">@totalPages</a>
+                            </li>
+                        }
+                        
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <a class="page-link" href="@BuildPaginationUrl(currentPage + 1)" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string BuildPaginationUrl(int page)
+    {
+        var banner = ViewBag.Banner as web_ban_thuoc.Models.Banner;
+        var query = Context.Request.Query;
+        var parameters = new List<string>();
+        
+        if (!string.IsNullOrEmpty(query["sort"]))
+            parameters.Add($"sort={query["sort"]}");
+        if (!string.IsNullOrEmpty(query["brands"]))
+            parameters.Add($"brands={query["brands"]}");
+        if (!string.IsNullOrEmpty(query["origins"]))
+            parameters.Add($"origins={query["origins"]}");
+        if (!string.IsNullOrEmpty(query["priceRange"]))
+            parameters.Add($"priceRange={query["priceRange"]}");
+        
+        parameters.Add($"page={page}");
+        
+        return $"/Home/BannerProducts/{banner?.BannerId}?{string.Join("&", parameters)}";
+    }
+}
+
+<script>
+function sortProducts(sort) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('sort', sort);
+    url.searchParams.set('page', '1');
+
+    if (typeof currentFilters !== 'undefined') {
+        currentFilters.sort = sort;
+    }
+
+    const headers = {
+        'X-Requested-With': 'XMLHttpRequest'
+    };
+
+    const productList = document.getElementById('product-list');
+    if (productList) {
+        productList.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Đang tải...</span></div></div>';
+    }
+
+    fetch(url, { headers })
+        .then(res => res.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newList = doc.querySelector('#product-list');
+            
+            if (newList && productList) {
+                productList.innerHTML = newList.innerHTML;
+            }
+        })
+        .catch(err => console.error(err));
+}
+</script>

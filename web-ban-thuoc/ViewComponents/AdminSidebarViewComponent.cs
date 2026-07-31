@@ -42,6 +42,7 @@ public class AdminSidebarViewComponent : ViewComponent
 
         AddGroup("Sản phẩm", "fa-solid fa-pills",
             new AdminNavItem { Title = "Danh sách SP", Url = "/AdminProduct", IconClass = "fa-solid fa-box", PathPrefix = "/AdminProduct", Roles = [StaffRoles.Admin], ExcludePaths = ["/AdminProduct/Import", "/AdminProduct/Price"] },
+            new AdminNavItem { Title = "Quản lý giảm giá", Url = "/AdminDiscount", IconClass = "fa-solid fa-percent", PathPrefix = "/AdminDiscount", Roles = [StaffRoles.Admin] },
             new AdminNavItem { Title = "Quản lý giá SP", Url = "/AdminProduct/Price", IconClass = "fa-solid fa-dollar-sign", PathPrefix = "/AdminProduct/Price", Roles = [StaffRoles.Admin], IsSubItem = true },
             new AdminNavItem { Title = "Nhập từ Excel", Url = "/AdminProduct/Import", IconClass = "fa-solid fa-file-excel", PathPrefix = "/AdminProduct/Import", Roles = [StaffRoles.Admin], IsSubItem = true },
             new AdminNavItem { Title = "Danh mục", Url = "/AdminCategory", IconClass = "fa-solid fa-tags", PathPrefix = "/AdminCategory", Roles = [StaffRoles.Admin] });
