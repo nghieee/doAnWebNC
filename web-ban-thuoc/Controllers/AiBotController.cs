@@ -24,7 +24,7 @@ namespace web_ban_thuoc.Controllers
 
             try
             {
-                var answer = await _aiService.GetAdviceAsync(req.Question, _baseUrl);
+                var answer = await _aiService.GetAdviceAsync(req.Question, _baseUrl, req.History);
                 return Ok(new { answer });
             }
             catch (Exception ex)
@@ -63,13 +63,6 @@ namespace web_ban_thuoc.Controllers
     public class AiBotRequest
     {
         public string Question { get; set; } = string.Empty;
-    }
-
-    public class ChatHistoryItem
-    {
-        public string Type { get; set; } = string.Empty;
-        public string Content { get; set; } = string.Empty;
-        public string Timestamp { get; set; } = string.Empty;
-        public bool IsHtml { get; set; }
+        public List<ChatHistoryItem>? History { get; set; }
     }
 }

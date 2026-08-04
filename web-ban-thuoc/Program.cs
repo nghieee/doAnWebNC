@@ -23,16 +23,17 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 
 // Đăng ký cấu hình EmailSettings
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
-// Đăng ký service gửi mail: hoán đổi Strategy theo môi trường tại DI Container (Dev = Null, Prod = SMTP) + Decorator (LoggingEmailSender)
-if (builder.Environment.IsDevelopment())
+// Đăng ký service gửi mail: hoán đổi Strategy theo cấu hình Enabled tại DI Container + Decorator (LoggingEmailSender)
+var emailEnabled = builder.Configuration.GetValue<bool>("EmailSettings:Enabled", true);
+if (emailEnabled)
 {
     builder.Services.AddTransient<IEmailSender>(sp =>
-        new LoggingEmailSender(new NullEmailSender(), sp.GetRequiredService<ILogger<LoggingEmailSender>>()));
+        new LoggingEmailSender(new SmtpEmailSender(sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<EmailSettings>>()), sp.GetRequiredService<ILogger<LoggingEmailSender>>()));
 }
 else
 {
     builder.Services.AddTransient<IEmailSender>(sp =>
-        new LoggingEmailSender(new SmtpEmailSender(sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<EmailSettings>>()), sp.GetRequiredService<ILogger<LoggingEmailSender>>()));
+        new LoggingEmailSender(new NullEmailSender(), sp.GetRequiredService<ILogger<LoggingEmailSender>>()));
 }
 
 // Thêm cấu hình LoginPath cho cookie authentication
